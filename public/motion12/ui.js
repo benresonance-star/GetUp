@@ -519,10 +519,12 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('yogurtInput').value=p.yogurt;
   document.getElementById('berriesInput').value=p.berries;
   document.getElementById('nutsInput').value=p.nuts;
+  document.getElementById('seedsInput').value=p.seeds;
   document.getElementById('latteMilkInput').value=p.latteMilk;
   document.getElementById('meatInput').value=p.meat;
   document.getElementById('lunchRiceInput').value=p.lunchRice;
   document.getElementById('dinnerRiceInput').value=p.dinnerRice;
+  document.getElementById('legumesInput').value=p.legumes;
   document.getElementById('vegInput').value=p.veg;
   document.getElementById('oilInput').value=p.oil;
   document.getElementById('powderInput').value=p.powder;
@@ -545,10 +547,12 @@ document.getElementById('saveSettings').onclick=()=>{
       yogurt:portionValue('yogurtInput',old.yogurt),
       berries:portionValue('berriesInput',old.berries),
       nuts:portionValue('nutsInput',old.nuts),
+      seeds:portionValue('seedsInput',old.seeds),
       latteMilk:portionValue('latteMilkInput',old.latteMilk),
       meat:portionValue('meatInput',old.meat),
       lunchRice:portionValue('lunchRiceInput',old.lunchRice),
       dinnerRice:portionValue('dinnerRiceInput',old.dinnerRice),
+      legumes:portionValue('legumesInput',old.legumes),
       veg:portionValue('vegInput',old.veg),
       oil:portionValue('oilInput',old.oil),
       powder:portionValue('powderInput',old.powder),
