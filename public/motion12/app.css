@@ -326,15 +326,6 @@ html.standalone main{
   }
 }
 
-.meal-grams{
-  margin-top:7px;
-  color:#c5c8cd;
-  font-size:11px;
-  line-height:1.45;
-}
-.meal-row.done .meal-grams{
-  opacity:.65;
-}
 
 .intake-strip{
   margin:12px 0 10px;
