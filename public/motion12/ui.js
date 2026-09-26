@@ -312,7 +312,8 @@ function timerUseExercisePreset(name){
 function exercisePresetMarkup(){
   const p=program[programDay()];
   if(!p?.work?.length)return '';
-  return '<section class="section timer-exercise-section"><div class="section-head"><h2>Exercise recovery</h2><small>tap to load</small></div><div class="exercise-rest-list">'+
+  const circuitDay=programDay()===0||programDay()===2||programDay()===4;
+  return '<section class="section timer-exercise-section"><div class="section-head"><h2>'+(circuitDay?'Circuit timing':'Exercise recovery')+'</h2><small>'+(circuitDay?'session sequence':'tap to load')+'</small></div><div class="exercise-rest-list">'+
     p.work.map(x=>{
       const name=x[0],rec=exerciseRestPreset(name),active=smartTimer.exerciseName===name?' active':'';
       const safeName=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -478,7 +479,7 @@ function timerViewModel(){
   let label='REST',meta=plan.title,progress=0,detail='';
   if(kind==='intervals'){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
-    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=1;detail='All '+plan.rounds+' hard intervals complete';}
+    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=1;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
     else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?1-sec/smartTimer.duration:0;detail=plan.title;}
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
