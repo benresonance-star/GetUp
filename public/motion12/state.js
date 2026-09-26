@@ -7,7 +7,21 @@ const wasPreviousDefault=Object.keys(previousDefaultPortions).every(k=>Number(st
 let settings={...defaultSettings,...storedSettings,portionPresetVersion:2,portions:wasPreviousDefault?{...defaultPortions}:{...defaultPortions,...storedPortions}};
 let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
 let measurements=JSON.parse(localStorage.getItem('motion12.measurements')||'{}');
-let timerInt=null,timerSeconds=0,timerRunning=false;
+let timerInt=null;
+const defaultSmartTimer={
+  mode:'session',
+  running:false,
+  kind:'',
+  remaining:90,
+  duration:90,
+  endAt:0,
+  phaseIndex:0,
+  setIndex:0,
+  stopwatchElapsed:0,
+  stopwatchStartedAt:0,
+  dayKey:''
+};
+let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function getMondayISO(d){const x=new Date(d);const day=x.getDay()||7;x.setDate(x.getDate()-day+1);return iso(x)}
 function todayISO(){const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
