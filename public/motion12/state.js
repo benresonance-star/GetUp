@@ -220,7 +220,6 @@ function mealPlan(day){
     {id:'lunch',name:'Lunch',...lunch,
       items:[
         {main:'~'+lp.grams+' g cooked '+lp.food.label,guide:proteinPortionGuide(lp.grams)},
-        {main:'~20 g protein from the main protein'},
         {main:'~'+p.lunchRice+' g cooked whole grain',guide:g.lunchRice},
         {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
         {main:'~'+p.veg+' g vegetables',guide:g.veg},
@@ -240,7 +239,6 @@ function mealPlan(day){
     {id:'dinner',name:'Dinner',...dinner,
       items:[
         {main:'~'+dp.grams+' g cooked '+dp.food.label,guide:proteinPortionGuide(dp.grams)},
-        {main:'~20 g protein from the main protein'},
         {main:'~'+p.dinnerRice+' g cooked whole grain',guide:g.dinnerRice},
         {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
         {main:'~'+p.veg+' g vegetables',guide:g.veg},
