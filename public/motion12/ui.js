@@ -355,6 +355,13 @@ function updateInlineExerciseTimer(){
   const box=document.getElementById('inlineExerciseTimer');
   if(!box||!inlineTimer.activeId)return;
   const sec=inlineTimerSeconds();
+  if(inlineTimer.kind==='strengthsets'){
+    const phaseEl=document.getElementById('inlineTimerPhase');if(phaseEl)phaseEl.textContent=inlineTimer.phase==='rest'?'REST':inlineTimer.phase==='complete'?'ALL SETS DONE':'SET '+Math.min(inlineTimer.sets,inlineTimer.setIndex+1)+' READY';
+    const clock=document.getElementById('inlineTimerClock');if(clock)clock.textContent=inlineTimer.phase==='rest'?timerFormat(sec):inlineTimer.phase==='complete'?'✓':(inlineTimer.target||'SET');
+    const primary=box.querySelector('.inline-timer-primary');
+    if(primary&&inlineTimer.phase==='rest')primary.textContent=inlineTimer.running?'Pause':'Resume';
+    return;
+  }
   const phase=inlineTimer.phase==='work'?'WORK':inlineTimer.phase==='rest'?'REST / TRANSITION':inlineTimer.phase==='complete'?'DONE':'REST';
   const phaseEl=document.getElementById('inlineTimerPhase');if(phaseEl)phaseEl.textContent=phase;
   const clock=document.getElementById('inlineTimerClock');if(clock)clock.textContent=timerFormat(sec);
