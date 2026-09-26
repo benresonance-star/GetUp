@@ -449,14 +449,30 @@ function supportBlockMarkup(day,date,w,p){
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
 }
 
-const mondayStrengthSetFlowNames=new Set([
+const strengthSetFlowNames=new Set([
   'Goblet squat',
   'Pull-up / assisted pull-up',
   'Kettlebell Romanian deadlift',
   '1-arm kettlebell press',
   'Suitcase carry',
-  'Plank shoulder tap'
+  'Plank shoulder tap',
+  'Reverse lunge',
+  'Push-up',
+  '1-arm kettlebell row',
+  'Back extension',
+  'Single-leg calf raise',
+  'Kettlebell woodchop',
+  'Lateral lunge',
+  'Ring row',
+  'Plank shoulder tap / kettlebell woodchop'
 ]);
+function strengthFlowDayFromId(id){
+  const m=String(id).match(/^\d{4}-\d{2}-\d{2}-(\d+)-\d+$/);
+  return m?Number(m[1]):programDay();
+}
+function strengthFlowDayLabel(id){
+  return DAYS[strengthFlowDayFromId(id)]||'Next session';
+}
 function strengthFlowConfig(name,target){
   const parsed=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
   const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
@@ -469,29 +485,68 @@ function strengthFlowConfig(name,target){
     loadInputMode:'decimal',
     repsPlaceholder:range?(range[1]+'–'+range[2]):'reps',
     noun:'load',
-    advanceTitle:'Increase load next Monday',
+    advanceTitle:'Increase load',
     advanceText:'Increase the working load one step and return toward the lower end of the prescribed range.'
   };
-  if(name==='Goblet squat')return {...base,advanceText:'Move to the next available kettlebell and return toward the lower end of the 6–10 rep range.'};
+  if(name==='Goblet squat')return {...base,
+    advanceText:'Move to the next available kettlebell and return toward the lower end of the '+base.low+'–'+base.top+' rep range.'
+  };
   if(name==='Pull-up / assisted pull-up')return {...base,
     loadPlaceholder:'BW / +kg / assist',loadInputMode:'text',noun:'load / assistance',
-    advanceTitle:'Progress the pull-up next Monday',
-    advanceText:'If weighted, add 1–2 kg. If assisted, reduce assistance one step and return toward 5–6 clean reps.'
+    advanceTitle:'Progress the pull-up',
+    advanceText:'If weighted, add 1–2 kg. If assisted, reduce assistance one step and return toward the lower end of the rep range.'
   };
   if(name==='Kettlebell Romanian deadlift')return {...base,
-    advanceText:'Increase the working load one step and return toward 8–10 clean reps.'
+    advanceText:'Increase the working load one step and return toward the lower end of the '+base.low+'–'+base.top+' rep range.'
   };
   if(name==='1-arm kettlebell press')return {...base,
-    advanceText:'Move to the next kettlebell if available, then return toward 6–8 clean reps per side. Let the weaker arm govern.'
+    advanceText:'Move to the next kettlebell if available, then return toward the lower end of the rep range per side. Let the weaker arm govern.'
   };
   if(name==='Suitcase carry')return {...base,
-    low:45,top:60,repsPlaceholder:'45–60',noun:'load',
+    low:45,top:60,repsPlaceholder:'45–60 sec',noun:'load',
     advanceText:'Move to the next kettlebell and reset the carry toward 30–45 seconds per side before building back to 60.'
   };
   if(name==='Plank shoulder tap')return {...base,
     loadPlaceholder:'BW / stance',loadInputMode:'text',noun:'variation',
-    advanceTitle:'Progress the variation next Monday',
+    advanceTitle:'Progress the variation',
     advanceText:'Keep bodyweight and make the movement harder by narrowing the stance slightly or slowing the tempo while keeping the hips quiet.'
+  };
+  if(name==='Reverse lunge')return {...base,
+    advanceText:'Increase the kettlebell one step and return toward the lower end of the rep range per leg.'
+  };
+  if(name==='Push-up')return {...base,
+    loadPlaceholder:'variation',loadInputMode:'text',noun:'variation',
+    advanceTitle:'Progress the push-up variation',
+    advanceText:'Move to a harder variation: lower the incline, progress to floor, elevate the feet, or use rings while preserving the same depth and control.'
+  };
+  if(name==='1-arm kettlebell row')return {...base,
+    advanceText:'Move to the next kettlebell and return toward the lower end of the rep range per side.'
+  };
+  if(name==='Back extension')return {...base,
+    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'load / variation',
+    advanceTitle:'Progress the back extension',
+    advanceText:'If bodyweight is controlled, add a light kettlebell held at the chest; otherwise increase the existing load only slightly.'
+  };
+  if(name==='Single-leg calf raise')return {...base,
+    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'load / variation',
+    advanceTitle:'Progress the calf raise',
+    advanceText:'Add a kettlebell or increase the existing load while keeping the full stretch and top pause.'
+  };
+  if(name==='Kettlebell woodchop')return {...base,
+    advanceText:'Increase the kettlebell slightly while keeping crisp control through the feet, hips and trunk.'
+  };
+  if(name==='Lateral lunge')return {...base,
+    advanceText:'Add or increase the goblet load while maintaining the same depth and frontal-plane control.'
+  };
+  if(name==='Ring row')return {...base,
+    loadPlaceholder:'foot position',loadInputMode:'text',noun:'variation',
+    advanceTitle:'Progress the ring row',
+    advanceText:'Move the feet 10–15 cm forward or elevate them slightly while preserving rigid-body control.'
+  };
+  if(name==='Plank shoulder tap / kettlebell woodchop')return {...base,
+    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'variation',
+    advanceTitle:'Progress the current variation',
+    advanceText:'For shoulder taps, narrow the stance or slow the tempo. For woodchops, increase the kettlebell slightly while keeping crisp control.'
   };
   return base;
 }
@@ -524,7 +579,8 @@ function strengthSetCompletedCount(id,total){
 }
 function strengthFlowState(id,name,target){
   const cfg=strengthFlowConfig(name,target);
-  const rest=exerciseRestPreset(name,1,weekNo()).seconds||90;
+  const day=strengthFlowDayFromId(id);
+  const rest=exerciseRestPreset(name,day,weekNo()).seconds||90;
   const completed=strengthSetCompletedCount(id,cfg.sets);
   if(inlineTimer.activeId===id&&inlineTimer.kind==='strengthsets'){
     return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds()};
@@ -585,10 +641,11 @@ function strengthCompletionSummary(id,name,target,entries){
     strengthNormalizeLoad(previous.sets[0]?.load)===normalized[0]&&
     strengthQualifiesForProgression(previous.sets,cfg.top);
   const targetPattern=entries.map(()=>cfg.top).join('/');
+  const dayLabel=strengthFlowDayLabel(id);
   let title=name==='Suitcase carry'?'Build carry time at this load':'Build reps at this '+cfg.noun;
   let text=name==='Suitcase carry'
-    ?'Keep the current load next Monday and build toward 60 seconds per side while keeping posture and grip controlled.'
-    :'Keep the current '+cfg.noun+' next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
+    ?'Keep the current load next '+dayLabel+' and build toward 60 seconds per side while keeping posture and grip controlled.'
+    :'Keep the current '+cfg.noun+' next '+dayLabel+' and aim to add 1 total rep while keeping about 2 reps in reserve.';
   let tone='hold';
   if(qualifies&&previousQualifies){
     title=cfg.advanceTitle;
@@ -605,7 +662,7 @@ function strengthCompletionSummary(id,name,target,entries){
       :'Do not progress yet. Bring every set back into the prescribed range with cleaner reserve before making it harder.';
   }else if(rirs.some(r=>r<2)){
     title='Hold the '+cfg.noun;
-    text='At least one set finished below 2 reps in reserve. Keep the '+cfg.noun+' stable and make the same work feel easier next Monday.';
+    text='At least one set finished below 2 reps in reserve. Keep the '+cfg.noun+' stable and make the same work feel easier next '+dayLabel+'.';
   }else if(!sameLoad){
     title='Standardise the '+cfg.noun;
     text='The '+cfg.noun+' changed across sets. Next Monday use one sustainable working level across all sets before judging progression.';
@@ -628,7 +685,7 @@ function strengthCompletionSummaryMarkup(id,name,target,entries){
       '<div><span>Reps</span><b>'+s.repsText+'</b></div>'+
       '<div><span>RIR</span><b>'+s.rirText+'</b></div>'+
     '</div>'+
-    '<div class="strength-next '+s.tone+'"><span>Next Monday</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
+    '<div class="strength-next '+s.tone+'"><span>Next '+strengthFlowDayLabel(id)+'</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
   '</div>';
 }
 function strengthSetFlowMarkup(id,name,target){
@@ -727,8 +784,8 @@ function exerciseCardMarkup(day,date,w,x,i){
   const id=exId(day,i,date),state=logs[id]||{};
   let target=x[1];if(day===6)target=aerobicTargets[w-1];
   const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
-  if(day===1&&mondayStrengthSetFlowNames.has(x[0])){
-    return '<div class="exercise monday-strength-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
+  if([1,3,5].includes(day)&&strengthSetFlowNames.has(x[0])){
+    return '<div class="exercise strength-session-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
       '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+
       strengthSetFlowMarkup(id,x[0],target)+
       '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
