@@ -635,19 +635,19 @@ function timerViewModel(){
   let label='REST',meta=plan.title,progress=0,detail='';
   if(kind==='intervals'){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
-    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=1;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
-    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?1-sec/smartTimer.duration:0;detail=plan.title;}
+    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=0;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
+    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;}
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
     meta=smartTimer.setIndex>=plan.sets?plan.sets+' sets complete':(smartTimer.setIndex+1)+' of '+plan.sets+' · '+plan.reps+' reps';
-    progress=smartTimer.running&&smartTimer.duration?1-sec/smartTimer.duration:smartTimer.setIndex/plan.sets;
+    progress=smartTimer.setIndex>=plan.sets?0:(smartTimer.running&&smartTimer.duration?sec/smartTimer.duration:1);
     detail=plan.title;
   }else if(kind==='stopwatch'){
-    label='ELAPSED';meta=plan.title;detail=plan.note;
+    label='ELAPSED';meta=plan.title;detail=plan.note;progress=0;
   }else{
     label='REST';
     meta=smartTimer.mode==='session'?plan.title:(smartTimer.exerciseName||'Manual rest');
-    progress=smartTimer.duration?1-sec/smartTimer.duration:0;
+    progress=smartTimer.duration?sec/smartTimer.duration:0;
     detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
   return {plan,sec,kind,label,meta,detail,progress:Math.max(0,Math.min(1,progress))};
