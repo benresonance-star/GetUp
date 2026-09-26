@@ -203,15 +203,36 @@ function loadGuideMarkup(guide){
     .replace(/REDUCE one bell/g,'<b>Reduce one bell</b>');
   return '<div class="tip load-rule"><span class="load-rule-label">Loading</span><p>'+html+'</p></div>';
 }
+function supportTarget(exercise,w){
+  if(exercise[0]==='Sliding hamstring curl'){
+    const sets=(w<=2||w===8||w===12)?1:2;
+    return sets+' × 8–12';
+  }
+  return exercise[1];
+}
+function supportBlockMarkup(day,date,w,p){
+  if(!p.support?.length)return '';
+  const cards=p.support.map((x,i)=>{
+    const id=`${date}-${day}-support-${i}`,state=logs[id]||{},target=supportTarget(x,w);
+    return `<div class="exercise support-exercise ${state.done?'complete':''}" id="ex-${id}">
+      <div class="ex-top"><div class="num">S${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
+      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="bodyweight / light KB" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="3–4 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
+      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
+    </div>`;
+  }).join('');
+  return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
+}
 function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===6)target=aerobicTargets[w-1];exHtml+=`<div class="exercise ${state.done?'complete':''}" id="ex-${id}"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
       <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>${loadGuideMarkup(x[4])}</div>`});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
+ const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <button class="session-timer-link" type="button" onclick="showPage('timerPage')"><div><span class="tag">Smart timer</span><h3>Use today’s prescribed timing</h3><p>Rest, sets or aerobic intervals are configured automatically.</p></div><span class="session-timer-arrow">→</span></button>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
  <div><section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
+ ${supportHtml}
  <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  window.scrollTo({top:0,behavior:'smooth'});
 }
