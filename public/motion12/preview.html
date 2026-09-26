@@ -250,6 +250,100 @@ html.standalone main{
   .meal-check{grid-column:2;grid-row:1}
   .meal-numbers{grid-column:2;grid-row:2}
 }
+
+/* Meal checklist + macro layout */
+.meal-row{
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:start;
+  gap:12px;
+}
+.meal-check{
+  grid-column:1;
+  grid-row:1;
+  margin-top:2px;
+}
+.meal-copy{
+  grid-column:2;
+  min-width:0;
+}
+.meal-kcal{
+  grid-column:3;
+  display:flex;
+  align-items:baseline;
+  gap:5px;
+  white-space:nowrap;
+  text-align:right;
+}
+.meal-kcal b{
+  color:var(--volt);
+  font-size:20px;
+  line-height:1;
+}
+.meal-kcal span{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+}
+.meal-macros{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.meal-macros span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 7px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#101215;
+  color:#d6d8dc;
+  font-size:10px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.meal-macros b{
+  color:var(--volt);
+}
+.macro-total{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  padding:10px 4px 0;
+  color:var(--muted);
+  font-size:11px;
+}
+.macro-total b{
+  color:var(--ink);
+  margin-right:2px;
+}
+.macro-total span{
+  padding:4px 7px;
+  border-radius:999px;
+  background:var(--surface);
+  border:1px solid var(--line);
+}
+.meal-row.done .meal-macros span,
+.meal-row.done .meal-kcal{
+  opacity:.65;
+}
+@media(max-width:390px){
+  .meal-row{
+    grid-template-columns:auto minmax(0,1fr);
+  }
+  .meal-check{grid-column:1;grid-row:1}
+  .meal-copy{grid-column:2;grid-row:1 / span 2}
+  .meal-kcal{
+    grid-column:2;
+    grid-row:2;
+    justify-self:start;
+    margin-top:10px;
+  }
+}
 </style>
 </head>
 <body>
@@ -446,11 +540,33 @@ function mealPlan(day){
   const breakfast=round50(total*.25);
   const lunch=round50((total-breakfast-shake)/2);
   const dinner=total-breakfast-lunch-shake;
-  return {total,meals:[
-    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
-    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
+
+  // Protein is fixed first. Fat is kept near 30% of eating-day calories;
+  // carbohydrate fills the remaining calorie budget.
+  const fatTarget=round5((total*.30)/9);
+  const shakeFat=0;
+  const breakfastFat=round5(fatTarget*.30);
+  const lunchFat=round5(fatTarget*.35);
+  const dinnerFat=Math.max(0,fatTarget-breakfastFat-lunchFat-shakeFat);
+  const macro=(kcal,protein,fat)=>({
+    protein,
+    fat,
+    carbs:Math.max(0,Math.round((kcal-protein*4-fat*9)/4))
+  });
+  const b=macro(breakfast,ps.breakfast,breakfastFat);
+  const l=macro(lunch,ps.lunch,lunchFat);
+  const d=macro(dinner,ps.dinner,dinnerFat);
+  const sh=macro(shake,ps.shake,shakeFat);
+  const macroTotals={
+    protein:b.protein+l.protein+d.protein+sh.protein,
+    carbs:b.carbs+l.carbs+d.carbs+sh.carbs,
+    fat:b.fat+l.fat+d.fat+sh.fat
+  };
+  return {total,macroTotals,meals:[
+    {name:'Breakfast',kcal:breakfast,...b,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
+    {name:'Lunch',kcal:lunch,...l,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Dinner',kcal:dinner,...d,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Protein shake',kcal:shake,...sh,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
   ],note:'Keep protein portions stable. Adjust rice and added fats first when calories need moving.'};
 }
 function nutritionSummary(day=programDay()){
@@ -478,8 +594,8 @@ function mealRows(day,date=todayISO()){
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
   return '<div class="meal-list">'+plan.meals.map((m,i)=>{
     const key=mealKey(date,i),done=!!logs[key]?.done;
-    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p></div><div class="meal-numbers"><b>'+m.kcal+'</b><span>kcal</span><b>'+m.protein+'g</b><span>protein</span></div><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span></button>';
-  }).join('')+'<div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
+    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
+  }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
 }
 function toggleMeal(key){
   logs[key]=logs[key]||{};
