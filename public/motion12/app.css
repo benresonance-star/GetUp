@@ -417,3 +417,190 @@ html.standalone main{
   font-weight:800;
 }
 .plan-gap.over{color:var(--orange)}
+
+/* Compact iPhone Home dashboard */
+.compact-home{
+  display:grid;
+  gap:8px;
+  padding:0 0 4px;
+}
+.compact-session{
+  width:100%;
+  border:1px solid rgba(255,77,46,.45);
+  background:linear-gradient(135deg,#ff4d2e,#f03f26);
+  color:#0b0c0e;
+  border-radius:22px;
+  padding:14px 15px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  text-align:left;
+}
+.compact-kicker,.compact-label{
+  display:block;
+  font-size:9px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.compact-session h1{
+  margin:5px 0 3px;
+  font-size:28px;
+  line-height:.95;
+  letter-spacing:-.055em;
+  text-transform:uppercase;
+}
+.compact-session p{
+  margin:0;
+  font-size:11px;
+  font-weight:800;
+  opacity:.75;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.compact-session-right{
+  text-align:right;
+  display:grid;
+  gap:8px;
+  justify-items:end;
+}
+.compact-session-right b{font-size:13px}
+.compact-session-right span{
+  background:#0b0c0e;
+  color:white;
+  border-radius:999px;
+  padding:8px 10px;
+  font-size:10px;
+  font-weight:950;
+}
+.compact-week{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.compact-week .daydot{
+  border-radius:11px;
+  padding:6px 1px 5px;
+  min-height:38px;
+}
+.compact-week .daydot b{font-size:9px}
+.compact-week .daydot span{
+  margin-top:4px;
+  width:5px;
+  height:5px;
+}
+.compact-metrics,.compact-bottom-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.compact-card{
+  min-width:0;
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:18px;
+  padding:11px 12px;
+}
+.compact-card strong{
+  display:block;
+  margin-top:6px;
+  font-size:20px;
+  line-height:1;
+  letter-spacing:-.045em;
+}
+.compact-card small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.compact-metrics .compact-card:first-child strong{color:var(--volt)}
+.compact-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.compact-card-head b{
+  color:var(--volt);
+  font-size:11px;
+}
+.compact-meal-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:5px;
+}
+.compact-meal{
+  min-width:0;
+  border:1px solid var(--line);
+  background:#101215;
+  border-radius:10px;
+  min-height:34px;
+  padding:5px 6px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:#d7d9dd;
+  font-size:9px;
+  font-weight:850;
+  text-align:left;
+}
+.compact-meal .meal-check{
+  width:17px;
+  height:17px;
+  min-width:17px;
+  font-size:10px;
+  margin:0;
+}
+.compact-meal.done{
+  opacity:.62;
+}
+.compact-meal.done .meal-check{
+  background:var(--volt);
+  border-color:var(--volt);
+}
+.compact-fast,.compact-empty{
+  min-height:72px;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  text-align:center;
+}
+.compact-action{
+  color:var(--ink);
+  text-align:left;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.compact-action strong{color:var(--volt)}
+@media(max-width:520px){
+  #homePage.compact-active{
+    height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 184px);
+    min-height:560px;
+    overflow:hidden;
+  }
+  #homePage.compact-active .compact-home{
+    height:100%;
+    align-content:start;
+  }
+}
+@media(max-width:380px),(max-height:760px){
+  .compact-home{gap:6px}
+  .compact-session{padding:11px 12px;border-radius:18px}
+  .compact-session h1{font-size:23px}
+  .compact-session-right span{padding:7px 8px}
+  .compact-card{padding:9px 10px;border-radius:15px}
+  .compact-card strong{font-size:17px}
+  .compact-meal-grid{gap:4px}
+  .compact-meal{min-height:30px;padding:4px 5px}
+  .compact-week .daydot{min-height:34px;padding:5px 1px}
+}
