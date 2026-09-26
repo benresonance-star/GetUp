@@ -1243,3 +1243,19 @@ html.standalone main{
 @media(max-width:390px){
   .load-rule p{font-size:10.5px;line-height:1.45}
 }
+
+/* Low-fatigue support block beneath conditioning circuits */
+.support-section{
+  margin-top:18px;
+}
+.support-exercise{
+  border-color:rgba(99,210,214,.22);
+  background:linear-gradient(135deg,rgba(99,210,214,.035),var(--surface) 48%);
+}
+.support-exercise .num{
+  color:#a9e6e8;
+  border-color:rgba(99,210,214,.25);
+}
+.support-section .section-head small{
+  color:#a9e6e8;
+}
