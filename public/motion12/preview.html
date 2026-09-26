@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="compact-calories-20260926" />
+  <meta name="motion12-build" content="streak-progress-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -780,6 +780,113 @@ html.standalone main{
 .compact-meal.done .compact-meal-kcal{
   opacity:.7;
 }
+
+/* Completed-day streak + adherence */
+.streak-band{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:1.35fr .8fr .8fr;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#111316;
+  overflow:hidden;
+}
+.streak-band > div{
+  min-width:0;
+  padding:9px 11px;
+}
+.streak-band > div + div{
+  border-left:1px solid var(--line);
+}
+.streak-band span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.streak-band b{
+  display:block;
+  margin-top:3px;
+  font-size:13px;
+  line-height:1;
+  white-space:nowrap;
+}
+.streak-main b{color:var(--volt)}
+.compact-streak{
+  margin-top:0;
+  border-radius:14px;
+}
+.compact-streak > div{
+  padding:8px 10px;
+}
+.compact-streak b{
+  font-size:12px;
+}
+.adherence-card{
+  border-color:rgba(255,77,46,.28);
+  background:linear-gradient(135deg,rgba(255,77,46,.08),var(--surface) 45%);
+}
+.adherence-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  margin-top:12px;
+}
+.adherence-grid > div{
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:10px 8px;
+  background:#101215;
+}
+.adherence-grid b{
+  display:block;
+  color:var(--volt);
+  font-size:20px;
+  line-height:1;
+}
+.adherence-grid span{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.2;
+  text-transform:uppercase;
+  font-weight:850;
+}
+.adherence-track{
+  height:7px;
+  margin-top:12px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#282b30;
+}
+.adherence-track i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--volt);
+}
+.adherence-card small{
+  display:block;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+@media(max-width:390px){
+  .streak-band > div{padding:8px 8px}
+  .streak-band span{font-size:7px}
+  .streak-band b{font-size:11px}
+  .adherence-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-height:760px){
+  #homePage.compact-active .compact-streak > div{padding:6px 8px}
+  #homePage.compact-active .compact-streak b{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -1103,6 +1210,42 @@ function dietText(day){
 function formatDate(){const d=new Date();const weekday=new Intl.DateTimeFormat('en-AU',{weekday:'long'}).format(d).toUpperCase();const rest=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d).toUpperCase();return weekday+' · '+rest}
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
+function programProgressStats(){
+  const start=new Date(settings.startDate+'T00:00:00');
+  const today=new Date(todayISO()+'T00:00:00');
+  const programEnd=new Date(start); programEnd.setDate(start.getDate()+83);
+  if(today<start)return {currentStreak:0,bestStreak:0,completed:0,elapsed:0,programDays:84,weekCompleted:0,weekElapsed:0,adherence:0};
+
+  const effective=today>programEnd?programEnd:today;
+  const elapsed=Math.max(0,Math.min(84,Math.floor((effective-start)/86400000)+1));
+  const done=[];
+  for(let i=0;i<elapsed;i++){
+    const dt=new Date(start); dt.setDate(start.getDate()+i);
+    const ds=iso(dt),dd=dt.getDay();
+    done.push(completedOn(ds,dd));
+  }
+
+  let bestStreak=0,run=0;
+  done.forEach(v=>{run=v?run+1:0;if(run>bestStreak)bestStreak=run});
+
+  let anchor=done.length-1;
+  if(today<=programEnd && anchor>=0 && !done[anchor])anchor--;
+  let currentStreak=0;
+  while(anchor>=0 && done[anchor]){currentStreak++;anchor--}
+
+  const currentWeek=Math.max(1,Math.min(12,Math.floor((effective-start)/604800000)+1));
+  const weekStartIndex=(currentWeek-1)*7;
+  const weekElapsed=Math.max(0,Math.min(7,elapsed-weekStartIndex));
+  let weekCompleted=0;
+  for(let i=weekStartIndex;i<weekStartIndex+weekElapsed;i++)if(done[i])weekCompleted++;
+
+  const completed=done.filter(Boolean).length;
+  return {
+    currentStreak,bestStreak,completed,elapsed,programDays:84,
+    weekCompleted,weekElapsed,
+    adherence:elapsed?Math.round((completed/elapsed)*100):0
+  };
+}
 </script>
 <script>function updateHomeModeToggle(){
   const b=document.getElementById('homeModeToggle');
@@ -1195,6 +1338,16 @@ function compactMealCount(day,date){
   const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
+function streakBand(compact=false){
+  const s=programProgressStats();
+  const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
+  const program=s.completed+'/'+s.programDays;
+  return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
+    '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
+    '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
+    '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
+  '</div>';
+}
 function renderCompactHome(d,w,p,fat,cal,strip){
   const date=todayISO(),tot=intakeTotals(d,date),plan=mealPlan(d);
   const remaining=tot?.remaining;
@@ -1209,6 +1362,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </button>
 
       <div class="compact-week">${strip}</div>
+      ${streakBand(true)}
 
       <div class="compact-metrics">
         <div class="compact-card">
@@ -1244,7 +1398,7 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
   <section class="hero"><div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${completedOn(todayISO(),d)?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
-  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div></section>
+  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div>${streakBand(false)}</section>
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>calories → portions</small></div>
@@ -1280,9 +1434,9 @@ function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;localStorage.setItem
 function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;localStorage.setItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
 function renderProgress(){
   const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
-  const p=protein(),fat=fatLossTargets(),cal=calorieTargets();
+  const p=protein(),fat=fatLossTargets(),cal=calorieTargets(),ps=programProgressStats();
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
-  document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">Functional age dashboard</div><h1>Progress</h1><p>Track six useful measures. Calories are an estimate; the weight trend tells us whether the estimate is right.</p></div><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
+  document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='homePage')renderHome();if(id==='daysPage')renderDays();if(id==='progressPage')renderProgress();window.scrollTo({top:0,behavior:'smooth'})}
