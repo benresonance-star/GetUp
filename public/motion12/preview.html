@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="fruit-lower-rice-20260926" />
+  <meta name="motion12-build" content="household-portions-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -686,6 +686,81 @@ html.standalone main{
   .home-mode-toggle{padding:0 8px}
   .home-mode-label{display:none}
 }
+
+/* Relaxed compact Home spacing */
+@media(max-width:520px){
+  #homePage.compact-active .compact-home{
+    gap:12px;
+  }
+  #homePage.compact-active .compact-session{
+    padding:18px 17px;
+    border-radius:24px;
+    min-height:112px;
+  }
+  #homePage.compact-active .compact-session h1{
+    font-size:31px;
+    margin:7px 0 5px;
+  }
+  #homePage.compact-active .compact-session p{
+    font-size:11.5px;
+  }
+  #homePage.compact-active .compact-session-right{
+    gap:10px;
+  }
+  #homePage.compact-active .compact-session-right span{
+    padding:9px 12px;
+  }
+  #homePage.compact-active .compact-week{
+    gap:6px;
+  }
+  #homePage.compact-active .compact-week .daydot{
+    min-height:44px;
+    padding:8px 2px 7px;
+    border-radius:13px;
+  }
+  #homePage.compact-active .compact-metrics,
+  #homePage.compact-active .compact-bottom-grid{
+    gap:10px;
+  }
+  #homePage.compact-active .compact-card{
+    padding:14px 14px;
+    border-radius:20px;
+  }
+  #homePage.compact-active .compact-card strong{
+    margin-top:8px;
+    font-size:22px;
+  }
+  #homePage.compact-active .compact-card small{
+    margin-top:7px;
+    font-size:10.5px;
+  }
+  #homePage.compact-active .compact-card-head{
+    margin-bottom:11px;
+  }
+  #homePage.compact-active .compact-meal-grid{
+    gap:7px;
+  }
+  #homePage.compact-active .compact-meal{
+    min-height:40px;
+    padding:7px 8px;
+    border-radius:12px;
+    font-size:10px;
+  }
+  #homePage.compact-active .compact-meal .meal-check{
+    width:20px;
+    height:20px;
+    min-width:20px;
+  }
+}
+@media(max-width:380px),(max-height:760px){
+  #homePage.compact-active .compact-home{gap:8px}
+  #homePage.compact-active .compact-session{padding:13px 14px;min-height:auto}
+  #homePage.compact-active .compact-session h1{font-size:25px}
+  #homePage.compact-active .compact-card{padding:10px 11px}
+  #homePage.compact-active .compact-card strong{font-size:18px}
+  #homePage.compact-active .compact-meal{min-height:32px;padding:5px 6px;font-size:9px}
+  #homePage.compact-active .compact-week .daydot{min-height:36px;padding:5px 1px}
+}
 </style>
 </head>
 <body>
@@ -735,8 +810,8 @@ html.standalone main{
         <div class="field"><label>Nuts (g)</label><input type="number" id="nutsInput" step="5" min="0"></div>
         <div class="field"><label>Latte milk each (ml)</label><input type="number" id="latteMilkInput" step="10" min="0"></div>
         <div class="field"><label>Cooked meat/fish (g)</label><input type="number" id="meatInput" step="10" min="0"></div>
-        <div class="field"><label>Lunch cooked rice (g)</label><input type="number" id="lunchRiceInput" step="10" min="0"></div>
-        <div class="field"><label>Dinner cooked rice (g)</label><input type="number" id="dinnerRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Lunch rice — cooked weight (g)</label><input type="number" id="lunchRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Dinner rice — cooked weight (g)</label><input type="number" id="dinnerRiceInput" step="10" min="0"></div>
         <div class="field"><label>Vegetables each meal (g)</label><input type="number" id="vegInput" step="10" min="0"></div>
         <div class="field"><label>Oil/fat each meal (g)</label><input type="number" id="oilInput" step="1" min="0"></div>
         <div class="field"><label>Protein powder (g)</label><input type="number" id="powderInput" step="5" min="0"></div>
@@ -882,17 +957,31 @@ function handLabel(n,singular,plural){
   const v=Math.round(n*2)/2;
   return handCount(n)+' '+(v===1?singular:plural);
 }
+function quarterFraction(n){
+  const v=Math.max(.25,Math.round(n*4)/4);
+  const whole=Math.floor(v),q=Math.round((v-whole)*4);
+  const frac=q===1?'¼':q===2?'½':q===3?'¾':'';
+  return whole?(whole+(frac?frac:'')):frac;
+}
+function cupMeasure(cups){
+  const v=Math.max(.25,Math.round(cups*4)/4);
+  return '~'+quarterFraction(v)+' cup'+(v>1?'s':'');
+}
+function tspMeasure(tsp){
+  const v=Math.max(.5,Math.round(tsp*2)/2);
+  return '~'+(Number.isInteger(v)?v:v.toFixed(1))+' tsp';
+}
 function portionGuide(){
   const p=settings.portions;
   return {
-    yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands'),
-    berries:handLabel(p.berries/200,'fist','fists'),
-    nuts:handLabel(p.nuts/15,'thumb','thumbs'),
-    meat:handLabel(p.meat/80,'palm','palms'),
-    lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands'),
-    dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands'),
-    veg:handLabel(p.veg/112.5,'fist','fists'),
-    oil:handLabel(p.oil/7.5,'thumb','thumbs')
+    yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands')+' · '+cupMeasure(p.yogurt/250),
+    berries:handLabel(p.berries/200,'fist','fists')+' · '+cupMeasure(p.berries/135),
+    nuts:handLabel(p.nuts/15,'thumb','thumbs')+' · '+cupMeasure(p.nuts/100),
+    meat:handLabel(p.meat/80,'palm','palms')+' · '+cupMeasure(p.meat/140)+' chopped',
+    lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.lunchRice/180),
+    dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.dinnerRice/180),
+    veg:handLabel(p.veg/112.5,'fist','fists')+' · '+cupMeasure(p.veg/112.5),
+    oil:handLabel(p.oil/7.5,'thumb','thumbs')+' · '+tspMeasure(p.oil/5)
   };
 }
 function beverageMacros(){
@@ -964,20 +1053,20 @@ function mealPlan(day){
 
   const meals=[
     {id:'breakfast',name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g nuts ('+g.nuts+')'},
-    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
-    {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
-    {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
-    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder + ~'+p.shakeMilk+' ml full-cream milk'}
+    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
+    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
+    {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice, cooked weight ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
+    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
+    {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice, cooked weight ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
+    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder (1 scoop) + ~'+p.shakeMilk+' ml full-cream milk ('+cupMeasure(p.shakeMilk/250)+')'}
   ];
   const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
   const total=Math.round(totals.kcal);
   const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
   const gap=c.eatingDay-total;
-  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Check labels for your actual yoghurt, milk and protein powder. A positive gap means calories remain in the daily target.'};
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Rice grams are cooked weight, not dry. Household measures are approximate; cups use a 250 ml metric cup. Check labels for your actual yoghurt, milk and protein powder. A positive gap means calories remain in the daily target.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
