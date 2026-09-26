@@ -209,6 +209,47 @@ html.standalone main{
 }
 
 .mobility-home-card{width:100%;text-align:left;color:var(--ink);cursor:pointer;-webkit-appearance:none;appearance:none}.mobility-home-card .right{font-size:22px;color:var(--volt)}
+
+.meal-toggle{
+  width:100%;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  font:inherit;
+}
+.meal-check{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid #45484f;
+  display:grid;
+  place-items:center;
+  flex:none;
+  font-size:16px;
+  font-weight:950;
+  color:#0b0c0e;
+}
+.meal-row.done{
+  opacity:.68;
+}
+.meal-row.done .meal-check{
+  background:var(--volt);
+  border-color:var(--volt);
+}
+.meal-row.done .meal-name{
+  text-decoration:line-through;
+  text-decoration-thickness:1.5px;
+}
+.meal-row{
+  grid-template-columns:1fr auto auto;
+}
+@media(max-width:390px){
+  .meal-row{grid-template-columns:1fr auto}
+  .meal-check{grid-column:2;grid-row:1}
+  .meal-numbers{grid-column:2;grid-row:2}
+}
 </style>
 </head>
 <body>
@@ -430,11 +471,25 @@ function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)retu
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
 </script>
 <script>function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
-function mealRows(day){
+function mealKey(date,index){return 'meal:'+date+':'+index}
+function mealRows(day,date=todayISO()){
   const plan=mealPlan(day);
   if(!plan)return '<div class="card"><p>Add bodyweight to create the meal plan.</p></div>';
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
-  return '<div class="meal-list">'+plan.meals.map(m=>'<div class="meal-row"><div><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p></div><div class="meal-numbers"><b>'+m.kcal+'</b><span>kcal</span><b>'+m.protein+'g</b><span>protein</span></div></div>').join('')+'<div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
+  return '<div class="meal-list">'+plan.meals.map((m,i)=>{
+    const key=mealKey(date,i),done=!!logs[key]?.done;
+    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p></div><div class="meal-numbers"><b>'+m.kcal+'</b><span>kcal</span><b>'+m.protein+'g</b><span>protein</span></div><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span></button>';
+  }).join('')+'<div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
+}
+function toggleMeal(key){
+  logs[key]=logs[key]||{};
+  logs[key].done=!logs[key].done;
+  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  document.querySelectorAll('[data-meal-key="'+key+'"]').forEach(el=>{
+    el.classList.toggle('done',logs[key].done);
+    const check=el.querySelector('.meal-check');
+    if(check)check.textContent=logs[key].done?'✓':'';
+  });
 }
 function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').innerHTML=`
@@ -448,7 +503,7 @@ function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText
     <div class="card diet-card"><span class="tag">Protein · eating day</span><div class="big">${protein()?`~${protein()} G`:`SET WEIGHT`}</div><p>${proteinSplit()?`Meals ${proteinSplit().breakfast}g / ${proteinSplit().lunch}g / ${proteinSplit().dinner}g + shake ${proteinSplit().shake}g · weekly average ~${weeklyProteinAverage()} g/day with Monday fast`:`Add bodyweight to calculate protein.`}</p></div>
     <div class="card diet-card"><span class="tag">Calorie target</span><div class="big ${d===1?`fast`:``}">${d===1?`FAST`:cal?`~${cal.eatingDay}`:`SET DETAILS`}</div><p>${d===1?`0 kcal Monday assumption · this must match how you actually fast.`:cal?`kcal today · maintenance ~${cal.maintenance} · planned loss ~${cal.predictedLoss} kg/week · target ${fat.low}–${fat.high}`:`Add bodyweight; height/age/sex improve the estimate.`}</p></div>
   </div>
-  ${mealRows(d)}
+  ${mealRows(d,todayISO())}
   </section>
   <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><button class="card row mobility-home-card" type="button" onclick="openMobilityToday()"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></button></section>
   </div></div>`;
@@ -465,7 +520,7 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
  const diet=dietText(day), key=`${date}-${day}`;
  document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="timer"><div class="eyebrow">Session / rest timer</div><div class="clock" id="clock">00:00</div><div class="timer-actions"><button class="primary" onclick="toggleTimer()" id="timerToggle">Start</button><button onclick="setTimer(60)">1:00</button><button onclick="setTimer(90)">1:30</button><button onclick="resetTimer()">Reset</button></div></div>
- <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div><div class="card" style="margin-top:10px"><span class="tag">Food</span><h3 style="margin-top:10px" class="${day===1?'fast':''}">${diet[0]}</h3><p>${diet[1]}. ${diet[2]}</p><div class="nutrition-strip">${nutritionSummary(day)}</div></div><div style="margin-top:10px">${mealRows(day)}</div></div>
+ <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div><div class="card" style="margin-top:10px"><span class="tag">Food</span><h3 style="margin-top:10px" class="${day===1?'fast':''}">${diet[0]}</h3><p>${diet[1]}. ${diet[2]}</p><div class="nutrition-strip">${nutritionSummary(day)}</div></div><div style="margin-top:10px">${mealRows(day,date)}</div></div>
  <div><section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  updateClock(); window.scrollTo({top:0,behavior:'smooth'});
