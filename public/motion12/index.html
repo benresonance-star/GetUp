@@ -52,6 +52,23 @@
     <div class="field"><label>Sex for calorie estimate</label><select id="sexInput"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option></select></div>
     <div class="field"><label>Daily step baseline</label><input type="number" id="stepsInput" step="500" min="0"></div>
     <div class="field"><label>Known maintenance calories — optional</label><input type="number" id="maintenanceInput" step="50" min="1200" max="6000" placeholder="Overrides estimate if known"></div>
+    <details class="portion-settings">
+      <summary>Portion calibration</summary>
+      <p class="settings-note">Edit these once to match your usual portions. Calories/macros recalculate from representative food values.</p>
+      <div class="settings-grid">
+        <div class="field"><label>Greek yoghurt (g)</label><input type="number" id="yogurtInput" step="10" min="0"></div>
+        <div class="field"><label>Berries (g)</label><input type="number" id="berriesInput" step="10" min="0"></div>
+        <div class="field"><label>Nuts (g)</label><input type="number" id="nutsInput" step="5" min="0"></div>
+        <div class="field"><label>Latte milk each (ml)</label><input type="number" id="latteMilkInput" step="10" min="0"></div>
+        <div class="field"><label>Cooked meat/fish (g)</label><input type="number" id="meatInput" step="10" min="0"></div>
+        <div class="field"><label>Lunch cooked rice (g)</label><input type="number" id="lunchRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Dinner cooked rice (g)</label><input type="number" id="dinnerRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Vegetables each meal (g)</label><input type="number" id="vegInput" step="10" min="0"></div>
+        <div class="field"><label>Oil/fat each meal (g)</label><input type="number" id="oilInput" step="1" min="0"></div>
+        <div class="field"><label>Protein powder (g)</label><input type="number" id="powderInput" step="5" min="0"></div>
+        <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
+      </div>
+    </details>
     <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
   </div>
 </div>
