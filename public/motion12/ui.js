@@ -480,11 +480,18 @@ function exercisePresetMarkup(){
     }).join('')+
   '</div></section>';
 }
+let timerPhaseTransitionUntil=0;
 function saveSmartTimer(){localStorage.setItem('motion12.timer',JSON.stringify(smartTimer))}
 function timerFormat(sec){
   sec=Math.max(0,Math.floor(sec||0));
   const m=Math.floor(sec/60),s=sec%60;
   return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function timerPhaseReadable(label){
+  return String(label||'')
+    .toLowerCase()
+    .replace(/\bkb\b/g,'KB')
+    .replace(/\b\w/g,m=>m.toUpperCase());
 }
 function timerConfigure(mode=smartTimer.mode||'session',force=false){
   const dayKey=todayISO()+':'+weekNo();
@@ -556,7 +563,10 @@ function timerTick(){
       smartTimer.endAt=previousEnd+phase.seconds*1000;
       timerBeep();
     }
-    if(changed)saveSmartTimer();
+    if(changed){
+      timerPhaseTransitionUntil=Date.now()+190;
+      saveSmartTimer();
+    }
   }else if(smartTimer.kind!=='stopwatch'&&now>=smartTimer.endAt){
     smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;saveSmartTimer();timerBeep();
   }
@@ -614,6 +624,7 @@ function timerSkipPhase(){
     smartTimer.duration=phase.seconds;smartTimer.remaining=phase.seconds;
     if(smartTimer.running)smartTimer.endAt=Date.now()+phase.seconds*1000;
   }
+  timerPhaseTransitionUntil=Date.now()+190;
   saveSmartTimer();timerBeep();renderTimerPage();
 }
 function timerCompleteSet(){
@@ -632,11 +643,18 @@ function timerCompleteSet(){
 function timerViewModel(){
   timerConfigure(smartTimer.mode||'session',false);
   const plan=timerSessionPlan(),sec=timerCurrentSeconds(),kind=smartTimer.kind;
-  let label='REST',meta=plan.title,progress=0,detail='';
+  let label='REST',meta=plan.title,progress=0,detail='',nextText='';
   if(kind==='intervals'){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
-    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=0;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
-    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;}
+    if(smartTimer.phaseIndex>=plan.phases.length){
+      label='COMPLETE';meta=plan.title;progress=0;
+      detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';
+    }else{
+      label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;
+      progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
+      const next=plan.phases[smartTimer.phaseIndex+1];
+      nextText=next?'Next · '+timerPhaseReadable(next.label)+' '+next.seconds+' sec':'Next · Complete';
+    }
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
     meta=smartTimer.setIndex>=plan.sets?plan.sets+' sets complete':(smartTimer.setIndex+1)+' of '+plan.sets+' · '+plan.reps+' reps';
@@ -654,14 +672,29 @@ function timerViewModel(){
   const stepAngle=duration>0?360/duration:360;
   const gapAngle=duration>0?Math.min(1.6,Math.max(.55,stepAngle*.16)):0;
   const fillAngle=Math.max(.1,stepAngle-gapAngle);
+  const majorStepAngle=duration>0?stepAngle*5:360;
+  const majorGapAngle=duration>0?Math.min(3.2,Math.max(1.5,gapAngle*1.9)):0;
+  const normalizedProgress=Math.max(0,Math.min(1,progress));
+  const transitioning=Date.now()<timerPhaseTransitionUntil;
   return {
-    plan,sec,kind,label,meta,detail,
-    progress:Math.max(0,Math.min(1,progress)),
-    duration,stepAngle,gapAngle,fillAngle
+    plan,sec,kind,label,meta,detail,nextText,
+    progress:normalizedProgress,
+    ringProgress:transitioning?0:normalizedProgress,
+    transitioning,
+    duration,stepAngle,gapAngle,fillAngle,majorStepAngle,majorGapAngle
   };
 }
+function timerPrimaryLabel(vm){
+  if(smartTimer.running)return 'Pause';
+  if(vm.kind==='stopwatch')return smartTimer.stopwatchElapsed>0?'Resume':'Start';
+  if(vm.kind==='intervals'&&smartTimer.phaseIndex>=vm.plan.phases.length)return 'Start again';
+  const sec=timerCurrentSeconds(),duration=Math.max(0,Number(smartTimer.duration)||0);
+  if(duration>0&&sec>0&&sec<duration)return 'Resume';
+  if(duration>0&&sec<=0)return 'Start again';
+  return 'Start';
+}
 function timerControls(vm){
-  const primary='<button class="timer-primary" onclick="timerStartPause()">'+(smartTimer.running?'Pause':'Start')+'</button>';
+  const primary='<button class="timer-primary" onclick="timerStartPause()">'+timerPrimaryLabel(vm)+'</button>';
   if(vm.kind==='intervals')return primary+'<button onclick="timerSkipPhase()">Skip phase</button><button onclick="timerReset()">Reset</button>';
   if(vm.kind==='sets'){
     if(smartTimer.setIndex>=vm.plan.sets)return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
@@ -684,7 +717,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.progress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><em id="timerNext">'+vm.nextText+'</em></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -699,12 +732,15 @@ function updateSmartTimerDisplay(){
   clock.textContent=timerFormat(vm.sec);
   const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
+  const next=document.getElementById('timerNext');if(next)next.textContent=vm.nextText;
   const ring=document.getElementById('timerRing');
   if(ring){
-    ring.style.setProperty('--timer-progress',(vm.progress*360)+'deg');
+    ring.style.setProperty('--timer-progress',(vm.ringProgress*360)+'deg');
     ring.style.setProperty('--timer-step-angle',vm.stepAngle+'deg');
     ring.style.setProperty('--timer-gap-angle',vm.gapAngle+'deg');
     ring.style.setProperty('--timer-fill-angle',vm.fillAngle+'deg');
+    ring.style.setProperty('--timer-major-step-angle',vm.majorStepAngle+'deg');
+    ring.style.setProperty('--timer-major-gap-angle',vm.majorGapAngle+'deg');
   }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
 }
