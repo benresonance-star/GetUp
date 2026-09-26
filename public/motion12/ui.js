@@ -89,11 +89,30 @@ function compactMealCount(day,date){
   const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
+const MOTIVATION_QUOTES=[
+  {text:"Don't count the days; make the days count.",by:"Muhammad Ali"},
+  {text:"It's hard to beat a person who never gives up.",by:"Babe Ruth"},
+  {text:"The first wealth is health.",by:"Ralph Waldo Emerson"},
+  {text:"Energy and persistence conquer all things.",by:"Benjamin Franklin"},
+  {text:"Knowing is not enough; we must apply.",by:"Bruce Lee"},
+  {text:"The only place success comes before work is in the dictionary.",by:"Vince Lombardi"},
+  {text:"Believe you can and you're halfway there.",by:"Theodore Roosevelt"},
+  {text:"Exercise is king. Nutrition is queen.",by:"Jack LaLanne"},
+  {text:"I can accept failure; I can't accept not trying.",by:"Michael Jordan"},
+  {text:"Everything negative is an opportunity for me to rise.",by:"Kobe Bryant"},
+  {text:"A champion is defined by how they recover when they fall.",by:"Serena Williams"},
+  {text:"Strength does not come from winning.",by:"Arnold Schwarzenegger"}
+];
+function dailyMotivationQuote(date=todayISO()){
+  const day=Math.floor(new Date(date+'T00:00:00').getTime()/86400000);
+  return MOTIVATION_QUOTES[((day%MOTIVATION_QUOTES.length)+MOTIVATION_QUOTES.length)%MOTIVATION_QUOTES.length];
+}
 function streakBand(compact=false){
-  const s=programProgressStats();
+  const s=programProgressStats(),q=dailyMotivationQuote();
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
   const program=s.completed+'/'+s.programDays;
   return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
+    '<div class="streak-quote">“'+q.text+'” <span>— '+q.by+'</span></div>'+
     '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
     '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
     '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
