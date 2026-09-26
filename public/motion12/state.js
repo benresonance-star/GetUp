@@ -117,13 +117,13 @@ function mealPlan(day){
   };
 
   return {total,macroTotals,meals:[
-    {name:'Breakfast',kcal:breakfast,...b,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
-    {name:'Latte 1',kcal:latte1,...la,portion:'Espresso + ~200 ml full-cream milk. No added sugar.'},
-    {name:'Lunch',kcal:lunch,...l,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Latte 2',kcal:latte2,...la,portion:'Espresso + ~200 ml full-cream milk. No added sugar.'},
-    {name:'Dinner',kcal:dinner,...d,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Protein shake',kcal:shake,...sh,portion:'1 scoop protein powder + ~250 ml full-cream milk. No extra fruit unless calories are borrowed from a meal.'}
-  ],note:'Milk calories are already included. Keep protein stable; adjust rice and added fats first when calories need moving.'};
+    {name:'Breakfast',kcal:breakfast,...b,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.',grams:'Example: ~350 g high-protein Greek yoghurt · ~200 g berries · ~20 g nuts. Add/trim fruit or yoghurt to match your label calories.'},
+    {name:'Latte 1',kcal:latte1,...la,portion:'Espresso + ~200 ml full-cream milk. No added sugar.',grams:'Example: 1 espresso + ~200 g (ml) full-cream milk.'},
+    {name:'Lunch',kcal:lunch,...l,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat',grams:'Example: ~130–150 g cooked lean meat/fish · ~200–220 g cooked rice · ~200–250 g vegetables · ~5–10 g oil/fat.'},
+    {name:'Latte 2',kcal:latte2,...la,portion:'Espresso + ~200 ml full-cream milk. No added sugar.',grams:'Example: 1 espresso + ~200 g (ml) full-cream milk.'},
+    {name:'Dinner',kcal:dinner,...d,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat',grams:'Example: ~130–150 g cooked lean meat/fish · ~180–220 g cooked rice · ~200–250 g vegetables · ~5–10 g oil/fat.'},
+    {name:'Protein shake',kcal:shake,...sh,portion:'1 scoop protein powder + ~250 ml full-cream milk. No extra fruit unless calories are borrowed from a meal.',grams:'Example: ~30–35 g protein powder + ~250 g (ml) full-cream milk.'}
+  ],note:'Milk calories are already included. Weighed examples are approximate because brands and cuts vary. Keep protein stable; adjust rice and added fats first when calories need moving.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
