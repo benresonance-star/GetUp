@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="exercise-form-video-audit-20260926" />
+  <meta name="motion12-build" content="timer-remaining-radial-bands-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -1055,15 +1055,38 @@ html.standalone main{
   text-align:right;
 }
 .timer-ring{
-  --timer-progress:0deg;
+  --timer-progress:360deg;
+  --timer-track:#292c31;
+  --timer-orange:#ff7a1a;
+  --timer-red:#ff4d2e;
   width:min(250px,72vw);
   aspect-ratio:1;
   margin:18px auto;
   border-radius:50%;
   display:grid;
   place-items:center;
-  background:conic-gradient(var(--volt) var(--timer-progress),#292c31 0);
   position:relative;
+  /*
+    Bottom layer = orange/red radial bands.
+    Top layer = grey elapsed-time track.
+    --timer-progress is the amount of the CURRENT PHASE still remaining.
+  */
+  background:
+    conic-gradient(
+      from -90deg,
+      transparent 0deg var(--timer-progress),
+      var(--timer-track) var(--timer-progress) 360deg
+    ),
+    repeating-conic-gradient(
+      from -90deg,
+      var(--timer-orange) 0deg,
+      var(--timer-red) 9deg,
+      rgba(255,77,46,.28) 9deg 10.5deg,
+      var(--timer-orange) 10.5deg 12deg
+    );
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.018),
+    0 0 26px rgba(255,77,46,.055);
 }
 .timer-ring:before{
   content:"";
@@ -1072,6 +1095,7 @@ html.standalone main{
   border-radius:50%;
   background:#111315;
   border:1px solid #30343a;
+  box-shadow:0 0 0 1px rgba(0,0,0,.2);
 }
 .timer-ring > div{
   position:relative;
@@ -2543,19 +2567,19 @@ function timerViewModel(){
   let label='REST',meta=plan.title,progress=0,detail='';
   if(kind==='intervals'){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
-    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=1;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
-    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?1-sec/smartTimer.duration:0;detail=plan.title;}
+    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=0;detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';}
+    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;}
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
     meta=smartTimer.setIndex>=plan.sets?plan.sets+' sets complete':(smartTimer.setIndex+1)+' of '+plan.sets+' · '+plan.reps+' reps';
-    progress=smartTimer.running&&smartTimer.duration?1-sec/smartTimer.duration:smartTimer.setIndex/plan.sets;
+    progress=smartTimer.setIndex>=plan.sets?0:(smartTimer.running&&smartTimer.duration?sec/smartTimer.duration:1);
     detail=plan.title;
   }else if(kind==='stopwatch'){
-    label='ELAPSED';meta=plan.title;detail=plan.note;
+    label='ELAPSED';meta=plan.title;detail=plan.note;progress=0;
   }else{
     label='REST';
     meta=smartTimer.mode==='session'?plan.title:(smartTimer.exerciseName||'Manual rest');
-    progress=smartTimer.duration?1-sec/smartTimer.duration:0;
+    progress=smartTimer.duration?sec/smartTimer.duration:0;
     detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
   return {plan,sec,kind,label,meta,detail,progress:Math.max(0,Math.min(1,progress))};
