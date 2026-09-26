@@ -270,6 +270,14 @@ function timerCurrentSeconds(){
   }
   return smartTimer.running?Math.max(0,Math.ceil((smartTimer.endAt-Date.now())/1000)):Math.max(0,smartTimer.remaining||0);
 }
+function timerPrimeAudio(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    window.__motionTimerAudio=window.__motionTimerAudio||new AC();
+    if(window.__motionTimerAudio.state==='suspended')window.__motionTimerAudio.resume();
+  }catch(e){}
+}
 function timerBeep(){
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -314,6 +322,7 @@ function timerEnsureTick(){
 }
 function timerSetMode(mode){timerConfigure(mode,true);renderTimerPage()}
 function timerStartPause(){
+  timerPrimeAudio();
   timerConfigure(smartTimer.mode||'session',false);
   if(smartTimer.running){
     if(smartTimer.kind==='stopwatch')smartTimer.stopwatchElapsed=timerCurrentSeconds();
@@ -362,6 +371,7 @@ function timerSkipPhase(){
   saveSmartTimer();timerBeep();renderTimerPage();
 }
 function timerCompleteSet(){
+  timerPrimeAudio();
   const plan=timerSessionPlan();
   if(smartTimer.kind!=='sets'||smartTimer.running||smartTimer.setIndex>=plan.sets)return;
   smartTimer.setIndex++;
