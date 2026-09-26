@@ -176,3 +176,39 @@ function dietText(day){
 function formatDate(){const d=new Date();const weekday=new Intl.DateTimeFormat('en-AU',{weekday:'long'}).format(d).toUpperCase();const rest=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d).toUpperCase();return weekday+' · '+rest}
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
+function programProgressStats(){
+  const start=new Date(settings.startDate+'T00:00:00');
+  const today=new Date(todayISO()+'T00:00:00');
+  const programEnd=new Date(start); programEnd.setDate(start.getDate()+83);
+  if(today<start)return {currentStreak:0,bestStreak:0,completed:0,elapsed:0,programDays:84,weekCompleted:0,weekElapsed:0,adherence:0};
+
+  const effective=today>programEnd?programEnd:today;
+  const elapsed=Math.max(0,Math.min(84,Math.floor((effective-start)/86400000)+1));
+  const done=[];
+  for(let i=0;i<elapsed;i++){
+    const dt=new Date(start); dt.setDate(start.getDate()+i);
+    const ds=iso(dt),dd=dt.getDay();
+    done.push(completedOn(ds,dd));
+  }
+
+  let bestStreak=0,run=0;
+  done.forEach(v=>{run=v?run+1:0;if(run>bestStreak)bestStreak=run});
+
+  let anchor=done.length-1;
+  if(today<=programEnd && anchor>=0 && !done[anchor])anchor--;
+  let currentStreak=0;
+  while(anchor>=0 && done[anchor]){currentStreak++;anchor--}
+
+  const currentWeek=Math.max(1,Math.min(12,Math.floor((effective-start)/604800000)+1));
+  const weekStartIndex=(currentWeek-1)*7;
+  const weekElapsed=Math.max(0,Math.min(7,elapsed-weekStartIndex));
+  let weekCompleted=0;
+  for(let i=weekStartIndex;i<weekStartIndex+weekElapsed;i++)if(done[i])weekCompleted++;
+
+  const completed=done.filter(Boolean).length;
+  return {
+    currentStreak,bestStreak,completed,elapsed,programDays:84,
+    weekCompleted,weekElapsed,
+    adherence:elapsed?Math.round((completed/elapsed)*100):0
+  };
+}
