@@ -740,3 +740,22 @@ html.standalone main{
   #homePage.compact-active .compact-meal{min-height:32px;padding:5px 6px;font-size:9px}
   #homePage.compact-active .compact-week .daydot{min-height:36px;padding:5px 1px}
 }
+
+.compact-meal{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+}
+.compact-meal-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.compact-meal-kcal{
+  color:var(--volt);
+  font-size:9px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.compact-meal.done .compact-meal-kcal{
+  opacity:.7;
+}
