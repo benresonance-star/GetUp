@@ -216,7 +216,50 @@ function renderProgress(){
 }
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
+function conditioningCircuitPlan(day,w){
+  const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
+  let stations=[],roundRest=0,title='',note='';
+  if(day===2){
+    stations=[
+      {label:'KB DEADLIFT',work:30,rest:30},
+      {label:'RING ROW',work:30,rest:30},
+      {label:'REV LUNGE',work:30,rest:30},
+      {label:'SUITCASE',work:30,rest:30}
+    ];
+    title=conditioningTarget(day,w);
+    note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by 30 seconds easy recovery.';
+  }else if(day===4){
+    stations=[
+      {label:'SWINGS',work:20,rest:40},
+      {label:'PUSH-UPS',work:20,rest:40},
+      {label:'SQUATS',work:20,rest:40}
+    ];
+    title=conditioningTarget(day,w);
+    note='Power circuit: keep every work interval crisp. The 40-second recovery is part of the prescription.';
+  }else if(day===0){
+    stations=[
+      {label:'SQUAT + CALF',work:40,rest:20},
+      {label:'PUSH-UPS',work:40,rest:20},
+      {label:'REV LUNGE',work:40,rest:20},
+      {label:'SUITCASE',work:40,rest:20}
+    ];
+    roundRest=60;
+    title=conditioningTarget(day,w);
+    note='Aerobic-base circuit: RPE 5–6. Keep moving easily and use the full 60-second recovery between rounds.';
+  }else return null;
+
+  const phases=[];
+  for(let r=1;r<=rounds;r++){
+    stations.forEach(st=>{
+      phases.push({label:st.label,seconds:st.work,round:r});
+      phases.push({label:'RECOVER',seconds:st.rest,round:r});
+    });
+    if(roundRest&&r<rounds)phases.push({label:'ROUND REST',seconds:roundRest,round:r});
+  }
+  return {kind:'intervals',title,note,rounds,phases,circuit:true};
+}
 function timerSessionPlan(day=programDay(),w=weekNo()){
+  if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w);
   if(day===6){
     const target=aerobicTargets[w-1]||'Aerobic session';
     const m=target.match(/(\d+)\s*×\s*(\d+)\s*min hard\s*\/\s*(\d+)\s*min easy/i);
@@ -230,21 +273,16 @@ function timerSessionPlan(day=programDay(),w=weekNo()){
     }
     return {kind:'stopwatch',title:target,note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
   }
-  if(day===4){
-    const target=swingTargets[w-1]||'Swing sets';
-    const m=target.match(/(\d+)\s*×\s*(\d+)/);
-    const sets=m?Number(m[1]):8,reps=m?Number(m[2]):10;
-    return {kind:'sets',title:target,note:'Complete a crisp set, then let the timer control a 60-second recovery.',sets,reps,rest:60};
-  }
-  if(day===2)return {kind:'rest',title:'Restore · easy recovery',note:'Keep rests short because today is deliberately low fatigue.',rest:60};
   if(day===1||day===3||day===5)return {kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
-  return {kind:'stopwatch',title:'Reset · mobility',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
+  return {kind:'stopwatch',title:'Easy movement',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
 }
 function exerciseRestPreset(name,day=programDay(),w=weekNo()){
+  if(day===2)return {category:'Recovery circuit',seconds:30,action:'session',label:'30s / 30s',note:'Use the complete Restore circuit timer.'};
+  if(day===4)return {category:'Power circuit',seconds:40,action:'session',label:'20s / 40s',note:'Use the complete Power circuit timer.'};
+  if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
   const strength120=new Set(['Goblet squat','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
-  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Kettlebell deadlift','Ring row','Band pull-apart','Single-leg calf raise','Back extension','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
-  if(name==='2-hand kettlebell swing')return {category:'Power',seconds:60,action:'session',label:'1:00 between sets',note:'Keep recovery long enough for every set to stay explosive.'};
+  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
   if(name==='Aerobic intervals'){
     const plan=timerSessionPlan(day,w);
     if(plan.kind==='intervals'){
@@ -253,7 +291,6 @@ function exerciseRestPreset(name,day=programDay(),w=weekNo()){
     }
     return {category:'Conditioning',seconds:0,action:'session',label:'Continuous',note:'No fixed rest on today’s continuous aerobic session.'};
   }
-  if(day===2&&accessory60.has(name))return {category:'Recovery',seconds:45,action:'rest',label:'0:45',note:'Restore day stays deliberately easy with short recoveries.'};
   if(strength120.has(name))return {category:'Primary strength',seconds:120,action:'rest',label:'2:00',note:'Longer recovery protects force output and technique on demanding compound work.'};
   if(strength90.has(name))return {category:'Strength',seconds:90,action:'rest',label:'1:30',note:'Enough recovery to keep reps crisp without unnecessarily stretching the session.'};
   if(accessory60.has(name))return {category:'Accessory / core',seconds:60,action:'rest',label:'1:00',note:'Shorter recovery is usually sufficient for accessories, carries and trunk work.'};
