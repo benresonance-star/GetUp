@@ -1,9 +1,11 @@
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const short=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const program={
-  1:{name:'Strength A',why:'Your highest-quality strength session before the fast begins.',time:'30 min',tone:'volt',diet:'Fast starts after training',work:[
+  1:{name:'Strength A',why:'Your highest-quality strength session before the fast begins.',time:'30 min',tone:'volt',diet:'Fast starts after training',prep:[
+    ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
+  ],work:[
     ['Goblet squat','3 × 6–10','Choose load for ~3 reps in reserve.','10/10/10 with ≥2 RIR twice → next kettlebell.'],
-    ['Ring row / pull-up','3 × 6–10','Rigid body; chest reaches the same point each rep.','3 × 10 twice → move feet 10–15 cm forward. Pull-up: 3 × 6 twice → add 2–4 kg.'],
+    ['Pull-up / assisted pull-up','3 × 5–8','Start from a controlled hang; drive elbows down and keep ribs quiet. Use assistance if needed to keep every rep clean.','3 × 8 twice with ≥2 RIR → add 1–2 kg. If assisted, reduce assistance one step and return to 5–6 clean reps.'],
     ['Kettlebell Romanian deadlift','3 × 8–12','Hips back; feel hamstrings and glutes, not lumbar strain.','12/12/12 with ≥2 RIR twice → increase load.'],
     ['1-arm kettlebell press','3 × 6–10 / side','No side lean or leg drive. Let weaker arm govern.','10/10/10 both arms twice → next bell or heavy-set migration.'],
     ['Suitcase carry','2 × 45–60 sec / side','Walk tall; no leaning toward or away from bell.','2 × 60 sec twice → next bell, reset to 30–45 sec.'],
@@ -15,7 +17,9 @@ const program={
     ['Alternating reverse lunge','30 sec work / 30 sec recovery','Bodyweight; use a long comfortable stride and control the bottom position while alternating legs.','Smooth range only; no grinding.','BODYWEIGHT: do not add kettlebell load on Tuesday. Progress only by smoother range and control.'],
     ['Suitcase march / carry','30 sec work / 30 sec recovery','Light-to-moderate bell; tall posture and relaxed breathing.','Grip should never limit the circuit.','START: use ~50–60% of Monday suitcase-carry load, rounded DOWN. If you have no reference yet, start at 12 kg. INCREASE: after 2 Tuesday sessions with upright posture, no grip limitation and RPE ≤4, move to the next smallest bell. HOLD or reduce if grip, trunk bracing or breathing becomes the limiter.']
   ]},
-  3:{name:'Strength B',why:'Unilateral strength, pushing, pulling, posterior chain and controlled rotation.',time:'28 min',tone:'pink',diet:'High-protein eating day',work:[
+  3:{name:'Strength B',why:'Unilateral strength, pushing, pulling, posterior chain and controlled rotation.',time:'28 min',tone:'pink',diet:'High-protein eating day',prep:[
+    ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
+  ],work:[
     ['Reverse lunge','3 × 6–10 / leg','Equal stride and depth. Weaker leg governs.','3 × 10 both legs twice → increase kettlebell.'],
     ['Push-up','3 × 8–15','Choose variation that leaves ~3 reps in reserve.','3 × 15 twice → lower incline / floor / feet elevated / rings.'],
     ['1-arm kettlebell row','3 × 8–12 / side','Minimal torso rotation; pull with upper back.','3 × 12 twice → next kettlebell.'],
@@ -23,18 +27,20 @@ const program={
     ['Single-leg calf raise','2 × 10–15 / side','Full stretch; pause at top.','2 × 15 twice → add kettlebell.'],
     ['Kettlebell woodchop','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
   ]},
-  4:{name:'Power Circuit',why:'Repeated short power efforts with generous recovery: preserve swing speed while building cardiovascular capacity.',time:'14–21 min',tone:'orange',diet:'High-protein eating day',work:[
+  4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: coordinate squat, leg drive and overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',work:[
     ['2-hand kettlebell swing','20 sec work / 40 sec recovery','Aim for about 8–10 crisp swings, then stop even if time remains.','Power quality wins. If snap slows, reduce load or reps.','START: choose the heaviest bell you can swing for 10 technically crisp reps at RPE ≤6 with obvious speed left. If you do not yet have a calibrated swing load, start at 12 kg if learning the movement or 16 kg if your swing technique is already reliable. INCREASE: after 2 consecutive Thursday sessions completing every prescribed round with 8–10 crisp swings, no visible speed loss, final-session RPE ≤7 and no next-day low-back soreness, move to the next bell (+2–4 kg). If the jump is 4 kg, use 6–8 swings per work interval for the first 1–2 sessions. REDUCE immediately if snap, hinge position or breathing deteriorates.'],
     ['Push-up','20 sec work / 40 sec recovery','Use a variation that stays fast and technically clean.','Stop before reps grind.','BODYWEIGHT: do not add external load. Progress the variation only when all rounds remain fast at RPE ≤7.'],
-    ['Bodyweight squat','20 sec work / 40 sec recovery','Use the deepest comfortable squat you can repeat smoothly with heels down.','Keep breathing controlled; this is conditioning, not a squat test.','BODYWEIGHT: no kettlebell. Keep this station rhythmic so the swing remains the power-loading stimulus.']
+    ['Kettlebell squat → jerk → strict press','40 sec work / 60 sec recovery','Use one light kettlebell. Work one side, then the other: front-rack squat → drive into a crisp jerk → lower to rack → strict press. Move deliberately; do not race the sequence.','Begin with 1–2 clean complexes per side. Build to 2–3 per side without slowing or grinding, then increase the kettlebell one small step. The strict press governs the load.','START: choose a bell you could strict press for about 8–10 clean reps when fresh, but keep several reps in reserve here. INCREASE: only after 2 Thursday sessions where every complex stays crisp, both sides match, the strict press never grinds and final-session RPE stays ≤7. Move up one small bell (+2–4 kg) and return to 1–2 complexes per side. REDUCE immediately if the jerk becomes a press-out, the torso leans, or overhead control deteriorates.']
   ],support:[
     ['Band pull-apart','1 × 12–20','Smooth scapular movement; shoulders stay down and ribs quiet.','Quality only. Stop well before fatigue; do not turn this into extra pulling volume.'],
     ['Wall slide','1 × 8','Move slowly through the largest pain-free overhead range you can control.','Add range and control before adding repetitions.']
   ]},
-  5:{name:'Strength C',why:'Frontal-plane strength plus another balanced full-body exposure.',time:'30 min',tone:'volt',diet:'High-protein eating day',work:[
+  5:{name:'Strength C',why:'Frontal-plane strength plus another balanced full-body exposure.',time:'30 min',tone:'volt',diet:'High-protein eating day',prep:[
+    ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
+  ],work:[
     ['Lateral lunge','3 × 6–8 / side','Sit into the working hip; control frontal plane.','3 × 8 twice at same depth → add/increase goblet load.'],
     ['Goblet squat','2 × 8–12','Full comfortable range.','12/12 twice with ≥2 RIR → next kettlebell.'],
-    ['Ring row / pull-up','3 × 6–10','Strong scapular control.','Use Monday progression rule.'],
+    ['Ring row','3 × 8–12','Rigid body; pull chest toward the same point and finish with controlled scapular retraction.','3 × 12 twice with ≥2 RIR → move feet 10–15 cm forward or elevate feet slightly.'],
     ['Push-up','2 × 8–15','Same variation and depth each rep.','2 × 15 twice → harder variation.'],
     ['Kettlebell Romanian deadlift','2 × 8–12','Controlled lowering; strong hip extension.','12/12 twice → increase load.'],
     ['Suitcase carry','2 × 45 sec / side','Tall and quiet trunk.','60 sec twice → next bell.'],
@@ -64,7 +70,7 @@ const conditioningRounds={
 function conditioningTarget(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))];
   if(day===2)return rounds+' rounds · 30 sec work / 30 sec recovery · RPE 4–5';
-  if(day===4)return rounds+' rounds · 20 sec work / 40 sec recovery · RPE 6–7';
+  if(day===4)return rounds+' rounds · complex 40/60 · swings + push-ups 20/40 · RPE 6–7';
   if(day===0)return rounds+' rounds · 40 sec work / 20 sec transition + 60 sec between rounds · RPE 5–6';
   return '';
 }
@@ -76,6 +82,7 @@ const videoLinks={
     {label:'Ring row',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'},
     {label:'Pull-up',url:'https://www.youtube.com/watch?v=eGo4IYlbE5g'}
   ],
+  'Pull-up / assisted pull-up':[{label:'Form',url:'https://www.youtube.com/watch?v=eGo4IYlbE5g'}],
   'Ring row':[{label:'Form',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'}],
   'Kettlebell Romanian deadlift':[{label:'Form',url:'https://www.youtube.com/watch?v=Uc5rP5xs7qQ'}],
   '1-arm kettlebell press':[{label:'Form',url:'https://www.youtube.com/watch?v=X-uFqWtjpGI'}],
