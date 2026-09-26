@@ -653,7 +653,7 @@ function timerViewModel(){
       label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;
       progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
       const next=plan.phases[smartTimer.phaseIndex+1];
-      nextText=next?'Next · '+timerPhaseReadable(next.label)+' '+next.seconds+' sec':'Next · Complete';
+      nextText=next?timerPhaseReadable(next.label)+' · '+next.seconds+' sec':'Complete';
     }
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
@@ -717,7 +717,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><em id="timerNext">'+vm.nextText+'</em></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -732,7 +732,8 @@ function updateSmartTimerDisplay(){
   clock.textContent=timerFormat(vm.sec);
   const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
-  const next=document.getElementById('timerNext');if(next)next.textContent=vm.nextText;
+  const next=document.getElementById('timerNext');
+  if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
   const ring=document.getElementById('timerRing');
   if(ring){
     ring.style.setProperty('--timer-progress',(vm.ringProgress*360)+'deg');
