@@ -29,3 +29,16 @@
     @media(min-width:760px){body{background:#070809}.app{max-width:900px}.bottomnav{max-width:900px}.homegrid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.homegrid .section{margin-top:18px}.hero{min-height:330px}.hero h1{font-size:62px}.day-page-wrap{display:grid;grid-template-columns:340px 1fr;gap:20px}.day-page-wrap .sticky-col{position:sticky;top:92px;height:max-content}.exercise{padding:19px}.settings-overlay{align-items:center}.sheet{border-radius:30px;max-width:520px}}
 
 .video-link{display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:5px 8px;border:1px solid rgba(255,77,46,.35);border-radius:999px;color:var(--volt);font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;vertical-align:2px;white-space:nowrap}.video-link:hover{background:rgba(255,77,46,.10)}.nutrition-strip{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;line-height:1.5;color:#c8cbd0}.target-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.target-chip{border:1px solid var(--line);border-radius:14px;padding:10px;background:#101215}.target-chip b{display:block;color:var(--volt);font-size:16px}.target-chip span{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:850;letter-spacing:.06em}
+
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet select{width:100%;padding:12px;border-radius:13px;border:1px solid var(--line);background:#0f1113;color:white}
+.meal-list{margin-top:10px;display:grid;gap:8px}
+.meal-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.meal-name{display:block;font-weight:950;font-size:15px;margin-bottom:5px}
+.meal-row p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.meal-numbers{display:grid;grid-template-columns:auto auto;gap:2px 5px;align-items:baseline;text-align:right;white-space:nowrap}
+.meal-numbers b{font-size:15px;color:var(--volt)}
+.meal-numbers span{font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:850;letter-spacing:.05em}
+.meal-note{font-size:11px;color:var(--muted);line-height:1.5;padding:6px 4px 0}
+.fast-card{border-color:rgba(255,77,46,.3);background:linear-gradient(135deg,rgba(255,77,46,.08),var(--surface) 45%)}
+@media(max-width:390px){.meal-row{grid-template-columns:1fr}.meal-numbers{text-align:left;width:max-content}.settings-grid{grid-template-columns:1fr}}
