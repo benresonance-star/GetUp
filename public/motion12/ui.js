@@ -203,6 +203,111 @@ function loadGuideMarkup(guide){
     .replace(/REDUCE one bell/g,'<b>Reduce one bell</b>');
   return '<div class="tip load-rule"><span class="load-rule-label">Loading</span><p>'+html+'</p></div>';
 }
+function saveInlineTimer(){localStorage.setItem('motion12.inlineTimer',JSON.stringify(inlineTimer))}
+function inlineTimerSeconds(){
+  return inlineTimer.running?Math.max(0,Math.ceil((inlineTimer.endAt-Date.now())/1000)):Math.max(0,inlineTimer.remaining||0);
+}
+function inlineTimerPreset(name,day,target,isSupport=false){
+  const m=String(target||'').match(/(\d+)\s*sec\s*work\s*\/\s*(\d+)\s*sec/i);
+  if(m)return {kind:'workrest',work:Number(m[1]),rest:Number(m[2]),label:'Exercise interval'};
+  if(isSupport){
+    if(name==='Back extension')return {kind:'rest',rest:60,label:'Support recovery'};
+    if(name==='Sliding hamstring curl')return {kind:'rest',rest:45,label:'Support recovery'};
+    return {kind:'rest',rest:60,label:'Support recovery'};
+  }
+  const rec=exerciseRestPreset(name,day,weekNo());
+  if(rec.action==='rest')return {kind:'rest',rest:rec.seconds||90,label:rec.category+' recovery'};
+  return {kind:'session',rest:0,label:'Session timer'};
+}
+function inlineTimerMarkup(id){
+  if(inlineTimer.activeId!==id)return '';
+  if(inlineTimer.kind==='session'){
+    return '<div class="inline-ex-timer" id="inlineExerciseTimer"><div class="inline-timer-main"><span>SESSION TIMER</span><b>Use full sequence</b></div><div class="inline-timer-actions"><button type="button" onclick="event.stopPropagation();showPage(\'timerPage\')">Open timer</button><button type="button" class="inline-close" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div></div>';
+  }
+  const sec=inlineTimerSeconds(),phase=inlineTimer.phase==='work'?'WORK':inlineTimer.phase==='rest'?'REST / TRANSITION':inlineTimer.phase==='complete'?'DONE':'REST';
+  const primary=inlineTimer.phase==='complete'?'Again':(inlineTimer.running?'Pause':'Start');
+  return '<div class="inline-ex-timer" id="inlineExerciseTimer">'+
+    '<div class="inline-timer-main"><span id="inlineTimerPhase">'+phase+'</span><strong id="inlineTimerClock">'+timerFormat(sec)+'</strong><small>'+inlineTimer.exerciseName+'</small></div>'+
+    '<div class="inline-timer-actions"><button type="button" class="inline-timer-primary" onclick="event.stopPropagation();inlineTimerStartPause()">'+primary+'</button>'+
+    '<button type="button" onclick="event.stopPropagation();inlineTimerReset()">Reset</button>'+
+    '<button type="button" class="inline-close" aria-label="Close timer" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div>'+
+  '</div>';
+}
+function activateExerciseTimerFromCard(event,card){
+  if(event.target.closest('button,input,a,select,textarea,label'))return;
+  const id=card.dataset.timerId,day=Number(card.dataset.timerDay),name=decodeURIComponent(card.dataset.timerName||''),target=decodeURIComponent(card.dataset.timerTarget||''),isSupport=card.dataset.timerSupport==='1';
+  if(!id||!name)return;
+  const preset=inlineTimerPreset(name,day,target,isSupport);
+  inlineTimer={...defaultInlineTimer,activeId:id,exerciseName:name,kind:preset.kind,work:preset.work||0,rest:preset.rest||0,phase:preset.kind==='workrest'?'work':'rest',duration:preset.kind==='workrest'?(preset.work||0):(preset.rest||0),remaining:preset.kind==='workrest'?(preset.work||0):(preset.rest||0)};
+  saveInlineTimer();
+  document.querySelectorAll('.exercise.active-timer').forEach(el=>el.classList.remove('active-timer'));
+  document.querySelectorAll('.inline-ex-timer').forEach(el=>el.remove());
+  card.classList.add('active-timer');
+  card.querySelector('.ex-top')?.insertAdjacentHTML('afterend',inlineTimerMarkup(id));
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function inlineTimerStartPause(){
+  timerPrimeAudio();
+  if(inlineTimer.kind==='session')return;
+  if(inlineTimer.phase==='complete'){
+    inlineTimer.phase=inlineTimer.kind==='workrest'?'work':'rest';
+    inlineTimer.duration=inlineTimer.kind==='workrest'?inlineTimer.work:inlineTimer.rest;
+    inlineTimer.remaining=inlineTimer.duration;
+  }
+  if(inlineTimer.running){
+    inlineTimer.remaining=inlineTimerSeconds();
+    inlineTimer.running=false;inlineTimer.endAt=0;
+  }else{
+    if(inlineTimerSeconds()<=0){
+      inlineTimer.duration=inlineTimer.phase==='work'?inlineTimer.work:inlineTimer.rest;
+      inlineTimer.remaining=inlineTimer.duration;
+    }
+    inlineTimer.endAt=Date.now()+inlineTimer.remaining*1000;
+    inlineTimer.running=true;
+  }
+  saveInlineTimer();inlineTimerEnsureTick();updateInlineExerciseTimer();
+}
+function inlineTimerReset(){
+  inlineTimer.running=false;inlineTimer.endAt=0;
+  inlineTimer.phase=inlineTimer.kind==='workrest'?'work':'rest';
+  inlineTimer.duration=inlineTimer.kind==='workrest'?inlineTimer.work:inlineTimer.rest;
+  inlineTimer.remaining=inlineTimer.duration;
+  saveInlineTimer();updateInlineExerciseTimer();
+}
+function closeInlineExerciseTimer(){
+  inlineTimer={...defaultInlineTimer};
+  saveInlineTimer();
+  document.querySelectorAll('.exercise.active-timer').forEach(el=>el.classList.remove('active-timer'));
+  document.querySelectorAll('.inline-ex-timer').forEach(el=>el.remove());
+}
+function inlineTimerTick(){
+  if(!inlineTimer.running){updateInlineExerciseTimer();return}
+  const now=Date.now();
+  if(now>=inlineTimer.endAt){
+    const previousEnd=inlineTimer.endAt;
+    if(inlineTimer.kind==='workrest'&&inlineTimer.phase==='work'&&inlineTimer.rest>0){
+      inlineTimer.phase='rest';inlineTimer.duration=inlineTimer.rest;inlineTimer.remaining=inlineTimer.rest;inlineTimer.endAt=previousEnd+inlineTimer.rest*1000;timerBeep();
+    }else{
+      inlineTimer.running=false;inlineTimer.phase='complete';inlineTimer.remaining=0;inlineTimer.endAt=0;timerBeep();
+    }
+    saveInlineTimer();
+  }
+  updateInlineExerciseTimer();
+}
+function inlineTimerEnsureTick(){
+  if(inlineTimerInt)return;
+  inlineTimerInt=setInterval(inlineTimerTick,250);
+}
+function updateInlineExerciseTimer(){
+  const box=document.getElementById('inlineExerciseTimer');
+  if(!box||!inlineTimer.activeId)return;
+  const sec=inlineTimerSeconds();
+  const phase=inlineTimer.phase==='work'?'WORK':inlineTimer.phase==='rest'?'REST / TRANSITION':inlineTimer.phase==='complete'?'DONE':'REST';
+  const phaseEl=document.getElementById('inlineTimerPhase');if(phaseEl)phaseEl.textContent=phase;
+  const clock=document.getElementById('inlineTimerClock');if(clock)clock.textContent=timerFormat(sec);
+  const primary=box.querySelector('.inline-timer-primary');
+  if(primary)primary.textContent=inlineTimer.phase==='complete'?'Again':(inlineTimer.running?'Pause':'Start');
+}
 function supportTarget(exercise,w){
   if(exercise[0]==='Sliding hamstring curl'){
     const sets=(w<=2||w===8||w===12)?1:2;
@@ -214,15 +319,17 @@ function supportBlockMarkup(day,date,w,p){
   if(!p.support?.length)return '';
   const cards=p.support.map((x,i)=>{
     const id=`${date}-${day}-support-${i}`,state=logs[id]||{},target=supportTarget(x,w);
-    return `<div class="exercise support-exercise ${state.done?'complete':''}" id="ex-${id}">
+    const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
+    return `<div class="exercise support-exercise ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
       <div class="ex-top"><div class="num">S${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
+      ${inlineTimerMarkup(id)}
       <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="bodyweight / light KB" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="3–4 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
     </div>`;
   }).join('');
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
 }
-function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===6)target=aerobicTargets[w-1];exHtml+=`<div class="exercise ${state.done?'complete':''}" id="ex-${id}"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
+function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===6)target=aerobicTargets[w-1];const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);exHtml+=`<div class="exercise ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="0" onclick="activateExerciseTimerFromCard(event,this)"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>${inlineTimerMarkup(id)}
       <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>${loadGuideMarkup(x[4])}</div>`});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
@@ -246,7 +353,8 @@ function renderProgress(){
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
   document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
-function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
+function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
+if(inlineTimer.activeId)inlineTimerEnsureTick();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
 function conditioningCircuitPlan(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
