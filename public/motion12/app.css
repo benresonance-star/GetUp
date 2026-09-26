@@ -1035,6 +1035,9 @@ html.standalone main{
 }
 .timer-ring{
   --timer-progress:360deg;
+  --timer-step-angle:9deg;
+  --timer-gap-angle:1.2deg;
+  --timer-fill-angle:7.8deg;
   --timer-track:#292c31;
   --timer-orange:#ff7a1a;
   --timer-red:#ff4d2e;
@@ -1046,9 +1049,10 @@ html.standalone main{
   place-items:center;
   position:relative;
   /*
-    Bottom layer = orange/red radial bands.
-    Top layer = grey elapsed-time track.
-    --timer-progress is the amount of the CURRENT PHASE still remaining.
+    Each coloured division represents exactly one second of the CURRENT PHASE.
+    JS sets the step/gap angle from smartTimer.duration so 20s, 40s and 60s
+    phases always have 20, 40 and 60 clean divisions respectively.
+    The grey overlay is also quantised to the whole-second countdown.
   */
   background:
     conic-gradient(
@@ -1059,9 +1063,9 @@ html.standalone main{
     repeating-conic-gradient(
       from -90deg,
       var(--timer-orange) 0deg,
-      var(--timer-red) 9deg,
-      rgba(255,77,46,.28) 9deg 10.5deg,
-      var(--timer-orange) 10.5deg 12deg
+      var(--timer-red) var(--timer-fill-angle),
+      var(--timer-track) var(--timer-fill-angle),
+      var(--timer-track) var(--timer-step-angle)
     );
   box-shadow:
     0 0 0 1px rgba(255,255,255,.018),
