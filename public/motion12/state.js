@@ -71,7 +71,7 @@ function handCount(n){
 }
 function handLabel(n,singular,plural){
   const v=Math.round(n*2)/2;
-  return handCount(n)+' '+(v===1?singular:plural);
+  return handCount(n)+' '+(v>0&&v<=1?singular:plural);
 }
 function quarterFraction(n){
   const v=Math.max(.25,Math.round(n*4)/4);
