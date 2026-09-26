@@ -49,17 +49,31 @@ function handLabel(n,singular,plural){
   const v=Math.round(n*2)/2;
   return handCount(n)+' '+(v===1?singular:plural);
 }
+function quarterFraction(n){
+  const v=Math.max(.25,Math.round(n*4)/4);
+  const whole=Math.floor(v),q=Math.round((v-whole)*4);
+  const frac=q===1?'¼':q===2?'½':q===3?'¾':'';
+  return whole?(whole+(frac?frac:'')):frac;
+}
+function cupMeasure(cups){
+  const v=Math.max(.25,Math.round(cups*4)/4);
+  return '~'+quarterFraction(v)+' cup'+(v>1?'s':'');
+}
+function tspMeasure(tsp){
+  const v=Math.max(.5,Math.round(tsp*2)/2);
+  return '~'+(Number.isInteger(v)?v:v.toFixed(1))+' tsp';
+}
 function portionGuide(){
   const p=settings.portions;
   return {
-    yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands'),
-    berries:handLabel(p.berries/200,'fist','fists'),
-    nuts:handLabel(p.nuts/15,'thumb','thumbs'),
-    meat:handLabel(p.meat/80,'palm','palms'),
-    lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands'),
-    dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands'),
-    veg:handLabel(p.veg/112.5,'fist','fists'),
-    oil:handLabel(p.oil/7.5,'thumb','thumbs')
+    yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands')+' · '+cupMeasure(p.yogurt/250),
+    berries:handLabel(p.berries/200,'fist','fists')+' · '+cupMeasure(p.berries/135),
+    nuts:handLabel(p.nuts/15,'thumb','thumbs')+' · '+cupMeasure(p.nuts/100),
+    meat:handLabel(p.meat/80,'palm','palms')+' · '+cupMeasure(p.meat/140)+' chopped',
+    lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.lunchRice/180),
+    dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.dinnerRice/180),
+    veg:handLabel(p.veg/112.5,'fist','fists')+' · '+cupMeasure(p.veg/112.5),
+    oil:handLabel(p.oil/7.5,'thumb','thumbs')+' · '+tspMeasure(p.oil/5)
   };
 }
 function beverageMacros(){
@@ -131,20 +145,20 @@ function mealPlan(day){
 
   const meals=[
     {id:'breakfast',name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g nuts ('+g.nuts+')'},
-    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
+    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
+    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
     {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice, cooked weight ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
     {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
+    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
     {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice, cooked weight ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
-    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder + ~'+p.shakeMilk+' ml full-cream milk'}
+    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
+    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder (1 scoop) + ~'+p.shakeMilk+' ml full-cream milk ('+cupMeasure(p.shakeMilk/250)+')'}
   ];
   const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
   const total=Math.round(totals.kcal);
   const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
   const gap=c.eatingDay-total;
-  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Rice grams are cooked weight, not dry. Check labels for your actual yoghurt, milk and protein powder. A positive gap means calories remain in the daily target.'};
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Rice grams are cooked weight, not dry. Household measures are approximate; cups use a 250 ml metric cup. Check labels for your actual yoghurt, milk and protein powder. A positive gap means calories remain in the daily target.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
