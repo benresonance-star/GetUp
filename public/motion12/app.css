@@ -378,3 +378,42 @@ html.standalone main{
     margin-top:3px;
   }
 }
+
+.portion-settings{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#121417;
+  padding:0 14px 12px;
+}
+.portion-settings summary{
+  cursor:pointer;
+  list-style:none;
+  padding:15px 0;
+  font-weight:950;
+  font-size:14px;
+}
+.portion-settings summary::-webkit-details-marker{display:none}
+.portion-settings summary:after{
+  content:"+";
+  float:right;
+  color:var(--volt);
+  font-size:20px;
+  line-height:.8;
+}
+.portion-settings[open] summary:after{content:"−"}
+.settings-note{
+  margin:-2px 0 8px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
+}
+.plan-gap{
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+.plan-gap.over{color:var(--orange)}
