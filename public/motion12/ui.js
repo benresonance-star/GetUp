@@ -89,6 +89,16 @@ function compactMealCount(day,date){
   const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
+function streakBand(compact=false){
+  const s=programProgressStats();
+  const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
+  const program=s.completed+'/'+s.programDays;
+  return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
+    '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
+    '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
+    '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
+  '</div>';
+}
 function renderCompactHome(d,w,p,fat,cal,strip){
   const date=todayISO(),tot=intakeTotals(d,date),plan=mealPlan(d);
   const remaining=tot?.remaining;
@@ -103,6 +113,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </button>
 
       <div class="compact-week">${strip}</div>
+      ${streakBand(true)}
 
       <div class="compact-metrics">
         <div class="compact-card">
@@ -138,7 +149,7 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
   <section class="hero"><div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${completedOn(todayISO(),d)?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
-  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div></section>
+  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div>${streakBand(false)}</section>
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>calories → portions</small></div>
