@@ -521,7 +521,8 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('nutsInput').value=p.nuts;
   document.getElementById('seedsInput').value=p.seeds;
   document.getElementById('latteMilkInput').value=p.latteMilk;
-  document.getElementById('meatInput').value=p.meat;
+  document.getElementById('lunchProteinInput').value=settings.lunchProtein||'chicken';
+  document.getElementById('dinnerProteinInput').value=settings.dinnerProtein||'chicken';
   document.getElementById('lunchRiceInput').value=p.lunchRice;
   document.getElementById('dinnerRiceInput').value=p.dinnerRice;
   document.getElementById('legumesInput').value=p.legumes;
@@ -543,13 +544,14 @@ document.getElementById('saveSettings').onclick=()=>{
     sex:document.getElementById('sexInput').value||'',
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
+    lunchProtein:document.getElementById('lunchProteinInput').value||'chicken',
+    dinnerProtein:document.getElementById('dinnerProteinInput').value||'chicken',
     portions:{
       yogurt:portionValue('yogurtInput',old.yogurt),
       berries:portionValue('berriesInput',old.berries),
       nuts:portionValue('nutsInput',old.nuts),
       seeds:portionValue('seedsInput',old.seeds),
       latteMilk:portionValue('latteMilkInput',old.latteMilk),
-      meat:portionValue('meatInput',old.meat),
       lunchRice:portionValue('lunchRiceInput',old.lunchRice),
       dinnerRice:portionValue('dinnerRiceInput',old.dinnerRice),
       legumes:portionValue('legumesInput',old.legumes),
