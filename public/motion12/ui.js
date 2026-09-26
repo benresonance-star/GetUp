@@ -627,27 +627,27 @@ function conditioningCircuitPlan(day,w){
   let stations=[],roundRest=0,title='',note='';
   if(day===2){
     stations=[
-      {label:'KB DEADLIFT',work:30,rest:30},
-      {label:'RING ROW',work:30,rest:30},
-      {label:'REV LUNGE',work:30,rest:30},
-      {label:'SUITCASE',work:30,rest:30}
+      {label:'Kettlebell deadlift',work:30,rest:30},
+      {label:'Ring row',work:30,rest:30},
+      {label:'Alternating reverse lunge',work:30,rest:30},
+      {label:'Suitcase march / carry',work:30,rest:30}
     ];
     title=conditioningTarget(day,w);
     note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by 30 seconds easy recovery.';
   }else if(day===4){
     stations=[
-      {label:'KB COMPLEX',work:40,rest:60},
-      {label:'SWINGS',work:20,rest:40},
-      {label:'PUSH-UPS',work:20,rest:40}
+      {label:'Kettlebell squat → jerk → strict press',work:40,rest:60},
+      {label:'2-hand kettlebell swing',work:20,rest:40},
+      {label:'Push-up',work:20,rest:40}
     ];
     title=conditioningTarget(day,w);
     note='Power circuit: use the full 40/60 window for the kettlebell complex, then keep swings and push-ups crisp at 20/40. Quality beats speed.';
   }else if(day===0){
     stations=[
-      {label:'SQUAT + CALF',work:40,rest:20},
-      {label:'PUSH-UPS',work:40,rest:20},
-      {label:'REV LUNGE',work:40,rest:20},
-      {label:'SUITCASE',work:40,rest:20}
+      {label:'Squat-to-calf-raise',work:40,rest:20},
+      {label:'Push-up',work:40,rest:20},
+      {label:'Alternating reverse lunge',work:40,rest:20},
+      {label:'Suitcase march / carry',work:40,rest:20}
     ];
     roundRest=60;
     title=conditioningTarget(day,w);
@@ -1075,7 +1075,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -1088,7 +1088,11 @@ function updateSmartTimerDisplay(){
   if(!clock)return;
   const vm=timerViewModel();
   clock.textContent=vm.clockText||timerFormat(vm.sec);
-  const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
+  const phase=document.getElementById('timerPhase');
+  if(phase){
+    phase.textContent=vm.label;
+    phase.classList.toggle('long',String(vm.label).length>26);
+  }
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
   const next=document.getElementById('timerNext');
   if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
