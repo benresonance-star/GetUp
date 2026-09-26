@@ -10,12 +10,12 @@ function intakeTotals(day,date){
     return acc;
   },{kcal:0,protein:0,carbs:0,fat:0});
   const remaining={
-    kcal:Math.max(0,plan.total-consumed.kcal),
+    kcal:Math.max(0,(plan.target||plan.total)-consumed.kcal),
     protein:Math.max(0,plan.macroTotals.protein-consumed.protein),
     carbs:Math.max(0,plan.macroTotals.carbs-consumed.carbs),
     fat:Math.max(0,plan.macroTotals.fat-consumed.fat)
   };
-  return {consumed,remaining,total:{kcal:plan.total,...plan.macroTotals}};
+  return {consumed,remaining,total:{kcal:plan.target||plan.total,...plan.macroTotals},planKcal:plan.total,gap:plan.gap||0};
 }
 function intakeStripInner(day,date){
   const t=intakeTotals(day,date);
@@ -32,7 +32,7 @@ function mealRows(day,date=todayISO()){
   const plan=mealPlan(day);
   if(!plan)return '<div class="card"><p>Add bodyweight to create the meal plan.</p></div>';
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
-  return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+'</div><div class="meal-list">'+plan.meals.map((m,i)=>{
+  return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+(plan.gap?'<div class="plan-gap '+(plan.gap<0?'over':'')+'">Plan '+plan.total+' kcal · target '+plan.target+' kcal · '+(plan.gap>0?plan.gap+' kcal unallocated':Math.abs(plan.gap)+' kcal over target')+'</div>':'')+'</div><div class="meal-list">'+plan.meals.map((m,i)=>{
     const key=mealKey(date,i),done=!!logs[key]?.done;
     return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
   }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Use labels or a food scale once to calibrate your usual portions.</div></div>';
@@ -104,7 +104,56 @@ function resetTimer(){clearInterval(timerInt);timerSeconds=0;timerRunning=false;
 document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.getElementById('quickTimer').onclick=()=>{openDay(programDay());setTimer(60)};
-document.getElementById('settingsBtn').onclick=()=>{document.getElementById('startDateInput').value=settings.startDate;document.getElementById('bodyweightInput').value=settings.bodyweight;document.getElementById('heightInput').value=settings.height||'';document.getElementById('ageInput').value=settings.age||'';document.getElementById('sexInput').value=settings.sex||'';document.getElementById('stepsInput').value=settings.steps;document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';document.getElementById('settingsOverlay').classList.add('show')};
+document.getElementById('settingsBtn').onclick=()=>{
+  document.getElementById('startDateInput').value=settings.startDate;
+  document.getElementById('bodyweightInput').value=settings.bodyweight;
+  document.getElementById('heightInput').value=settings.height||'';
+  document.getElementById('ageInput').value=settings.age||'';
+  document.getElementById('sexInput').value=settings.sex||'';
+  document.getElementById('stepsInput').value=settings.steps;
+  document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';
+  const p=settings.portions||defaultPortions;
+  document.getElementById('yogurtInput').value=p.yogurt;
+  document.getElementById('berriesInput').value=p.berries;
+  document.getElementById('nutsInput').value=p.nuts;
+  document.getElementById('latteMilkInput').value=p.latteMilk;
+  document.getElementById('meatInput').value=p.meat;
+  document.getElementById('lunchRiceInput').value=p.lunchRice;
+  document.getElementById('dinnerRiceInput').value=p.dinnerRice;
+  document.getElementById('vegInput').value=p.veg;
+  document.getElementById('oilInput').value=p.oil;
+  document.getElementById('powderInput').value=p.powder;
+  document.getElementById('shakeMilkInput').value=p.shakeMilk;
+  document.getElementById('settingsOverlay').classList.add('show');
+};
 document.getElementById('cancelSettings').onclick=()=>document.getElementById('settingsOverlay').classList.remove('show');
-document.getElementById('saveSettings').onclick=()=>{settings={...settings,startDate:document.getElementById('startDateInput').value||settings.startDate,bodyweight:Number(document.getElementById('bodyweightInput').value)||settings.bodyweight,height:Number(document.getElementById('heightInput').value)||0,age:Number(document.getElementById('ageInput').value)||0,sex:document.getElementById('sexInput').value||'',steps:Number(document.getElementById('stepsInput').value)||settings.steps,maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0};if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);localStorage.setItem('motion12.measurements',JSON.stringify(measurements))}localStorage.setItem('motion12.settings',JSON.stringify(settings));document.getElementById('settingsOverlay').classList.remove('show');renderHome();renderDays();renderProgress()};
+document.getElementById('saveSettings').onclick=()=>{
+  const old=settings.portions||defaultPortions;
+  settings={...settings,
+    startDate:document.getElementById('startDateInput').value||settings.startDate,
+    bodyweight:Number(document.getElementById('bodyweightInput').value)||settings.bodyweight,
+    height:Number(document.getElementById('heightInput').value)||0,
+    age:Number(document.getElementById('ageInput').value)||0,
+    sex:document.getElementById('sexInput').value||'',
+    steps:Number(document.getElementById('stepsInput').value)||settings.steps,
+    maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
+    portions:{
+      yogurt:Number(document.getElementById('yogurtInput').value)||old.yogurt,
+      berries:Number(document.getElementById('berriesInput').value)||old.berries,
+      nuts:Number(document.getElementById('nutsInput').value)||old.nuts,
+      latteMilk:Number(document.getElementById('latteMilkInput').value)||old.latteMilk,
+      meat:Number(document.getElementById('meatInput').value)||old.meat,
+      lunchRice:Number(document.getElementById('lunchRiceInput').value)||old.lunchRice,
+      dinnerRice:Number(document.getElementById('dinnerRiceInput').value)||old.dinnerRice,
+      veg:Number(document.getElementById('vegInput').value)||old.veg,
+      oil:Number(document.getElementById('oilInput').value)||old.oil,
+      powder:Number(document.getElementById('powderInput').value)||old.powder,
+      shakeMilk:Number(document.getElementById('shakeMilkInput').value)||old.shakeMilk
+    }
+  };
+  if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);localStorage.setItem('motion12.measurements',JSON.stringify(measurements))}
+  localStorage.setItem('motion12.settings',JSON.stringify(settings));
+  document.getElementById('settingsOverlay').classList.remove('show');
+  renderHome();renderDays();renderProgress();
+};
 renderHome();renderDays();renderProgress();
