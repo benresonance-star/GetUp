@@ -496,6 +496,80 @@ function gobletEnsureTimer(id,target){
   }
   return inlineTimer;
 }
+function gobletPreviousCompletedSession(id){
+  const matches=Object.keys(logs)
+    .filter(k=>k!==id&&/^\d{4}-\d{2}-\d{2}-1-0$/.test(k))
+    .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=3&&logs[k].sets.slice(0,3).every(s=>s?.complete))
+    .sort((a,b)=>b.localeCompare(a));
+  return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,3)}:null;
+}
+function gobletQualifiesForProgression(sets,topRep=10){
+  if(!Array.isArray(sets)||sets.length<3)return false;
+  const firstLoad=String(sets[0]?.load??'').trim();
+  if(!firstLoad)return false;
+  return sets.slice(0,3).every(s=>
+    s?.complete&&
+    String(s.load??'').trim()===firstLoad&&
+    Number(s.reps)>=topRep&&
+    Number(s.rir)>=2
+  );
+}
+function gobletCompletionSummary(id,target,entries){
+  if(!entries?.length||!entries.every(s=>s?.complete))return null;
+  const reps=entries.map(s=>Number(s.reps)||0);
+  const rirs=entries.map(s=>Number(s.rir)||0);
+  const loads=entries.map(s=>String(s.load??'').trim()).filter(Boolean);
+  const sameLoad=loads.length===entries.length&&loads.every(x=>x===loads[0]);
+  const loadText=sameLoad?loads[0]+' kg':loads.map(x=>x+' kg').join(' / ');
+  const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
+  const low=range?Number(range[1]):6,top=range?Number(range[2]):10;
+  const qualifies=gobletQualifiesForProgression(entries,top);
+  const previous=gobletPreviousCompletedSession(id);
+  const previousQualifies=previous&&sameLoad&&String(previous.sets[0]?.load??'').trim()===loads[0]&&gobletQualifiesForProgression(previous.sets,top);
+  let title='Build reps at this load',text='Keep the current load next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
+  let tone='hold';
+  if(qualifies&&previousQualifies){
+    title='Increase load next Monday';
+    text='You have now hit '+top+'/'+top+'/'+top+' with at least 2 reps in reserve twice at '+loads[0]+' kg. Move to the next available kettlebell and return toward the lower end of the '+low+'–'+top+' rep range.';
+    tone='up';
+  }else if(qualifies){
+    title='Repeat once more';
+    text='This is the first '+top+'/'+top+'/'+top+' session at '+loads[0]+' kg with at least 2 reps in reserve. Repeat it once more before increasing the kettlebell.';
+    tone='ready';
+  }else if(reps.some(r=>r<low)||rirs.some(r=>r<1)){
+    title='Hold the load';
+    text='Do not increase yet. Bring every set back into the '+low+'–'+top+' rep range with cleaner reserve before progressing.';
+    tone='hold';
+  }else if(rirs.some(r=>r<2)){
+    title='Hold the load';
+    text='Reps are progressing, but at least one set finished below 2 reps in reserve. Keep the load stable and make the same reps feel easier next Monday.';
+    tone='hold';
+  }else if(!sameLoad){
+    title='Standardise the working load';
+    text='Loads changed across the three sets. Next Monday use the most sustainable working load across all sets before judging progression.';
+    tone='hold';
+  }
+  return {
+    loadText,
+    repsText:reps.join(' / '),
+    rirText:rirs.join(' / '),
+    title,text,tone,
+    previous:previous?.id||''
+  };
+}
+function gobletCompletionSummaryMarkup(id,target,entries){
+  const s=gobletCompletionSummary(id,target,entries);
+  if(!s)return '';
+  return '<div class="goblet-completion-summary">'+
+    '<div class="goblet-summary-title"><span>Session result</span><b>3 sets logged</b></div>'+
+    '<div class="goblet-summary-metrics">'+
+      '<div><span>Load</span><b>'+s.loadText+'</b></div>'+
+      '<div><span>Reps</span><b>'+s.repsText+'</b></div>'+
+      '<div><span>RIR</span><b>'+s.rirText+'</b></div>'+
+    '</div>'+
+    '<div class="goblet-next '+s.tone+'"><span>Next Monday</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
+  '</div>';
+}
 function gobletSetFlowMarkup(id,target){
   const state=gobletFlowState(id,target),entries=strengthSetLogEntries(id,state.sets);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
@@ -503,6 +577,7 @@ function gobletSetFlowMarkup(id,target){
   const statusTitle=isComplete?'GOBLET SQUAT COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
   const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText+' reps';
   const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
+  const completionSummary=isComplete?gobletCompletionSummaryMarkup(id,target,entries):'';
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
     const active=!isComplete&&!isRest&&i===readyIndex;
@@ -526,6 +601,7 @@ function gobletSetFlowMarkup(id,target){
   return '<div class="goblet-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="goblet-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="goblet-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
+    completionSummary+
     '<div class="strength-flow-message" id="goblet-flow-message-'+id+'"></div>'+
     '<div class="strength-flow-actions">'+actions+'</div>'+
   '</div>';
