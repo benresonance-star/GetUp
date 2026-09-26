@@ -1,5 +1,5 @@
 const defaultPortions={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,portions:defaultPortions};
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portions:defaultPortions};
 const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
 let settings={...defaultSettings,...storedSettings,portions:{...defaultPortions,...(storedSettings.portions||{})}};
 let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
