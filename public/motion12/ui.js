@@ -1,3 +1,16 @@
+function updateHomeModeToggle(){
+  const b=document.getElementById('homeModeToggle');
+  if(!b)return;
+  const compact=settings.homeMode==='compact';
+  b.setAttribute('aria-checked',compact?'true':'false');
+  b.classList.toggle('active',compact);
+}
+function toggleHomeMode(){
+  settings.homeMode=settings.homeMode==='compact'?'full':'compact';
+  localStorage.setItem('motion12.settings',JSON.stringify(settings));
+  updateHomeModeToggle();
+  if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
 function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
 function mealKey(date,index){return 'meal:'+date+':'+index}
 function intakeTotals(day,date){
@@ -111,7 +124,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
     </div>`;
 }
-function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').classList.remove('compact-active');
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
@@ -166,6 +179,8 @@ function resetTimer(){clearInterval(timerInt);timerSeconds=0;timerRunning=false;
 document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.getElementById('quickTimer').onclick=()=>{openDay(programDay());setTimer(60)};
+document.getElementById('homeModeToggle').onclick=toggleHomeMode;
+updateHomeModeToggle();
 document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('startDateInput').value=settings.startDate;
   document.getElementById('bodyweightInput').value=settings.bodyweight;
@@ -174,7 +189,6 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('sexInput').value=settings.sex||'';
   document.getElementById('stepsInput').value=settings.steps;
   document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';
-  document.getElementById('homeModeInput').value=settings.homeMode||'full';
   const p=settings.portions||defaultPortions;
   document.getElementById('yogurtInput').value=p.yogurt;
   document.getElementById('berriesInput').value=p.berries;
@@ -201,7 +215,6 @@ document.getElementById('saveSettings').onclick=()=>{
     sex:document.getElementById('sexInput').value||'',
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
-    homeMode:document.getElementById('homeModeInput').value||'full',
     portions:{
       yogurt:portionValue('yogurtInput',old.yogurt),
       berries:portionValue('berriesInput',old.berries),
