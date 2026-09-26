@@ -148,7 +148,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
 
       <div class="compact-card compact-meals-card">
-        <div class="compact-card-head"><span class="compact-label">Food</span><b>${mealCount}</b></div>
+        <div class="compact-card-head"><span class="compact-label">Food · ${plan?plan.total.toLocaleString()+' kcal':'—'}</span><b>${mealCount}</b></div>
         ${compactMealChips(d,date)}
       </div>
 
