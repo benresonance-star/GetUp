@@ -1034,15 +1034,38 @@ html.standalone main{
   text-align:right;
 }
 .timer-ring{
-  --timer-progress:0deg;
+  --timer-progress:360deg;
+  --timer-track:#292c31;
+  --timer-orange:#ff7a1a;
+  --timer-red:#ff4d2e;
   width:min(250px,72vw);
   aspect-ratio:1;
   margin:18px auto;
   border-radius:50%;
   display:grid;
   place-items:center;
-  background:conic-gradient(var(--volt) var(--timer-progress),#292c31 0);
   position:relative;
+  /*
+    Bottom layer = orange/red radial bands.
+    Top layer = grey elapsed-time track.
+    --timer-progress is the amount of the CURRENT PHASE still remaining.
+  */
+  background:
+    conic-gradient(
+      from -90deg,
+      transparent 0deg var(--timer-progress),
+      var(--timer-track) var(--timer-progress) 360deg
+    ),
+    repeating-conic-gradient(
+      from -90deg,
+      var(--timer-orange) 0deg,
+      var(--timer-red) 9deg,
+      rgba(255,77,46,.28) 9deg 10.5deg,
+      var(--timer-orange) 10.5deg 12deg
+    );
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.018),
+    0 0 26px rgba(255,77,46,.055);
 }
 .timer-ring:before{
   content:"";
@@ -1051,6 +1074,7 @@ html.standalone main{
   border-radius:50%;
   background:#111315;
   border:1px solid #30343a;
+  box-shadow:0 0 0 1px rgba(0,0,0,.2);
 }
 .timer-ring > div{
   position:relative;
