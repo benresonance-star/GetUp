@@ -77,6 +77,7 @@ function conditioningTarget(day,w){
 const aerobicTargets=['40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','3 × 3 min hard / 3 min easy','4 × 3 min hard / 3 min easy','4 × 4 min hard / 3 min easy','30–40 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','2 km walk test'];
 
 const videoLinks={
+  'Kettlebell halo':[{label:'Form',url:'https://www.youtube.com/watch?v=jRwUtI5aIhE'}],
   'Goblet squat':[{label:'Form',url:'https://www.youtube.com/watch?v=nfX7IFK9UNI'}],
   'Ring row / pull-up':[
     {label:'Ring row',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'},
@@ -99,9 +100,13 @@ const videoLinks={
   'Push-up':[{label:'Form',url:'https://www.youtube.com/watch?v=WDIpL0pjun0'}],
   '1-arm kettlebell row':[{label:'Form',url:'https://www.youtube.com/watch?v=IyQAMOV0WAc'}],
   'Back extension':[{label:'Form',url:'https://www.youtube.com/watch?v=H8Swl1N-uis'}],
-  'Sliding hamstring curl':[],
+  'Sliding hamstring curl':[{label:'Form',url:'https://www.youtube.com/watch?v=UaecXxAgsKA'}],
   'Kettlebell woodchop':[{label:'Form',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}],
   '2-hand kettlebell swing':[{label:'Form',url:'https://www.youtube.com/watch?v=1cVT3ee9mgU'}],
+  'Kettlebell squat → jerk → strict press':[
+    {label:'Jerk',url:'https://www.youtube.com/watch?v=i_VR2v07aWA'},
+    {label:'Press',url:'https://www.youtube.com/watch?v=WO2JPxGCsnU'}
+  ],
   'Lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}],
   'Plank shoulder tap / kettlebell woodchop':[
     {label:'Shoulder tap',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'},
