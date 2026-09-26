@@ -1115,3 +1115,52 @@ html.standalone main{
   .timer-ring{width:min(225px,70vw)}
   .timer-ring strong{font-size:48px}
 }
+
+.timer-exercise-section{margin-top:16px}
+.exercise-rest-list{display:grid;gap:8px}
+.exercise-rest-preset{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#111316;
+  color:var(--ink);
+  padding:12px 13px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  text-align:left;
+}
+.exercise-rest-preset span{min-width:0}
+.exercise-rest-preset b{
+  display:block;
+  font-size:13px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.exercise-rest-preset small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:9px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.exercise-rest-preset strong{
+  color:var(--volt);
+  font-size:14px;
+  white-space:nowrap;
+}
+.exercise-rest-preset.active{
+  border-color:rgba(255,77,46,.55);
+  background:linear-gradient(135deg,rgba(255,77,46,.10),#111316 58%);
+  box-shadow:0 0 0 1px rgba(255,77,46,.08) inset;
+}
+@media(max-width:390px){
+  .exercise-rest-preset{padding:11px 12px}
+  .exercise-rest-preset b{font-size:12px}
+  .exercise-rest-preset strong{font-size:13px}
+}
