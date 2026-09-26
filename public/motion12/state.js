@@ -199,15 +199,64 @@ function mealPlan(day){
   const shake=roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)));
 
   const meals=[
-    {id:'breakfast',name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g walnuts/almonds ('+g.nuts+') · ~'+p.seeds+' g ground flax/chia ('+g.seeds+')'},
-    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
-    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
-    {id:'lunch',name:'Lunch',...lunch,portion:'~'+lp.grams+' g cooked '+lp.food.label+' ('+proteinPortionGuide(lp.grams)+') · ~20 g protein · ~'+p.lunchRice+' g cooked whole grain ('+g.lunchRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
-    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
-    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
-    {id:'dinner',name:'Dinner',...dinner,portion:'~'+dp.grams+' g cooked '+dp.food.label+' ('+proteinPortionGuide(dp.grams)+') · ~20 g protein · ~'+p.dinnerRice+' g cooked whole grain ('+g.dinnerRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
-    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
-    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder (1 scoop) + ~'+p.shakeMilk+' ml full-cream milk ('+cupMeasure(p.shakeMilk/250)+') + 5 g creatine monohydrate'}
+    {id:'breakfast',name:'Breakfast',...breakfast,
+      items:[
+        {main:'~'+p.yogurt+' g high-protein Greek yoghurt',guide:g.yogurt},
+        {main:'~'+p.berries+' g berries',guide:g.berries},
+        {main:'~'+p.nuts+' g walnuts/almonds',guide:g.nuts},
+        {main:'~'+p.seeds+' g ground flax/chia',guide:g.seeds}
+      ]},
+    {id:'latte1',name:'Latte 1',...latte,
+      items:[
+        {main:'1 espresso'},
+        {main:'~'+p.latteMilk+' ml full-cream milk',guide:cupMeasure(p.latteMilk/250)},
+        {main:'No added sugar'}
+      ]},
+    {id:'fruit1',name:'Fruit 1',...fruit,
+      items:[
+        {main:'1 medium piece fruit',guide:'~1 cup chopped'},
+        {main:'Vary colours across the week'}
+      ]},
+    {id:'lunch',name:'Lunch',...lunch,
+      items:[
+        {main:'~'+lp.grams+' g cooked '+lp.food.label,guide:proteinPortionGuide(lp.grams)},
+        {main:'~20 g protein from the main protein'},
+        {main:'~'+p.lunchRice+' g cooked whole grain',guide:g.lunchRice},
+        {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
+        {main:'~'+p.veg+' g vegetables',guide:g.veg},
+        {main:'~'+p.oil+' g extra-virgin olive oil',guide:g.oil}
+      ]},
+    {id:'latte2',name:'Latte 2',...latte,
+      items:[
+        {main:'1 espresso'},
+        {main:'~'+p.latteMilk+' ml full-cream milk',guide:cupMeasure(p.latteMilk/250)},
+        {main:'No added sugar'}
+      ]},
+    {id:'fruit2',name:'Fruit 2',...fruit,
+      items:[
+        {main:'1 medium piece fruit',guide:'~1 cup chopped'},
+        {main:'Vary colours across the week'}
+      ]},
+    {id:'dinner',name:'Dinner',...dinner,
+      items:[
+        {main:'~'+dp.grams+' g cooked '+dp.food.label,guide:proteinPortionGuide(dp.grams)},
+        {main:'~20 g protein from the main protein'},
+        {main:'~'+p.dinnerRice+' g cooked whole grain',guide:g.dinnerRice},
+        {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
+        {main:'~'+p.veg+' g vegetables',guide:g.veg},
+        {main:'~'+p.oil+' g extra-virgin olive oil',guide:g.oil}
+      ]},
+    {id:'fruit3',name:'Fruit 3',...fruit,
+      items:[
+        {main:'1 medium piece fruit',guide:'~1 cup chopped'},
+        {main:'Vary colours across the week'}
+      ]},
+    {id:'shake',name:'Protein shake',...shake,
+      items:[
+        {main:'~'+p.powder+' g protein powder',guide:'1 scoop'},
+        {main:'~'+p.shakeMilk+' ml full-cream milk',guide:cupMeasure(p.shakeMilk/250)},
+        {main:'5 g creatine monohydrate'}
+      ]}
   ];
   const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
   const total=Math.round(totals.kcal);
