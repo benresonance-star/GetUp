@@ -188,3 +188,5 @@ html.standalone .top{
 html.standalone main{
   padding-top:calc(env(safe-area-inset-top, 0px) + 96px);
 }
+
+.mobility-home-card{width:100%;text-align:left;color:var(--ink);cursor:pointer;-webkit-appearance:none;appearance:none}.mobility-home-card .right{font-size:22px;color:var(--volt)}
