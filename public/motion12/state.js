@@ -213,7 +213,7 @@ function mealPlan(day){
   const total=Math.round(totals.kcal);
   const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
   const gap=c.eatingDay-total;
-  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Whole-grain and legume grams are cooked weight. Protein portions are cooked weights chosen to provide about 20 g protein: '+proteinEquivalentsText()+'. Extra-virgin olive oil is the default added fat. Household measures are approximate; cups use a 250 ml metric cup. Oily fish is more energy-dense than the representative lean-protein estimate, so use the calorie target as a guide rather than a laboratory value.'};
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Whole-grain and legume grams are cooked weight. Protein portions are cooked weights chosen to provide about 20 g protein: '+proteinEquivalentsText()+'. Extra-virgin olive oil is the default added fat. Household measures are approximate; cups use a 250 ml metric cup. Reference values are approximate and vary by cut, species and brand. Oily fish is more energy-dense, so selecting it raises the meal and day calories unless another component is adjusted.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
