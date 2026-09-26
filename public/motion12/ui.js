@@ -94,15 +94,15 @@ const MOTIVATION_QUOTES=[
   {text:"It's hard to beat a person who never gives up.",by:"Babe Ruth"},
   {text:"The first wealth is health.",by:"Ralph Waldo Emerson"},
   {text:"Energy and persistence conquer all things.",by:"Benjamin Franklin"},
-  {text:"Knowing is not enough; we must apply.",by:"Bruce Lee"},
-  {text:"The only place success comes before work is in the dictionary.",by:"Vince Lombardi"},
-  {text:"Believe you can and you're halfway there.",by:"Theodore Roosevelt"},
+  {text:"You miss 100% of the shots you don't take.",by:"Wayne Gretzky"},
   {text:"Exercise is king. Nutrition is queen.",by:"Jack LaLanne"},
-  {text:"I can accept failure; I can't accept not trying.",by:"Michael Jordan"},
-  {text:"Everything negative is an opportunity for me to rise.",by:"Kobe Bryant"},
+  {text:"I can accept failure, but I can't accept not trying.",by:"Michael Jordan"},
+  {text:"Everything negative is all an opportunity for me to rise.",by:"Kobe Bryant"},
   {text:"A champion is defined by how they recover when they fall.",by:"Serena Williams"},
-  {text:"Strength does not come from winning.",by:"Arnold Schwarzenegger"}
-];
+  {text:"Strength does not come from winning.",by:"Arnold Schwarzenegger"},
+  {text:"Champions keep playing until they get it right.",by:"Billie Jean King"},
+  {text:"Start where you are. Use what you have. Do what you can.",by:"Arthur Ashe"}
+]
 function dailyMotivationQuote(date=todayISO()){
   const day=Math.floor(new Date(date+'T00:00:00').getTime()/86400000);
   return MOTIVATION_QUOTES[((day%MOTIVATION_QUOTES.length)+MOTIVATION_QUOTES.length)%MOTIVATION_QUOTES.length];
