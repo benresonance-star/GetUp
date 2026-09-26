@@ -1469,6 +1469,77 @@ html.standalone main{
 }
 .strength-next.ready>span{color:var(--orange)}
 
+.strength-session-cue{
+  margin-top:10px;
+  padding:11px;
+  border:1px solid rgba(255,77,46,.34);
+  border-radius:13px;
+  background:linear-gradient(135deg,rgba(255,77,46,.08),rgba(255,77,46,.025));
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+}
+.strength-session-cue>div{min-width:0}
+.strength-session-cue span{
+  display:block;
+  color:var(--volt);
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.strength-session-cue strong{
+  display:block;
+  margin-top:5px;
+  color:#f4f5f6;
+  font-size:14px;
+  line-height:1.2;
+}
+.strength-session-cue small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.3;
+}
+.strength-session-cue button{
+  min-height:40px;
+  padding:9px 11px;
+  border:1px solid var(--volt);
+  border-radius:11px;
+  background:var(--volt);
+  color:#0a0b0c;
+  font-size:10px;
+  font-weight:950;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.strength-session-cue button b{font-size:15px;margin-left:3px}
+.strength-session-cue.final{
+  border-color:rgba(59,231,225,.28);
+  background:rgba(59,231,225,.055);
+}
+.strength-session-cue.final span{color:var(--cyan)}
+.strength-session-cue.final button{
+  border-color:var(--cyan);
+  background:var(--cyan);
+}
+.exercise.session-current{
+  border-color:rgba(255,77,46,.72);
+  box-shadow:inset 3px 0 0 rgba(255,77,46,.9),0 0 0 1px rgba(255,77,46,.08);
+}
+.exercise.session-current>.ex-top .num{
+  color:var(--volt);
+  border-color:rgba(255,77,46,.45);
+  background:rgba(255,77,46,.10);
+}
+.complete-session.attention{
+  box-shadow:0 0 0 4px rgba(255,77,46,.16),0 0 28px rgba(255,77,46,.18);
+  transform:scale(1.01);
+}
+
 .strength-flow-message{min-height:0;margin-top:7px;color:#ff927f;font-size:10px;font-weight:800;line-height:1.3}
 .strength-set-flow.needs-input .strength-set-row.active{border-color:#ff735e}
 .strength-flow-actions{display:flex;gap:7px;margin-top:10px}
@@ -1493,6 +1564,8 @@ html.standalone main{
   .strength-summary-metrics b{font-size:10.5px}
   .strength-next strong{font-size:12.5px}
   .strength-next p{font-size:9.7px}
+  .strength-session-cue{grid-template-columns:1fr;gap:8px;padding:10px}
+  .strength-session-cue button{width:100%;min-height:42px}
 }
 
 /* Low-fatigue support block beneath conditioning circuits */
