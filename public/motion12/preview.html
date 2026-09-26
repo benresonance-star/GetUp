@@ -194,12 +194,14 @@ function round5(n){return Math.round(n/5)*5}
 function round50(n){return Math.round(n/50)*50}
 function proteinSplit(){
   const p=protein(); if(!p)return null;
-  const breakfast=round5(p*.25);
-  const shake=round5(Math.min(35,Math.max(25,p*.20)));
-  const lunch=round5((p-breakfast-shake)/2);
-  const dinner=Math.max(0,p-breakfast-shake-lunch);
+  const shake=round5(Math.min(40,Math.max(30,p*.22)));
+  const mealProtein=p-shake;
+  const breakfast=round5(mealProtein/3);
+  const lunch=round5((mealProtein-breakfast)/2);
+  const dinner=Math.max(0,p-shake-breakfast-lunch);
   return {breakfast,lunch,dinner,shake,total:p};
 }
+function weeklyProteinAverage(){const p=protein();return p?Math.round((p*6)/7):null}
 function fatLossTargets(){if(!settings.bodyweight)return null;return {low:(settings.bodyweight*.005).toFixed(2),high:(settings.bodyweight*.008).toFixed(2),mid:settings.bodyweight*.0065,cap:(settings.bodyweight*.01).toFixed(2)}}
 function activityFactor(){
   const st=Number(settings.steps)||0;
@@ -219,35 +221,48 @@ function maintenanceEstimate(){
   return null;
 }
 function calorieTargets(){
-  const m=maintenanceEstimate(),f=fatLossTargets();
-  if(!m||!f)return null;
+  const m=maintenanceEstimate(),f=fatLossTargets(),w=Number(settings.bodyweight);
+  if(!m||!f||!w)return null;
   const weeklyMaintenance=m.kcal*7;
-  const weeklyDeficit=f.mid*7700;
-  const eatingDay=round50(Math.max(1200,(weeklyMaintenance-weeklyDeficit)/6));
-  return {maintenance:m.kcal,basis:m.basis,eatingDay,fastDay:0,weeklyDeficit:Math.round(weeklyDeficit)};
+  const targetWeeklyDeficit=f.mid*7700;
+  const rawEatingDay=(weeklyMaintenance-targetWeeklyDeficit)/6;
+  const eatingDay=round50(Math.max(1200,rawEatingDay));
+  const weeklyIntake=eatingDay*6;
+  const actualWeeklyDeficit=weeklyMaintenance-weeklyIntake;
+  const predictedLoss=Math.max(0,actualWeeklyDeficit/7700);
+  const predictedPct=(predictedLoss/w)*100;
+  return {
+    maintenance:m.kcal,basis:m.basis,eatingDay,fastDay:0,
+    targetWeeklyDeficit:Math.round(targetWeeklyDeficit),
+    actualWeeklyDeficit:Math.round(actualWeeklyDeficit),
+    weeklyIntake,
+    predictedLoss:Number(predictedLoss.toFixed(2)),
+    predictedPct:Number(predictedPct.toFixed(2)),
+    constrained:rawEatingDay<1200
+  };
 }
 function mealPlan(day){
   const c=calorieTargets(),ps=proteinSplit();
   if(!c||!ps)return null;
   if(day===1)return {total:0,meals:[],note:'Fast after the morning workout. Water, plain tea/coffee; resume meals Tuesday.'};
   const total=c.eatingDay;
+  const shake=150;
   const breakfast=round50(total*.25);
-  const lunch=round50(total*.30);
-  const dinner=round50(total*.30);
-  const shake=total-breakfast-lunch-dinner;
+  const lunch=round50((total-breakfast-shake)/2);
+  const dinner=total-breakfast-lunch-shake;
   return {total,meals:[
-    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'~2 cupped hands high-protein Greek yoghurt · 1 fist berries · 1 thumb nuts'},
-    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'1 scoop protein. Use water if calories are tight; milk/fruit only if needed to fill the day’s budget.'}
-  ],note:'Keep protein portions stable. Adjust rice/fats first if calories need moving.'};
+    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
+    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
+  ],note:'Keep protein portions stable. Adjust rice and added fats first when calories need moving.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
   if(!p||!f)return 'Add bodyweight to calculate protein and weekly fat-loss targets.';
   if(!c)return 'Protein ~'+p+' g/day · target loss '+f.low+'–'+f.high+' kg/week. Add height, age and sex for a better calorie estimate.';
-  if(day===1)return 'Monday fast · estimated maintenance ~'+c.maintenance+' kcal · weekly target loss '+f.low+'–'+f.high+' kg.';
-  return '~'+m.total+' kcal today · protein ~'+p+' g · target loss '+f.low+'–'+f.high+' kg/week · estimate basis: '+c.basis+'.';
+  if(day===1)return 'Monday fast · 0 kcal assumption · estimated maintenance ~'+c.maintenance+' kcal · planned loss ~'+c.predictedLoss+' kg/week.';
+  return '~'+m.total+' kcal today · protein ~'+p+' g · planned loss ~'+c.predictedLoss+' kg/week ('+c.predictedPct+'% bodyweight) · target range '+f.low+'–'+f.high+' kg/week.';
 }
 function dietText(day){
   const p=protein(),ps=proteinSplit(),c=calorieTargets();
@@ -275,8 +290,8 @@ function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>calories → portions</small></div>
   <div class="diet-grid">
-    <div class="card diet-card"><span class="tag">Protein</span><div class="big">${protein()?`~${protein()} G`:`SET WEIGHT`}</div><p>${proteinSplit()?`3 whole-food meals + shake · ${proteinSplit().breakfast}g / ${proteinSplit().lunch}g / ${proteinSplit().dinner}g / ${proteinSplit().shake}g`:`Add bodyweight to calculate protein.`}</p></div>
-    <div class="card diet-card"><span class="tag">Calorie target</span><div class="big ${d===1?`fast`:``}">${d===1?`FAST`:cal?`~${cal.eatingDay}`:`SET DETAILS`}</div><p>${d===1?`0 kcal after the workout today.`:cal?`kcal today · estimated maintenance ~${cal.maintenance} kcal · target loss ${fat.low}–${fat.high} kg/week`:`Add bodyweight; height/age/sex improve the estimate.`}</p></div>
+    <div class="card diet-card"><span class="tag">Protein · eating day</span><div class="big">${protein()?`~${protein()} G`:`SET WEIGHT`}</div><p>${proteinSplit()?`Meals ${proteinSplit().breakfast}g / ${proteinSplit().lunch}g / ${proteinSplit().dinner}g + shake ${proteinSplit().shake}g · weekly average ~${weeklyProteinAverage()} g/day with Monday fast`:`Add bodyweight to calculate protein.`}</p></div>
+    <div class="card diet-card"><span class="tag">Calorie target</span><div class="big ${d===1?`fast`:``}">${d===1?`FAST`:cal?`~${cal.eatingDay}`:`SET DETAILS`}</div><p>${d===1?`0 kcal Monday assumption · this must match how you actually fast.`:cal?`kcal today · maintenance ~${cal.maintenance} · planned loss ~${cal.predictedLoss} kg/week · target ${fat.low}–${fat.high}`:`Add bodyweight; height/age/sex improve the estimate.`}</p></div>
   </div>
   ${mealRows(d)}
   </section>
@@ -307,7 +322,7 @@ function renderProgress(){
   const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
   const p=protein(),fat=fatLossTargets(),cal=calorieTargets();
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
-  document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">Functional age dashboard</div><h1>Progress</h1><p>Track six useful measures. Calories are an estimate; the weight trend tells us whether the estimate is right.</p></div><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${fat?`${fat.low}–${fat.high} kg`:'—'}</b><span>target loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Estimate basis: ${cal.basis}. Monday fast is already included in the weekly calorie math.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Run the target for 2 weeks. If average loss is below ~${fat.low} kg/week, remove about 100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week or strength/sleep/energy fall, add about 100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
+  document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">Functional age dashboard</div><h1>Progress</h1><p>Track six useful measures. Calories are an estimate; the weight trend tells us whether the estimate is right.</p></div><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='homePage')renderHome();if(id==='daysPage')renderDays();if(id==='progressPage')renderProgress();window.scrollTo({top:0,behavior:'smooth'})}
