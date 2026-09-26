@@ -129,6 +129,7 @@ document.getElementById('settingsBtn').onclick=()=>{
 document.getElementById('cancelSettings').onclick=()=>document.getElementById('settingsOverlay').classList.remove('show');
 document.getElementById('saveSettings').onclick=()=>{
   const old=settings.portions||defaultPortions;
+  const portionValue=(id,fallback)=>{const raw=document.getElementById(id).value;return raw===''?fallback:Math.max(0,Number(raw)||0)};
   settings={...settings,
     startDate:document.getElementById('startDateInput').value||settings.startDate,
     bodyweight:Number(document.getElementById('bodyweightInput').value)||settings.bodyweight,
@@ -138,17 +139,17 @@ document.getElementById('saveSettings').onclick=()=>{
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
     portions:{
-      yogurt:Number(document.getElementById('yogurtInput').value)||old.yogurt,
-      berries:Number(document.getElementById('berriesInput').value)||old.berries,
-      nuts:Number(document.getElementById('nutsInput').value)||old.nuts,
-      latteMilk:Number(document.getElementById('latteMilkInput').value)||old.latteMilk,
-      meat:Number(document.getElementById('meatInput').value)||old.meat,
-      lunchRice:Number(document.getElementById('lunchRiceInput').value)||old.lunchRice,
-      dinnerRice:Number(document.getElementById('dinnerRiceInput').value)||old.dinnerRice,
-      veg:Number(document.getElementById('vegInput').value)||old.veg,
-      oil:Number(document.getElementById('oilInput').value)||old.oil,
-      powder:Number(document.getElementById('powderInput').value)||old.powder,
-      shakeMilk:Number(document.getElementById('shakeMilkInput').value)||old.shakeMilk
+      yogurt:portionValue('yogurtInput',old.yogurt),
+      berries:portionValue('berriesInput',old.berries),
+      nuts:portionValue('nutsInput',old.nuts),
+      latteMilk:portionValue('latteMilkInput',old.latteMilk),
+      meat:portionValue('meatInput',old.meat),
+      lunchRice:portionValue('lunchRiceInput',old.lunchRice),
+      dinnerRice:portionValue('dinnerRiceInput',old.dinnerRice),
+      veg:portionValue('vegInput',old.veg),
+      oil:portionValue('oilInput',old.oil),
+      powder:portionValue('powderInput',old.powder),
+      shakeMilk:portionValue('shakeMilkInput',old.shakeMilk)
     }
   };
   if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);localStorage.setItem('motion12.measurements',JSON.stringify(measurements))}
