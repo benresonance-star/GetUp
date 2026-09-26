@@ -23,7 +23,7 @@ const program={
     ['1-arm kettlebell row','3 × 8–12 / side','Minimal torso rotation; pull with upper back.','3 × 12 twice → next kettlebell.'],
     ['Back extension','2 × 10–15','Finish straight, not hyperextended.','2 × 15 twice → hold light kettlebell at chest.'],
     ['Single-leg calf raise','2 × 10–15 / side','Full stretch; pause at top.','2 × 15 twice → add kettlebell.'],
-    ['Standing kettlebell cross-body lift','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
+    ['Kettlebell woodchop','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
   ]},
   4:{name:'Swing Power',why:'Explosive hip power plus compact cardiovascular conditioning.',time:'12–18 min',tone:'orange',diet:'High-protein eating day',work:[
     ['2-hand kettlebell swing','See weekly target','Every rep should snap. Stop before technique slows.','Complete 10 × 10 twice at ≤7–8/10 effort → next bell, reset to 6–8 × 8.']
@@ -35,7 +35,7 @@ const program={
     ['Push-up','2 × 8–15','Same variation and depth each rep.','2 × 15 twice → harder variation.'],
     ['Kettlebell Romanian deadlift','2 × 8–12','Controlled lowering; strong hip extension.','12/12 twice → increase load.'],
     ['Suitcase carry','2 × 45 sec / side','Tall and quiet trunk.','60 sec twice → next bell.'],
-    ['Plank shoulder tap / cross-body lift','2 × 8–10 / side','Odd weeks shoulder taps; even weeks light kettlebell cross-body lifts.','Progress stance/tempo on taps; progress load cautiously on lifts.']
+    ['Plank shoulder tap / kettlebell woodchop','2 × 8–10 / side','Odd weeks shoulder taps; even weeks light kettlebell woodchops.','Progress stance/tempo on taps; progress load cautiously on woodchops.']
   ]},
   6:{name:'Aerobic Power',why:'Raise maximal oxygen uptake without grip or kettlebell technique being the limiter.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
     ['Aerobic intervals','See weekly target','Uphill walk, jog, bike or stairs. Keep output repeatable.','Increase pace only if all intervals complete, <5% fade, ≤8.5/10 finish and recovery is adequate.']
@@ -43,37 +43,42 @@ const program={
   0:{name:'Reset',why:'Absorb the week. Mobility and normal walking only.',time:'8 min',tone:'cyan',diet:'Normal eating day',work:[]}
 };
 const mobility=[
- ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Lateral step + cross-body reach','5 / side']
+ ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Bodyweight lateral lunge','5 / side']
 ];
 const swingTargets=['6 × 8 = 48','7 × 8 = 56','8 × 8 = 64','10 × 8 = 80','8 × 10 = 80','9 × 10 = 90','10 × 10 = 100','6 × 8 = 48 deload','10 × 10 = 100','11 × 10 = 110','12 × 10 = 120','8 × 8 = 64 consolidate'];
 const aerobicTargets=['40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','3 × 3 min hard / 3 min easy','4 × 3 min hard / 3 min easy','4 × 4 min hard / 3 min easy','30–40 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','2 km walk test'];
 
-const ytSearch=(q)=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' short proper form');
 const videoLinks={
-  'Goblet squat':'https://www.youtube.com/watch?v=TzU5zkTEkg8',
-  'Ring row / pull-up':ytSearch('ring row pull up technique'),
-  'Ring row':ytSearch('ring row technique'),
-  'Kettlebell Romanian deadlift':'https://www.youtube.com/watch?v=Hv2M23ZfipA',
-  '1-arm kettlebell press':'https://www.youtube.com/watch?v=X-uFqWtjpGI',
-  'Suitcase carry':'https://www.youtube.com/watch?v=Q1GjhRDAil0',
-  'Plank shoulder tap':ytSearch('plank shoulder tap anti rotation proper form'),
-  'Kettlebell deadlift':'https://www.youtube.com/watch?v=LDfnyt0Rmaw',
-  'Band pull-apart':'https://www.youtube.com/watch?v=JObYtU7Y7ag',
-  'Single-leg calf raise':ytSearch('single leg calf raise'),
-  'Reverse lunge':'https://www.youtube.com/watch?v=xrPteyQLGAo',
-  'Push-up':'https://www.youtube.com/watch?v=WDIpL0pjun0',
-  '1-arm kettlebell row':'https://www.youtube.com/watch?v=IyQAMOV0WAc',
-  'Back extension':'https://www.youtube.com/watch?v=dF_V3358Dkc',
-  'Standing kettlebell cross-body lift':ytSearch('standing kettlebell cross body lift wood chop'),
-  '2-hand kettlebell swing':'https://www.youtube.com/watch?v=1cVT3ee9mgU',
-  'Lateral lunge':'https://www.youtube.com/watch?v=YCdVdzN0L_w',
-  'Plank shoulder tap / cross-body lift':ytSearch('plank shoulder tap kettlebell cross body lift'),
-  'Aerobic intervals':ytSearch('4x4 VO2 max interval protocol'),
-  'Chin tuck':ytSearch('chin tuck neck exercise'),
-  'Open-book rotation':'https://www.youtube.com/watch?v=YqXJyXTKH3E',
-  'Wall slide':ytSearch('wall slide shoulder mobility'),
-  '90/90 hip rotation':'https://www.youtube.com/watch?v=t4Zz6-aG8Iw',
-  'Figure-four glute stretch':'https://www.youtube.com/watch?v=UDmKplc61t8',
-  'Lateral step + cross-body reach':ytSearch('lateral step cross body reach mobility')
+  'Goblet squat':[{label:'Form',url:'https://www.youtube.com/watch?v=nfX7IFK9UNI'}],
+  'Ring row / pull-up':[
+    {label:'Ring row',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'},
+    {label:'Pull-up',url:'https://www.youtube.com/watch?v=eGo4IYlbE5g'}
+  ],
+  'Ring row':[{label:'Form',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'}],
+  'Kettlebell Romanian deadlift':[{label:'Form',url:'https://www.youtube.com/watch?v=Uc5rP5xs7qQ'}],
+  '1-arm kettlebell press':[{label:'Form',url:'https://www.youtube.com/watch?v=X-uFqWtjpGI'}],
+  'Suitcase carry':[{label:'Form',url:'https://www.youtube.com/watch?v=BaRMAhD7SP4'}],
+  'Plank shoulder tap':[{label:'Form',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'}],
+  'Kettlebell deadlift':[{label:'Form',url:'https://www.youtube.com/watch?v=LDfnyt0Rmaw'}],
+  'Band pull-apart':[{label:'Form',url:'https://www.youtube.com/watch?v=JObYtU7Y7ag'}],
+  'Single-leg calf raise':[{label:'Form',url:'https://www.youtube.com/watch?v=nSeQdvzehcU'}],
+  'Reverse lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=xrPteyQLGAo'}],
+  'Push-up':[{label:'Form',url:'https://www.youtube.com/watch?v=WDIpL0pjun0'}],
+  '1-arm kettlebell row':[{label:'Form',url:'https://www.youtube.com/watch?v=IyQAMOV0WAc'}],
+  'Back extension':[{label:'Form',url:'https://www.youtube.com/watch?v=H8Swl1N-uis'}],
+  'Kettlebell woodchop':[{label:'Form',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}],
+  '2-hand kettlebell swing':[{label:'Form',url:'https://www.youtube.com/watch?v=1cVT3ee9mgU'}],
+  'Lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}],
+  'Plank shoulder tap / kettlebell woodchop':[
+    {label:'Shoulder tap',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'},
+    {label:'Woodchop',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}
+  ],
+  'Aerobic intervals':[{label:'4×4',url:'https://www.youtube.com/watch?v=o3SjPbS9ovA'}],
+  'Chin tuck':[{label:'Form',url:'https://www.youtube.com/watch?v=u8C5LgpK3r4'}],
+  'Open-book rotation':[{label:'Form',url:'https://www.youtube.com/watch?v=OW6YHlxY6JI'}],
+  'Wall slide':[{label:'Form',url:'https://www.youtube.com/watch?v=Eaj_NG5_hIo'}],
+  '90/90 hip rotation':[{label:'Form',url:'https://www.youtube.com/watch?v=t4Zz6-aG8Iw'}],
+  'Figure-four glute stretch':[{label:'Form',url:'https://www.youtube.com/watch?v=-g0nuyTHMrI'}],
+  'Bodyweight lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}]
 };
-function videoFor(name){return videoLinks[name]||ytSearch(name)}
+function videosFor(name){return videoLinks[name]||[]}
