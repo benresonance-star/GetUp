@@ -71,11 +71,33 @@ function mealPlan(day){
   const breakfast=round50(total*.25);
   const lunch=round50((total-breakfast-shake)/2);
   const dinner=total-breakfast-lunch-shake;
-  return {total,meals:[
-    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
-    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
+
+  // Protein is fixed first. Fat is kept near 30% of eating-day calories;
+  // carbohydrate fills the remaining calorie budget.
+  const fatTarget=round5((total*.30)/9);
+  const shakeFat=0;
+  const breakfastFat=round5(fatTarget*.30);
+  const lunchFat=round5(fatTarget*.35);
+  const dinnerFat=Math.max(0,fatTarget-breakfastFat-lunchFat-shakeFat);
+  const macro=(kcal,protein,fat)=>({
+    protein,
+    fat,
+    carbs:Math.max(0,Math.round((kcal-protein*4-fat*9)/4))
+  });
+  const b=macro(breakfast,ps.breakfast,breakfastFat);
+  const l=macro(lunch,ps.lunch,lunchFat);
+  const d=macro(dinner,ps.dinner,dinnerFat);
+  const sh=macro(shake,ps.shake,shakeFat);
+  const macroTotals={
+    protein:b.protein+l.protein+d.protein+sh.protein,
+    carbs:b.carbs+l.carbs+d.carbs+sh.carbs,
+    fat:b.fat+l.fat+d.fat+sh.fat
+  };
+  return {total,macroTotals,meals:[
+    {name:'Breakfast',kcal:breakfast,...b,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
+    {name:'Lunch',kcal:lunch,...l,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Dinner',kcal:dinner,...d,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Protein shake',kcal:shake,...sh,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
   ],note:'Keep protein portions stable. Adjust rice and added fats first when calories need moving.'};
 }
 function nutritionSummary(day=programDay()){
