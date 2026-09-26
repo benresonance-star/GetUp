@@ -15,12 +15,14 @@ function round5(n){return Math.round(n/5)*5}
 function round50(n){return Math.round(n/50)*50}
 function proteinSplit(){
   const p=protein(); if(!p)return null;
-  const breakfast=round5(p*.25);
-  const shake=round5(Math.min(35,Math.max(25,p*.20)));
-  const lunch=round5((p-breakfast-shake)/2);
-  const dinner=Math.max(0,p-breakfast-shake-lunch);
+  const shake=round5(Math.min(40,Math.max(30,p*.22)));
+  const mealProtein=p-shake;
+  const breakfast=round5(mealProtein/3);
+  const lunch=round5((mealProtein-breakfast)/2);
+  const dinner=Math.max(0,p-shake-breakfast-lunch);
   return {breakfast,lunch,dinner,shake,total:p};
 }
+function weeklyProteinAverage(){const p=protein();return p?Math.round((p*6)/7):null}
 function fatLossTargets(){if(!settings.bodyweight)return null;return {low:(settings.bodyweight*.005).toFixed(2),high:(settings.bodyweight*.008).toFixed(2),mid:settings.bodyweight*.0065,cap:(settings.bodyweight*.01).toFixed(2)}}
 function activityFactor(){
   const st=Number(settings.steps)||0;
@@ -40,35 +42,48 @@ function maintenanceEstimate(){
   return null;
 }
 function calorieTargets(){
-  const m=maintenanceEstimate(),f=fatLossTargets();
-  if(!m||!f)return null;
+  const m=maintenanceEstimate(),f=fatLossTargets(),w=Number(settings.bodyweight);
+  if(!m||!f||!w)return null;
   const weeklyMaintenance=m.kcal*7;
-  const weeklyDeficit=f.mid*7700;
-  const eatingDay=round50(Math.max(1200,(weeklyMaintenance-weeklyDeficit)/6));
-  return {maintenance:m.kcal,basis:m.basis,eatingDay,fastDay:0,weeklyDeficit:Math.round(weeklyDeficit)};
+  const targetWeeklyDeficit=f.mid*7700;
+  const rawEatingDay=(weeklyMaintenance-targetWeeklyDeficit)/6;
+  const eatingDay=round50(Math.max(1200,rawEatingDay));
+  const weeklyIntake=eatingDay*6;
+  const actualWeeklyDeficit=weeklyMaintenance-weeklyIntake;
+  const predictedLoss=Math.max(0,actualWeeklyDeficit/7700);
+  const predictedPct=(predictedLoss/w)*100;
+  return {
+    maintenance:m.kcal,basis:m.basis,eatingDay,fastDay:0,
+    targetWeeklyDeficit:Math.round(targetWeeklyDeficit),
+    actualWeeklyDeficit:Math.round(actualWeeklyDeficit),
+    weeklyIntake,
+    predictedLoss:Number(predictedLoss.toFixed(2)),
+    predictedPct:Number(predictedPct.toFixed(2)),
+    constrained:rawEatingDay<1200
+  };
 }
 function mealPlan(day){
   const c=calorieTargets(),ps=proteinSplit();
   if(!c||!ps)return null;
   if(day===1)return {total:0,meals:[],note:'Fast after the morning workout. Water, plain tea/coffee; resume meals Tuesday.'};
   const total=c.eatingDay;
+  const shake=150;
   const breakfast=round50(total*.25);
-  const lunch=round50(total*.30);
-  const dinner=round50(total*.30);
-  const shake=total-breakfast-lunch-dinner;
+  const lunch=round50((total-breakfast-shake)/2);
+  const dinner=total-breakfast-lunch-shake;
   return {total,meals:[
-    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'~2 cupped hands high-protein Greek yoghurt · 1 fist berries · 1 thumb nuts'},
-    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1 cupped hand cooked rice · 2 fists vegetables · 1 thumb fat'},
-    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'1 scoop protein. Use water if calories are tight; milk/fruit only if needed to fill the day’s budget.'}
-  ],note:'Keep protein portions stable. Adjust rice/fats first if calories need moving.'};
+    {name:'Breakfast',kcal:breakfast,protein:ps.breakfast,portion:'High-protein Greek yoghurt · 1 fist berries · 1–2 thumbs nuts. Adjust yoghurt/nuts to hit the meal calories.'},
+    {name:'Lunch',kcal:lunch,protein:ps.lunch,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Dinner',kcal:dinner,protein:ps.dinner,portion:'1½–2 palms lean meat/fish · 1–1½ cupped hands cooked rice · 2 fists vegetables · 1 thumb fat'},
+    {name:'Protein shake',kcal:shake,protein:ps.shake,portion:'Protein powder + water, targeting ~150 kcal. Check your powder label; add milk/fruit only by borrowing calories from meals.'}
+  ],note:'Keep protein portions stable. Adjust rice and added fats first when calories need moving.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
   if(!p||!f)return 'Add bodyweight to calculate protein and weekly fat-loss targets.';
   if(!c)return 'Protein ~'+p+' g/day · target loss '+f.low+'–'+f.high+' kg/week. Add height, age and sex for a better calorie estimate.';
-  if(day===1)return 'Monday fast · estimated maintenance ~'+c.maintenance+' kcal · weekly target loss '+f.low+'–'+f.high+' kg.';
-  return '~'+m.total+' kcal today · protein ~'+p+' g · target loss '+f.low+'–'+f.high+' kg/week · estimate basis: '+c.basis+'.';
+  if(day===1)return 'Monday fast · 0 kcal assumption · estimated maintenance ~'+c.maintenance+' kcal · planned loss ~'+c.predictedLoss+' kg/week.';
+  return '~'+m.total+' kcal today · protein ~'+p+' g · planned loss ~'+c.predictedLoss+' kg/week ('+c.predictedPct+'% bodyweight) · target range '+f.low+'–'+f.high+' kg/week.';
 }
 function dietText(day){
   const p=protein(),ps=proteinSplit(),c=calorieTargets();
