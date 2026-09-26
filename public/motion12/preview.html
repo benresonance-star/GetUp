@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="timer-glanceability-refinements-20260927" />
+  <meta name="motion12-build" content="timer-next-stage-clearer-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -1144,17 +1144,40 @@ html.standalone main{
   font-size:10px;
   line-height:1.3;
 }
-.timer-ring em{
-  min-height:12px;
-  margin-top:1px;
-  color:#c8cbd0;
-  font-size:9px;
-  line-height:1.25;
-  font-style:normal;
-  font-weight:800;
-  letter-spacing:.01em;
+.timer-next{
+  min-height:34px;
+  margin-top:6px;
+  padding:6px 10px 7px;
+  border:1px solid rgba(255,122,26,.22);
+  border-radius:999px;
+  background:rgba(255,122,26,.055);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  max-width:190px;
 }
-.timer-ring em:empty{display:none}
+.timer-next:empty{display:none}
+.timer-next-label{
+  color:var(--muted);
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.timer-next-stage{
+  color:#f2f3f4;
+  font-size:10px;
+  line-height:1.15;
+  font-weight:900;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.timer-next-stage b{
+  color:var(--orange);
+  font-weight:950;
+}
 .smart-timer-controls{
   display:flex;
   gap:7px;
@@ -2618,7 +2641,7 @@ function timerViewModel(){
       label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;
       progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
       const next=plan.phases[smartTimer.phaseIndex+1];
-      nextText=next?'Next · '+timerPhaseReadable(next.label)+' '+next.seconds+' sec':'Next · Complete';
+      nextText=next?timerPhaseReadable(next.label)+' · '+next.seconds+' sec':'Complete';
     }
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
@@ -2682,7 +2705,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><em id="timerNext">'+vm.nextText+'</em></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -2697,7 +2720,8 @@ function updateSmartTimerDisplay(){
   clock.textContent=timerFormat(vm.sec);
   const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
-  const next=document.getElementById('timerNext');if(next)next.textContent=vm.nextText;
+  const next=document.getElementById('timerNext');
+  if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
   const ring=document.getElementById('timerRing');
   if(ring){
     ring.style.setProperty('--timer-progress',(vm.ringProgress*360)+'deg');
