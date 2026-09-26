@@ -19,7 +19,7 @@ function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText
   </div>
   ${mealRows(d)}
   </section>
-  <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><div class="card row"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></div></section>
+  <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><button class="card row mobility-home-card" type="button" onclick="openMobilityToday()"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></button></section>
   </div></div>`;
 }
 function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Same structure every week. Only load, leverage and aerobic output progress.</p></div><div class="section day-list cards">`;
@@ -36,9 +36,10 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
  <div class="timer"><div class="eyebrow">Session / rest timer</div><div class="clock" id="clock">00:00</div><div class="timer-actions"><button class="primary" onclick="toggleTimer()" id="timerToggle">Start</button><button onclick="setTimer(60)">1:00</button><button onclick="setTimer(90)">1:30</button><button onclick="resetTimer()">Reset</button></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div><div class="card" style="margin-top:10px"><span class="tag">Food</span><h3 style="margin-top:10px" class="${day===1?'fast':''}">${diet[0]}</h3><p>${diet[1]}. ${diet[2]}</p><div class="nutrition-strip">${nutritionSummary(day)}</div></div><div style="margin-top:10px">${mealRows(day)}</div></div>
  <div><section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
- <section class="section"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
+ <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  updateClock(); window.scrollTo({top:0,behavior:'smooth'});
 }
+function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
 function toggleExercise(id){logs[id]=logs[id]||{};logs[id].done=!logs[id].done;localStorage.setItem('motion12.logs',JSON.stringify(logs));document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done)}
 function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;localStorage.setItem('motion12.logs',JSON.stringify(logs))}
 function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;localStorage.setItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
