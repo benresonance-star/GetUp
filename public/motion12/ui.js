@@ -112,7 +112,7 @@ function streakBand(compact=false){
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
   const program=s.completed+'/'+s.programDays;
   return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
-    '<div class="streak-quote">“'+q.text+'” <span>— '+q.by+'</span></div>'+
+    '<div class="streak-quote"><span class="streak-quote-text">“'+q.text+'”</span><span class="streak-quote-by">— '+q.by+'</span></div>'+
     '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
     '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
     '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
