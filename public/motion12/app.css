@@ -1371,8 +1371,8 @@ html.standalone main{
 }
 
 
-/* Monday Strength A — generalized set-level logging */
-.monday-strength-slice{border-color:rgba(255,77,46,.3)}
+/* Strength A/B/C — generalized set-level logging */
+.strength-session-slice{border-color:rgba(255,77,46,.3)}
 .strength-set-flow{
   margin:13px 0 14px;
   padding:12px;
