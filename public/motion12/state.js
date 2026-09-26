@@ -63,7 +63,11 @@ function roundMacros(m){
 }
 function handCount(n){
   const v=Math.round(n*2)/2;
-  return Number.isInteger(v)?String(v):v.toFixed(1);
+  if(v===0)return '0';
+  if(v===.5)return '½';
+  if(v===1.5)return '1½';
+  if(v===2.5)return '2½';
+  return String(v);
 }
 function handLabel(n,singular,plural){
   const v=Math.round(n*2)/2;
@@ -83,13 +87,17 @@ function tspMeasure(tsp){
   const v=Math.max(.5,Math.round(tsp*2)/2);
   return '~'+(Number.isInteger(v)?v:v.toFixed(1))+' tsp';
 }
+function tbspMeasure(tbsp){
+  const v=Math.max(.25,Math.round(tbsp*4)/4);
+  return '~'+quarterFraction(v)+' tbsp';
+}
 function portionGuide(){
   const p=settings.portions;
   return {
     yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands')+' · '+cupMeasure(p.yogurt/250),
     berries:handLabel(p.berries/200,'fist','fists')+' · '+cupMeasure(p.berries/135),
     nuts:handLabel(p.nuts/15,'thumb','thumbs')+' · '+cupMeasure(p.nuts/100),
-    seeds:tspMeasure(p.seeds/5)+' · ~1 tbsp at 10 g',
+    seeds:tbspMeasure(p.seeds/10),
     meat:handLabel(p.meat/80,'palm','palms')+' · '+cupMeasure(p.meat/140)+' chopped',
     lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.lunchRice/180),
     dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.dinnerRice/180),
