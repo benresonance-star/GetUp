@@ -12,12 +12,19 @@ function toggleHomeMode(){
   if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
 }
 function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
-function mealKey(date,index){return 'meal:'+date+':'+index}
+function mealKey(date,id){return 'meal:'+date+':'+id}
+function legacyMealIndex(id){return ({breakfast:0,latte1:1,lunch:2,latte2:3,dinner:4,shake:5})[id]}
+function mealDone(date,meal){
+  const key=mealKey(date,meal.id);
+  if(Object.prototype.hasOwnProperty.call(logs,key))return !!logs[key].done;
+  const legacy=legacyMealIndex(meal.id);
+  return legacy===undefined?false:!!logs['meal:'+date+':'+legacy]?.done;
+}
 function intakeTotals(day,date){
   const plan=mealPlan(day);
   if(!plan||!plan.meals.length)return null;
-  const consumed=plan.meals.reduce((acc,m,i)=>{
-    if(logs[mealKey(date,i)]?.done){
+  const consumed=plan.meals.reduce((acc,m)=>{
+    if(mealDone(date,m)){
       acc.kcal+=m.kcal; acc.protein+=m.protein; acc.carbs+=m.carbs; acc.fat+=m.fat;
     }
     return acc;
@@ -45,22 +52,23 @@ function mealRows(day,date=todayISO()){
   const plan=mealPlan(day);
   if(!plan)return '<div class="card"><p>Add bodyweight to create the meal plan.</p></div>';
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
-  return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+(plan.gap?'<div class="plan-gap '+(plan.gap<0?'over':'')+'">Plan '+plan.total+' kcal · target '+plan.target+' kcal · '+(plan.gap>0?plan.gap+' kcal unallocated':Math.abs(plan.gap)+' kcal over target')+'</div>':'')+'</div><div class="meal-list">'+plan.meals.map((m,i)=>{
-    const key=mealKey(date,i),done=!!logs[key]?.done;
-    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
+  return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+(plan.gap?'<div class="plan-gap '+(plan.gap<0?'over':'')+'">Plan '+plan.total+' kcal · target '+plan.target+' kcal · '+(plan.gap>0?plan.gap+' kcal unallocated':Math.abs(plan.gap)+' kcal over target')+'</div>':'')+'</div><div class="meal-list">'+plan.meals.map(m=>{
+    const key=mealKey(date,m.id),done=mealDone(date,m);
+    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
   }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Use labels or a food scale once to calibrate your usual portions.</div></div>';
 }
-function toggleMeal(key){
-  logs[key]=logs[key]||{};
-  logs[key].done=!logs[key].done;
+function toggleMeal(date,id){
+  const plan=mealPlan(new Date(date+'T00:00:00').getDay());
+  const meal=plan?.meals.find(m=>m.id===id);
+  if(!meal)return;
+  const key=mealKey(date,id),current=mealDone(date,meal);
+  logs[key]={...(logs[key]||{}),done:!current};
   localStorage.setItem('motion12.logs',JSON.stringify(logs));
-  const parts=key.split(':');
-  const date=parts[1];
   const day=new Date(date+'T00:00:00').getDay();
   document.querySelectorAll('[data-meal-key="'+key+'"]').forEach(el=>{
-    el.classList.toggle('done',logs[key].done);
+    el.classList.toggle('done',!current);
     const check=el.querySelector('.meal-check');
-    if(check)check.textContent=logs[key].done?'✓':'';
+    if(check)check.textContent=!current?'✓':'';
   });
   updateIntakeStrips(day,date);
   if(settings.homeMode==='compact' && document.getElementById('homePage')?.classList.contains('active'))renderHome();
@@ -69,16 +77,16 @@ function compactMealChips(day,date){
   const plan=mealPlan(day);
   if(!plan)return '<div class="compact-empty">Set bodyweight to build meals</div>';
   if(!plan.meals.length)return '<div class="compact-fast">FAST DAY · water / plain coffee / tea</div>';
-  return '<div class="compact-meal-grid">'+plan.meals.map((m,i)=>{
-    const key=mealKey(date,i),done=!!logs[key]?.done;
+  return '<div class="compact-meal-grid">'+plan.meals.map(m=>{
+    const key=mealKey(date,m.id),done=mealDone(date,m);
     const label=m.name.replace('Protein shake','Shake');
-    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span>'+label+'</span></button>';
+    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span>'+label+'</span></button>';
   }).join('')+'</div>';
 }
 function compactMealCount(day,date){
   const plan=mealPlan(day);
   if(!plan||!plan.meals.length)return '';
-  const done=plan.meals.reduce((n,m,i)=>n+(logs[mealKey(date,i)]?.done?1:0),0);
+  const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
 function renderCompactHome(d,w,p,fat,cal,strip){
@@ -110,7 +118,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
 
       <div class="compact-card compact-meals-card">
-        <div class="compact-card-head"><span class="compact-label">Meals</span><b>${mealCount}</b></div>
+        <div class="compact-card-head"><span class="compact-label">Food</span><b>${mealCount}</b></div>
         ${compactMealChips(d,date)}
       </div>
 
@@ -135,7 +143,7 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>calories → portions</small></div>
   <div class="diet-grid">
-    <div class="card diet-card"><span class="tag">Protein · eating day</span><div class="big">${protein()?`~${protein()} G`:`SET WEIGHT`}</div><p>${proteinSplit()?`Meals ${proteinSplit().breakfast}g / ${proteinSplit().lunch}g / ${proteinSplit().dinner}g + shake ${proteinSplit().shake}g + 2 lattes × ${proteinSplit().latte1}g · weekly average ~${weeklyProteinAverage()} g/day with Monday fast`:`Add bodyweight to calculate protein.`}</p></div>
+    <div class="card diet-card"><span class="tag">Protein · eating day</span><div class="big">${protein()?`~${protein()} G`:`SET WEIGHT`}</div><p>${proteinSplit()?`Meals ${proteinSplit().breakfast}g / ${proteinSplit().lunch}g / ${proteinSplit().dinner}g + shake ${proteinSplit().shake}g + 2 lattes × ${proteinSplit().latte1}g + 3 fruit · weekly average ~${weeklyProteinAverage()} g/day with Monday fast`:`Add bodyweight to calculate protein.`}</p></div>
     <div class="card diet-card"><span class="tag">Calorie target</span><div class="big ${d===1?`fast`:``}">${d===1?`FAST`:cal?`~${cal.eatingDay}`:`SET DETAILS`}</div><p>${d===1?`0 kcal Monday assumption · this must match how you actually fast.`:cal?`kcal today · maintenance ~${cal.maintenance} · planned loss ~${cal.predictedLoss} kg/week · target ${fat.low}–${fat.high}`:`Add bodyweight; height/age/sex improve the estimate.`}</p></div>
   </div>
   ${mealRows(d,todayISO())}
