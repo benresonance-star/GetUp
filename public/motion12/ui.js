@@ -234,6 +234,51 @@ function timerSessionPlan(day=programDay(),w=weekNo()){
   if(day===1||day===3||day===5)return {kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
   return {kind:'stopwatch',title:'Reset · mobility',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
 }
+function exerciseRestPreset(name,day=programDay(),w=weekNo()){
+  const strength120=new Set(['Goblet squat','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
+  const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
+  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Kettlebell deadlift','Ring row','Band pull-apart','Single-leg calf raise','Back extension','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
+  if(name==='2-hand kettlebell swing')return {category:'Power',seconds:60,action:'session',label:'1:00 between sets',note:'Keep recovery long enough for every set to stay explosive.'};
+  if(name==='Aerobic intervals'){
+    const plan=timerSessionPlan(day,w);
+    if(plan.kind==='intervals'){
+      const recover=plan.phases.find(x=>x.label==='RECOVER');
+      return {category:'Conditioning',seconds:recover?.seconds||180,action:'session',label:timerFormat(recover?.seconds||180)+' programmed',note:'Use the full programmed recovery so hard intervals stay repeatable.'};
+    }
+    return {category:'Conditioning',seconds:0,action:'session',label:'Continuous',note:'No fixed rest on today’s continuous aerobic session.'};
+  }
+  if(day===2&&accessory60.has(name))return {category:'Recovery',seconds:45,action:'rest',label:'0:45',note:'Restore day stays deliberately easy with short recoveries.'};
+  if(strength120.has(name))return {category:'Primary strength',seconds:120,action:'rest',label:'2:00',note:'Longer recovery protects force output and technique on demanding compound work.'};
+  if(strength90.has(name))return {category:'Strength',seconds:90,action:'rest',label:'1:30',note:'Enough recovery to keep reps crisp without unnecessarily stretching the session.'};
+  if(accessory60.has(name))return {category:'Accessory / core',seconds:60,action:'rest',label:'1:00',note:'Shorter recovery is usually sufficient for accessories, carries and trunk work.'};
+  return {category:'Strength',seconds:90,action:'rest',label:'1:30',note:'A balanced default for moderate strength work.'};
+}
+function timerUseExercisePreset(name){
+  timerPrimeAudio();
+  const rec=exerciseRestPreset(name);
+  if(rec.action==='session'){
+    timerConfigure('session',true);
+    smartTimer.exerciseName=name;
+    smartTimer.exerciseCategory=rec.category;
+    saveSmartTimer();
+    renderTimerPage();
+    return;
+  }
+  timerSetRest(rec.seconds,name,rec.category);
+}
+function exercisePresetMarkup(){
+  const p=program[programDay()];
+  if(!p?.work?.length)return '';
+  return '<section class="section timer-exercise-section"><div class="section-head"><h2>Exercise recovery</h2><small>tap to load</small></div><div class="exercise-rest-list">'+
+    p.work.map(x=>{
+      const name=x[0],rec=exerciseRestPreset(name),active=smartTimer.exerciseName===name?' active':'';
+      return '<button class="exercise-rest-preset'+active+'" type="button" onclick="timerUseExercisePreset('+JSON.stringify(name)+')">'+
+        '<span><b>'+name+'</b><small>'+rec.category+'</small></span>'+
+        '<strong>'+rec.label+'</strong>'+
+      '</button>';
+    }).join('')+
+  '</div></section>';
+}
 function saveSmartTimer(){localStorage.setItem('motion12.timer',JSON.stringify(smartTimer))}
 function timerFormat(sec){
   sec=Math.max(0,Math.floor(sec||0));
@@ -346,8 +391,8 @@ function timerStartPause(){
   saveSmartTimer();timerEnsureTick();renderTimerPage();
 }
 function timerReset(){timerConfigure(smartTimer.mode||'session',true);renderTimerPage()}
-function timerSetRest(sec){
-  smartTimer={...defaultSmartTimer,mode:'rest',kind:'rest',duration:sec,remaining:sec,dayKey:todayISO()+':'+weekNo()};
+function timerSetRest(sec,exerciseName='',exerciseCategory=''){
+  smartTimer={...defaultSmartTimer,mode:'rest',kind:'rest',duration:sec,remaining:sec,exerciseName,exerciseCategory,dayKey:todayISO()+':'+weekNo()};
   saveSmartTimer();renderTimerPage();
 }
 function timerAdjust(delta){
@@ -399,9 +444,10 @@ function timerViewModel(){
   }else if(kind==='stopwatch'){
     label='ELAPSED';meta=plan.title;detail=plan.note;
   }else{
-    label='REST';meta=smartTimer.mode==='session'?plan.title:'Manual rest';
+    label='REST';
+    meta=smartTimer.mode==='session'?plan.title:(smartTimer.exerciseName||'Manual rest');
     progress=smartTimer.duration?1-sec/smartTimer.duration:0;
-    detail=smartTimer.mode==='session'?plan.note:'Use this for any set that needs a different recovery time.';
+    detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
   return {plan,sec,kind,label,meta,detail,progress:Math.max(0,Math.min(1,progress))};
 }
@@ -433,6 +479,7 @@ function renderTimerPage(){
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
+    exercisePresetMarkup()+
     '<section class="section"><div class="card timer-guidance"><span class="tag">Why this timer</span><h3>'+vm.plan.title+'</h3><p>'+vm.detail+'</p></div></section>';
   timerEnsureTick();
 }
