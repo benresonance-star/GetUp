@@ -374,7 +374,7 @@ function closeInlineExerciseTimer(){
   document.querySelectorAll('.inline-ex-timer').forEach(el=>el.remove());
 }
 function inlineTimerTick(){
-  if(!inlineTimer.running){updateGobletFlowLive();updateInlineExerciseTimer();return}
+  if(!inlineTimer.running){updateStrengthFlowLive();updateInlineExerciseTimer();return}
   const now=Date.now();
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
@@ -382,7 +382,7 @@ function inlineTimerTick(){
       inlineTimer.running=false;inlineTimer.phase=inlineTimer.setIndex>=inlineTimer.sets?'complete':'ready';inlineTimer.remaining=0;inlineTimer.endAt=0;timerBeep();
       saveInlineTimer();
       const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
-      refreshGobletFlow();
+      refreshStrengthFlow();
       return;
     }
     if(inlineTimer.kind==='workrest'&&inlineTimer.phase==='work'&&inlineTimer.rest>0){
@@ -392,7 +392,7 @@ function inlineTimerTick(){
     }
     saveInlineTimer();
   }
-  updateGobletFlowLive();
+  updateStrengthFlowLive();
   updateInlineExerciseTimer();
 }
 function inlineTimerEnsureTick(){
@@ -449,6 +449,52 @@ function supportBlockMarkup(day,date,w,p){
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
 }
 
+const mondayStrengthSetFlowNames=new Set([
+  'Goblet squat',
+  'Pull-up / assisted pull-up',
+  'Kettlebell Romanian deadlift',
+  '1-arm kettlebell press',
+  'Suitcase carry',
+  'Plank shoulder tap'
+]);
+function strengthFlowConfig(name,target){
+  const parsed=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
+  const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
+  const base={
+    sets:parsed?Number(parsed[1]):3,
+    targetText:parsed?parsed[2]:'6–10',
+    low:range?Number(range[1]):6,
+    top:range?Number(range[2]):10,
+    loadPlaceholder:'kg',
+    loadInputMode:'decimal',
+    repsPlaceholder:range?(range[1]+'–'+range[2]):'reps',
+    noun:'load',
+    advanceTitle:'Increase load next Monday',
+    advanceText:'Increase the working load one step and return toward the lower end of the prescribed range.'
+  };
+  if(name==='Goblet squat')return {...base,advanceText:'Move to the next available kettlebell and return toward the lower end of the 6–10 rep range.'};
+  if(name==='Pull-up / assisted pull-up')return {...base,
+    loadPlaceholder:'BW / +kg / assist',loadInputMode:'text',noun:'load / assistance',
+    advanceTitle:'Progress the pull-up next Monday',
+    advanceText:'If weighted, add 1–2 kg. If assisted, reduce assistance one step and return toward 5–6 clean reps.'
+  };
+  if(name==='Kettlebell Romanian deadlift')return {...base,
+    advanceText:'Increase the working load one step and return toward 8–10 clean reps.'
+  };
+  if(name==='1-arm kettlebell press')return {...base,
+    advanceText:'Move to the next kettlebell if available, then return toward 6–8 clean reps per side. Let the weaker arm govern.'
+  };
+  if(name==='Suitcase carry')return {...base,
+    low:45,top:60,repsPlaceholder:'45–60',noun:'load',
+    advanceText:'Move to the next kettlebell and reset the carry toward 30–45 seconds per side before building back to 60.'
+  };
+  if(name==='Plank shoulder tap')return {...base,
+    loadPlaceholder:'BW / stance',loadInputMode:'text',noun:'variation',
+    advanceTitle:'Progress the variation next Monday',
+    advanceText:'Keep bodyweight and make the movement harder by narrowing the stance slightly or slowing the tempo while keeping the hips quiet.'
+  };
+  return base;
+}
 function strengthSetLogEntries(id,total){
   logs[id]=logs[id]||{};
   const current=Array.isArray(logs[id].sets)?logs[id].sets:[];
@@ -456,14 +502,15 @@ function strengthSetLogEntries(id,total){
   return logs[id].sets;
 }
 function saveStrengthSetField(id,setIndex,key,value){
-  const entries=strengthSetLogEntries(id,3);
+  const existing=Array.isArray(logs[id]?.sets)?logs[id].sets.length:0;
+  const entries=strengthSetLogEntries(id,Math.max(existing,setIndex+1));
   entries[setIndex]=entries[setIndex]||{};
   entries[setIndex][key]=value;
   logs[id].sets=entries;
   localStorage.setItem('motion12.logs',JSON.stringify(logs));
-  const flow=document.getElementById('goblet-flow-'+id);
+  const flow=document.getElementById('strength-flow-'+id);
   if(flow)flow.classList.remove('needs-input');
-  const msg=document.getElementById('goblet-flow-message-'+id);
+  const msg=document.getElementById('strength-flow-message-'+id);
   if(msg)msg.textContent='';
 }
 function strengthSetCompletedCount(id,total){
@@ -475,20 +522,20 @@ function strengthSetCompletedCount(id,total){
   }
   return count;
 }
-function gobletFlowState(id,target){
-  const m=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
-  const sets=m?Number(m[1]):3,targetText=m?m[2]:'6–10',rest=exerciseRestPreset('Goblet squat',1,weekNo()).seconds||120;
-  const completed=strengthSetCompletedCount(id,sets);
+function strengthFlowState(id,name,target){
+  const cfg=strengthFlowConfig(name,target);
+  const rest=exerciseRestPreset(name,1,weekNo()).seconds||90;
+  const completed=strengthSetCompletedCount(id,cfg.sets);
   if(inlineTimer.activeId===id&&inlineTimer.kind==='strengthsets'){
-    return {sets,targetText,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds()};
+    return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds()};
   }
-  return {sets,targetText,rest,setIndex:completed,phase:completed>=sets?'complete':'ready',running:false,sec:0};
+  return {...cfg,rest,setIndex:completed,phase:completed>=cfg.sets?'complete':'ready',running:false,sec:0};
 }
-function gobletEnsureTimer(id,target){
-  const state=gobletFlowState(id,target);
+function strengthEnsureTimer(id,name,target){
+  const state=strengthFlowState(id,name,target);
   if(inlineTimer.activeId!==id||inlineTimer.kind!=='strengthsets'){
     inlineTimer={...defaultInlineTimer,
-      activeId:id,exerciseName:'Goblet squat',kind:'strengthsets',
+      activeId:id,exerciseName:name,kind:'strengthsets',
       rest:state.rest,sets:state.sets,setIndex:state.setIndex,target:state.targetText,
       phase:state.phase,duration:state.rest,remaining:0,running:false,endAt:0
     };
@@ -496,58 +543,68 @@ function gobletEnsureTimer(id,target){
   }
   return inlineTimer;
 }
-function gobletPreviousCompletedSession(id){
+function strengthPreviousCompletedSession(id,total){
+  const match=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)$/);
+  if(!match)return null;
+  const suffix='-'+match[2]+'-'+match[3];
   const matches=Object.keys(logs)
-    .filter(k=>k!==id&&/^\d{4}-\d{2}-\d{2}-1-0$/.test(k))
-    .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=3&&logs[k].sets.slice(0,3).every(s=>s?.complete))
+    .filter(k=>k!==id&&k.endsWith(suffix))
+    .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=total&&logs[k].sets.slice(0,total).every(s=>s?.complete))
     .sort((a,b)=>b.localeCompare(a));
-  return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,3)}:null;
+  return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,total)}:null;
 }
-function gobletQualifiesForProgression(sets,topRep=10){
-  if(!Array.isArray(sets)||sets.length<3)return false;
-  const firstLoad=String(sets[0]?.load??'').trim();
+function strengthNormalizeLoad(v){return String(v??'').trim().toLowerCase()}
+function strengthFormatLoad(v){
+  const raw=String(v??'').trim();
+  if(!raw)return '—';
+  return /^[-+]?\d+(?:\.\d+)?$/.test(raw)?raw+' kg':raw;
+}
+function strengthQualifiesForProgression(sets,top){
+  if(!Array.isArray(sets)||!sets.length)return false;
+  const firstLoad=strengthNormalizeLoad(sets[0]?.load);
   if(!firstLoad)return false;
-  return sets.slice(0,3).every(s=>
+  return sets.every(s=>
     s?.complete&&
-    String(s.load??'').trim()===firstLoad&&
-    Number(s.reps)>=topRep&&
+    strengthNormalizeLoad(s.load)===firstLoad&&
+    Number(s.reps)>=top&&
     Number(s.rir)>=2
   );
 }
-function gobletCompletionSummary(id,target,entries){
+function strengthCompletionSummary(id,name,target,entries){
   if(!entries?.length||!entries.every(s=>s?.complete))return null;
+  const cfg=strengthFlowConfig(name,target);
   const reps=entries.map(s=>Number(s.reps)||0);
   const rirs=entries.map(s=>Number(s.rir)||0);
-  const loads=entries.map(s=>String(s.load??'').trim()).filter(Boolean);
-  const sameLoad=loads.length===entries.length&&loads.every(x=>x===loads[0]);
-  const loadText=sameLoad?loads[0]+' kg':loads.map(x=>x+' kg').join(' / ');
-  const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
-  const low=range?Number(range[1]):6,top=range?Number(range[2]):10;
-  const qualifies=gobletQualifiesForProgression(entries,top);
-  const previous=gobletPreviousCompletedSession(id);
-  const previousQualifies=previous&&sameLoad&&String(previous.sets[0]?.load??'').trim()===loads[0]&&gobletQualifiesForProgression(previous.sets,top);
-  let title='Build reps at this load',text='Keep the current load next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
+  const rawLoads=entries.map(s=>String(s.load??'').trim());
+  const normalized=rawLoads.map(strengthNormalizeLoad);
+  const sameLoad=normalized.length===entries.length&&normalized[0]&&normalized.every(x=>x===normalized[0]);
+  const loadText=sameLoad?strengthFormatLoad(rawLoads[0]):rawLoads.map(strengthFormatLoad).join(' / ');
+  const qualifies=strengthQualifiesForProgression(entries,cfg.top);
+  const previous=strengthPreviousCompletedSession(id,cfg.sets);
+  const previousQualifies=previous&&sameLoad&&
+    strengthNormalizeLoad(previous.sets[0]?.load)===normalized[0]&&
+    strengthQualifiesForProgression(previous.sets,cfg.top);
+  const targetPattern=entries.map(()=>cfg.top).join('/');
+  let title='Build reps at this '+cfg.noun;
+  let text='Keep the current '+cfg.noun+' next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
   let tone='hold';
   if(qualifies&&previousQualifies){
-    title='Increase load next Monday';
-    text='You have now hit '+top+'/'+top+'/'+top+' with at least 2 reps in reserve twice at '+loads[0]+' kg. Move to the next available kettlebell and return toward the lower end of the '+low+'–'+top+' rep range.';
+    title=cfg.advanceTitle;
+    text='You have now hit '+targetPattern+' with at least 2 reps in reserve twice at the same '+cfg.noun+'. '+cfg.advanceText;
     tone='up';
   }else if(qualifies){
     title='Repeat once more';
-    text='This is the first '+top+'/'+top+'/'+top+' session at '+loads[0]+' kg with at least 2 reps in reserve. Repeat it once more before increasing the kettlebell.';
+    text='This is the first '+targetPattern+' session at this '+cfg.noun+' with at least 2 reps in reserve. Repeat it once more before progressing.';
     tone='ready';
-  }else if(reps.some(r=>r<low)||rirs.some(r=>r<1)){
-    title='Hold the load';
-    text='Do not increase yet. Bring every set back into the '+low+'–'+top+' rep range with cleaner reserve before progressing.';
-    tone='hold';
+  }else if(reps.some(r=>r<cfg.low)||rirs.some(r=>r<1)){
+    title='Hold the '+cfg.noun;
+    text='Do not progress yet. Bring every set back into the prescribed range with cleaner reserve before making it harder.';
   }else if(rirs.some(r=>r<2)){
-    title='Hold the load';
-    text='Reps are progressing, but at least one set finished below 2 reps in reserve. Keep the load stable and make the same reps feel easier next Monday.';
-    tone='hold';
+    title='Hold the '+cfg.noun;
+    text='At least one set finished below 2 reps in reserve. Keep the '+cfg.noun+' stable and make the same work feel easier next Monday.';
   }else if(!sameLoad){
-    title='Standardise the working load';
-    text='Loads changed across the three sets. Next Monday use the most sustainable working load across all sets before judging progression.';
-    tone='hold';
+    title='Standardise the '+cfg.noun;
+    text='The '+cfg.noun+' changed across sets. Next Monday use one sustainable working level across all sets before judging progression.';
   }
   return {
     loadText,
@@ -557,35 +614,36 @@ function gobletCompletionSummary(id,target,entries){
     previous:previous?.id||''
   };
 }
-function gobletCompletionSummaryMarkup(id,target,entries){
-  const s=gobletCompletionSummary(id,target,entries);
+function strengthCompletionSummaryMarkup(id,name,target,entries){
+  const s=strengthCompletionSummary(id,name,target,entries);
   if(!s)return '';
-  return '<div class="goblet-completion-summary">'+
-    '<div class="goblet-summary-title"><span>Session result</span><b>3 sets logged</b></div>'+
-    '<div class="goblet-summary-metrics">'+
+  return '<div class="strength-completion-summary">'+
+    '<div class="strength-summary-title"><span>Session result</span><b>'+entries.length+' sets logged</b></div>'+
+    '<div class="strength-summary-metrics">'+
       '<div><span>Load</span><b>'+s.loadText+'</b></div>'+
       '<div><span>Reps</span><b>'+s.repsText+'</b></div>'+
       '<div><span>RIR</span><b>'+s.rirText+'</b></div>'+
     '</div>'+
-    '<div class="goblet-next '+s.tone+'"><span>Next Monday</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
+    '<div class="strength-next '+s.tone+'"><span>Next Monday</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
   '</div>';
 }
-function gobletSetFlowMarkup(id,target){
-  const state=gobletFlowState(id,target),entries=strengthSetLogEntries(id,state.sets);
+function strengthSetFlowMarkup(id,name,target){
+  const state=strengthFlowState(id,name,target),entries=strengthSetLogEntries(id,state.sets);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
   const isRest=state.phase==='rest',isComplete=state.phase==='complete';
-  const statusTitle=isComplete?'GOBLET SQUAT COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
-  const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText+' reps';
+  const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
+  const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText;
   const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
-  const completionSummary=isComplete?gobletCompletionSummaryMarkup(id,target,entries):'';
+  const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
+  const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
     const active=!isComplete&&!isRest&&i===readyIndex;
     const future=!complete&&!active;
     return '<div class="strength-set-row '+(complete?'logged ':'')+(active?'active ':'')+(future?'future':'')+'">'+
       '<div class="strength-set-number"><span>SET</span><b>'+(i+1)+'</b>'+(complete?'<i>✓</i>':'')+'</div>'+
-      '<label><span>Load</span><input inputmode="decimal" type="number" min="0" step="0.5" value="'+(set.load??'')+'" placeholder="kg" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
-      '<label><span>Reps</span><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="6–10" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
+      '<label><span>Load</span><input type="text" inputmode="'+state.loadInputMode+'" autocomplete="off" value="'+(set.load??'')+'" placeholder="'+state.loadPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
+      '<label><span>Reps</span><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="'+state.repsPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
       '<label><span>Reps in reserve</span><input inputmode="numeric" type="number" min="0" max="5" step="1" value="'+(set.rir??'')+'" placeholder="RIR" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
     '</div>';
   }).join('');
@@ -593,45 +651,50 @@ function gobletSetFlowMarkup(id,target){
   if(isComplete){
     actions='<button class="strength-flow-primary done" type="button" onclick="event.stopPropagation()">✓ Exercise complete</button>';
   }else if(isRest){
-    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();gobletPauseResume(\''+id+'\',\''+target+'\')">'+(state.running?'Pause rest':'Resume rest')+'</button>'+
-      '<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();gobletSkipRest(\''+id+'\')">Skip rest</button>';
+    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthPauseResume(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">'+(state.running?'Pause rest':'Resume rest')+'</button>'+
+      '<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();strengthSkipRest(\''+id+'\')">Skip rest</button>';
   }else{
-    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();gobletStrengthSetComplete(\''+id+'\',\''+target+'\')">Set '+(readyIndex+1)+' complete <span>→ rest '+timerFormat(state.rest)+'</span></button>';
+    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthSetComplete(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">Set '+(readyIndex+1)+' complete <span>→ rest '+timerFormat(state.rest)+'</span></button>';
   }
-  return '<div class="goblet-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="goblet-flow-'+id+'">'+
-    '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="goblet-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
+  return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
+    '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
     completionSummary+
-    '<div class="strength-flow-message" id="goblet-flow-message-'+id+'"></div>'+
+    '<div class="strength-flow-message" id="strength-flow-message-'+id+'"></div>'+
     '<div class="strength-flow-actions">'+actions+'</div>'+
   '</div>';
 }
-function refreshGobletFlow(){
-  if(inlineTimer.exerciseName!=='Goblet squat'||!inlineTimer.activeId)return;
-  const flow=document.getElementById('goblet-flow-'+inlineTimer.activeId);
+function refreshStrengthFlow(){
+  if(inlineTimer.kind!=='strengthsets'||!inlineTimer.activeId)return;
+  const flow=document.getElementById('strength-flow-'+inlineTimer.activeId);
   if(!flow)return;
   const card=flow.closest('.exercise');
-  const target=decodeURIComponent(card?.dataset.timerTarget||'3 × 6–10');
-  flow.outerHTML=gobletSetFlowMarkup(inlineTimer.activeId,target);
+  const name=decodeURIComponent(card?.dataset.timerName||'');
+  const target=decodeURIComponent(card?.dataset.timerTarget||'');
+  if(!name||!target)return;
+  flow.outerHTML=strengthSetFlowMarkup(inlineTimer.activeId,name,target);
 }
-function updateGobletFlowLive(){
-  if(inlineTimer.exerciseName!=='Goblet squat'||inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest'||!inlineTimer.activeId)return;
-  const clock=document.getElementById('goblet-flow-clock-'+inlineTimer.activeId);
+function updateStrengthFlowLive(){
+  if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest'||!inlineTimer.activeId)return;
+  const clock=document.getElementById('strength-flow-clock-'+inlineTimer.activeId);
   if(clock)clock.textContent=timerFormat(inlineTimerSeconds());
 }
-function gobletStrengthSetComplete(id,target){
-  const timer=gobletEnsureTimer(id,target),idx=timer.setIndex;
+function strengthSetComplete(id,encodedName,encodedTarget){
+  const name=decodeURIComponent(encodedName),target=decodeURIComponent(encodedTarget);
+  const timer=strengthEnsureTimer(id,name,target),idx=timer.setIndex;
   if(timer.phase!=='ready'||idx>=timer.sets)return;
   const entries=strengthSetLogEntries(id,timer.sets),set=entries[idx]||{};
   const validLoad=String(set.load??'').trim()!=='';
   const validReps=Number(set.reps)>0;
   const rirValue=String(set.rir??'').trim(),validRir=rirValue!==''&&Number(rirValue)>=0;
   if(!validLoad||!validReps||!validRir){
-    const flow=document.getElementById('goblet-flow-'+id);if(flow)flow.classList.add('needs-input');
-    const msg=document.getElementById('goblet-flow-message-'+id);
+    const flow=document.getElementById('strength-flow-'+id);if(flow)flow.classList.add('needs-input');
+    const msg=document.getElementById('strength-flow-message-'+id);
     if(msg)msg.textContent='Enter load, reps and reps in reserve before completing this set.';
     return;
   }
+  logs[id]=logs[id]||{};
+  logs[id].exerciseName=name;
   set.complete=true;set.completedAt=new Date().toISOString();
   entries[idx]=set;
   if(idx+1<timer.sets&&!entries[idx+1]?.load)entries[idx+1]={...(entries[idx+1]||{}),load:set.load};
@@ -643,26 +706,27 @@ function gobletStrengthSetComplete(id,target){
     localStorage.setItem('motion12.logs',JSON.stringify(logs));
     document.getElementById('ex-'+id)?.classList.add('complete');
   }
-  refreshGobletFlow();
+  refreshStrengthFlow();
 }
-function gobletPauseResume(id,target){
-  gobletEnsureTimer(id,target);
+function strengthPauseResume(id,encodedName,encodedTarget){
+  const name=decodeURIComponent(encodedName),target=decodeURIComponent(encodedTarget);
+  strengthEnsureTimer(id,name,target);
   inlineTimerStartPause();
-  refreshGobletFlow();
+  refreshStrengthFlow();
 }
-function gobletSkipRest(id){
+function strengthSkipRest(id){
   if(inlineTimer.activeId!==id)return;
   inlineSkipStrengthRest();
-  refreshGobletFlow();
+  refreshStrengthFlow();
 }
 function exerciseCardMarkup(day,date,w,x,i){
   const id=exId(day,i,date),state=logs[id]||{};
   let target=x[1];if(day===6)target=aerobicTargets[w-1];
   const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
-  if(day===1&&x[0]==='Goblet squat'){
-    return '<div class="exercise goblet-strength-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
+  if(day===1&&mondayStrengthSetFlowNames.has(x[0])){
+    return '<div class="exercise monday-strength-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
       '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+
-      gobletSetFlowMarkup(id,target)+
+      strengthSetFlowMarkup(id,x[0],target)+
       '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
     '</div>';
   }
