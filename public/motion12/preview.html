@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="timer-full-exercise-labels-20260927" />
+  <meta name="motion12-build" content="goblet-completion-progression-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -1445,6 +1445,51 @@ html.standalone main{
 }
 .strength-set-row.active input:focus{border-color:rgba(255,77,46,.7);box-shadow:0 0 0 2px rgba(255,77,46,.08)}
 .strength-set-row input:disabled{opacity:.55;color:var(--muted)}
+.goblet-completion-summary{
+  margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)
+}
+.goblet-summary-title{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px
+}
+.goblet-summary-title span{
+  color:var(--cyan);font-size:9px;font-weight:950;letter-spacing:.09em;text-transform:uppercase
+}
+.goblet-summary-title b{
+  color:var(--muted);font-size:9px;font-weight:850
+}
+.goblet-summary-metrics{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px
+}
+.goblet-summary-metrics>div{
+  min-width:0;padding:8px;border:1px solid var(--line);border-radius:11px;background:#0d0f11
+}
+.goblet-summary-metrics span{
+  display:block;color:var(--muted);font-size:7px;font-weight:900;letter-spacing:.07em;text-transform:uppercase
+}
+.goblet-summary-metrics b{
+  display:block;margin-top:4px;color:#f2f3f4;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.goblet-next{
+  margin-top:8px;padding:10px 11px;border:1px solid rgba(255,77,46,.22);border-radius:12px;background:rgba(255,77,46,.045)
+}
+.goblet-next>span{
+  display:block;color:var(--volt);font-size:8px;font-weight:950;letter-spacing:.1em;text-transform:uppercase
+}
+.goblet-next strong{
+  display:block;margin-top:4px;color:#f3f4f5;font-size:13px;line-height:1.2
+}
+.goblet-next p{
+  margin:5px 0 0;color:#bfc2c7;font-size:10px;line-height:1.4
+}
+.goblet-next.up{
+  border-color:rgba(59,231,225,.28);background:rgba(59,231,225,.05)
+}
+.goblet-next.up>span{color:var(--cyan)}
+.goblet-next.ready{
+  border-color:rgba(255,122,26,.28);background:rgba(255,122,26,.055)
+}
+.goblet-next.ready>span{color:var(--orange)}
+
 .strength-flow-message{min-height:0;margin-top:7px;color:#ff927f;font-size:10px;font-weight:800;line-height:1.3}
 .goblet-set-flow.needs-input .strength-set-row.active{border-color:#ff735e}
 .strength-flow-actions{display:flex;gap:7px;margin-top:10px}
@@ -1466,6 +1511,9 @@ html.standalone main{
   .strength-set-row input{height:37px;padding:7px 5px;font-size:12px}
   .strength-flow-status{padding:10px}
   .strength-flow-status strong{font-size:20px}
+  .goblet-summary-metrics b{font-size:10.5px}
+  .goblet-next strong{font-size:12.5px}
+  .goblet-next p{font-size:9.7px}
 }
 
 /* Low-fatigue support block beneath conditioning circuits */
@@ -2614,6 +2662,80 @@ function gobletEnsureTimer(id,target){
   }
   return inlineTimer;
 }
+function gobletPreviousCompletedSession(id){
+  const matches=Object.keys(logs)
+    .filter(k=>k!==id&&/^\d{4}-\d{2}-\d{2}-1-0$/.test(k))
+    .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=3&&logs[k].sets.slice(0,3).every(s=>s?.complete))
+    .sort((a,b)=>b.localeCompare(a));
+  return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,3)}:null;
+}
+function gobletQualifiesForProgression(sets,topRep=10){
+  if(!Array.isArray(sets)||sets.length<3)return false;
+  const firstLoad=String(sets[0]?.load??'').trim();
+  if(!firstLoad)return false;
+  return sets.slice(0,3).every(s=>
+    s?.complete&&
+    String(s.load??'').trim()===firstLoad&&
+    Number(s.reps)>=topRep&&
+    Number(s.rir)>=2
+  );
+}
+function gobletCompletionSummary(id,target,entries){
+  if(!entries?.length||!entries.every(s=>s?.complete))return null;
+  const reps=entries.map(s=>Number(s.reps)||0);
+  const rirs=entries.map(s=>Number(s.rir)||0);
+  const loads=entries.map(s=>String(s.load??'').trim()).filter(Boolean);
+  const sameLoad=loads.length===entries.length&&loads.every(x=>x===loads[0]);
+  const loadText=sameLoad?loads[0]+' kg':loads.map(x=>x+' kg').join(' / ');
+  const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
+  const low=range?Number(range[1]):6,top=range?Number(range[2]):10;
+  const qualifies=gobletQualifiesForProgression(entries,top);
+  const previous=gobletPreviousCompletedSession(id);
+  const previousQualifies=previous&&sameLoad&&String(previous.sets[0]?.load??'').trim()===loads[0]&&gobletQualifiesForProgression(previous.sets,top);
+  let title='Build reps at this load',text='Keep the current load next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
+  let tone='hold';
+  if(qualifies&&previousQualifies){
+    title='Increase load next Monday';
+    text='You have now hit '+top+'/'+top+'/'+top+' with at least 2 reps in reserve twice at '+loads[0]+' kg. Move to the next available kettlebell and return toward the lower end of the '+low+'–'+top+' rep range.';
+    tone='up';
+  }else if(qualifies){
+    title='Repeat once more';
+    text='This is the first '+top+'/'+top+'/'+top+' session at '+loads[0]+' kg with at least 2 reps in reserve. Repeat it once more before increasing the kettlebell.';
+    tone='ready';
+  }else if(reps.some(r=>r<low)||rirs.some(r=>r<1)){
+    title='Hold the load';
+    text='Do not increase yet. Bring every set back into the '+low+'–'+top+' rep range with cleaner reserve before progressing.';
+    tone='hold';
+  }else if(rirs.some(r=>r<2)){
+    title='Hold the load';
+    text='Reps are progressing, but at least one set finished below 2 reps in reserve. Keep the load stable and make the same reps feel easier next Monday.';
+    tone='hold';
+  }else if(!sameLoad){
+    title='Standardise the working load';
+    text='Loads changed across the three sets. Next Monday use the most sustainable working load across all sets before judging progression.';
+    tone='hold';
+  }
+  return {
+    loadText,
+    repsText:reps.join(' / '),
+    rirText:rirs.join(' / '),
+    title,text,tone,
+    previous:previous?.id||''
+  };
+}
+function gobletCompletionSummaryMarkup(id,target,entries){
+  const s=gobletCompletionSummary(id,target,entries);
+  if(!s)return '';
+  return '<div class="goblet-completion-summary">'+
+    '<div class="goblet-summary-title"><span>Session result</span><b>3 sets logged</b></div>'+
+    '<div class="goblet-summary-metrics">'+
+      '<div><span>Load</span><b>'+s.loadText+'</b></div>'+
+      '<div><span>Reps</span><b>'+s.repsText+'</b></div>'+
+      '<div><span>RIR</span><b>'+s.rirText+'</b></div>'+
+    '</div>'+
+    '<div class="goblet-next '+s.tone+'"><span>Next Monday</span><strong>'+s.title+'</strong><p>'+s.text+'</p></div>'+
+  '</div>';
+}
 function gobletSetFlowMarkup(id,target){
   const state=gobletFlowState(id,target),entries=strengthSetLogEntries(id,state.sets);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
@@ -2621,6 +2743,7 @@ function gobletSetFlowMarkup(id,target){
   const statusTitle=isComplete?'GOBLET SQUAT COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
   const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText+' reps';
   const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
+  const completionSummary=isComplete?gobletCompletionSummaryMarkup(id,target,entries):'';
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
     const active=!isComplete&&!isRest&&i===readyIndex;
@@ -2644,6 +2767,7 @@ function gobletSetFlowMarkup(id,target){
   return '<div class="goblet-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="goblet-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="goblet-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
+    completionSummary+
     '<div class="strength-flow-message" id="goblet-flow-message-'+id+'"></div>'+
     '<div class="strength-flow-actions">'+actions+'</div>'+
   '</div>';
