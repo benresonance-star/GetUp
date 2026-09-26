@@ -192,9 +192,20 @@ function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page
 }
 function exId(day,i,date){return `${date}-${day}-${i}`}
 function dateForProgramDay(day){const s=new Date(settings.startDate+'T00:00:00');const w=weekNo();const monday=new Date(s);monday.setDate(s.getDate()+(w-1)*7);const offset=day===0?6:day-1;const d=new Date(monday);d.setDate(monday.getDate()+offset);return iso(d)}
+function loadGuideMarkup(guide){
+  if(!guide)return '';
+  const html=guide
+    .replace(/START:/g,'<b>Start:</b>')
+    .replace(/INCREASE:/g,'<b>Increase:</b>')
+    .replace(/BODYWEIGHT:/g,'<b>Bodyweight:</b>')
+    .replace(/HOLD or reduce/g,'<b>Hold or reduce</b>')
+    .replace(/REDUCE immediately/g,'<b>Reduce immediately</b>')
+    .replace(/REDUCE one bell/g,'<b>Reduce one bell</b>');
+  return '<div class="tip load-rule"><span class="load-rule-label">Loading</span><p>'+html+'</p></div>';
+}
 function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===6)target=aerobicTargets[w-1];exHtml+=`<div class="exercise ${state.done?'complete':''}" id="ex-${id}"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
       <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
-      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div></div>`});
+      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>${loadGuideMarkup(x[4])}</div>`});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const diet=dietText(day), key=`${date}-${day}`;
  document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
