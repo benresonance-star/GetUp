@@ -98,7 +98,7 @@ const program={
     ['1-arm kettlebell row','3 × 8–12 / side','Minimal torso rotation; pull with upper back.','3 × 12 twice → next kettlebell.'],
     ['Back extension','2 × 10–15','Finish straight, not hyperextended.','2 × 15 twice → hold light kettlebell at chest.'],
     ['Single-leg calf raise','2 × 10–15 / side','Full stretch; pause at top.','2 × 15 twice → add kettlebell.'],
-    ['Standing kettlebell cross-body lift','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
+    ['Kettlebell woodchop','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
   ]},
   4:{name:'Swing Power',why:'Explosive hip power plus compact cardiovascular conditioning.',time:'12–18 min',tone:'orange',diet:'High-protein eating day',work:[
     ['2-hand kettlebell swing','See weekly target','Every rep should snap. Stop before technique slows.','Complete 10 × 10 twice at ≤7–8/10 effort → next bell, reset to 6–8 × 8.']
@@ -110,7 +110,7 @@ const program={
     ['Push-up','2 × 8–15','Same variation and depth each rep.','2 × 15 twice → harder variation.'],
     ['Kettlebell Romanian deadlift','2 × 8–12','Controlled lowering; strong hip extension.','12/12 twice → increase load.'],
     ['Suitcase carry','2 × 45 sec / side','Tall and quiet trunk.','60 sec twice → next bell.'],
-    ['Plank shoulder tap / cross-body lift','2 × 8–10 / side','Odd weeks shoulder taps; even weeks light kettlebell cross-body lifts.','Progress stance/tempo on taps; progress load cautiously on lifts.']
+    ['Plank shoulder tap / kettlebell woodchop','2 × 8–10 / side','Odd weeks shoulder taps; even weeks light kettlebell woodchops.','Progress stance/tempo on taps; progress load cautiously on woodchops.']
   ]},
   6:{name:'Aerobic Power',why:'Raise maximal oxygen uptake without grip or kettlebell technique being the limiter.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
     ['Aerobic intervals','See weekly target','Uphill walk, jog, bike or stairs. Keep output repeatable.','Increase pace only if all intervals complete, <5% fade, ≤8.5/10 finish and recovery is adequate.']
@@ -118,40 +118,45 @@ const program={
   0:{name:'Reset',why:'Absorb the week. Mobility and normal walking only.',time:'8 min',tone:'cyan',diet:'Normal eating day',work:[]}
 };
 const mobility=[
- ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Lateral step + cross-body reach','5 / side']
+ ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Bodyweight lateral lunge','5 / side']
 ];
 const swingTargets=['6 × 8 = 48','7 × 8 = 56','8 × 8 = 64','10 × 8 = 80','8 × 10 = 80','9 × 10 = 90','10 × 10 = 100','6 × 8 = 48 deload','10 × 10 = 100','11 × 10 = 110','12 × 10 = 120','8 × 8 = 64 consolidate'];
 const aerobicTargets=['40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','3 × 3 min hard / 3 min easy','4 × 3 min hard / 3 min easy','4 × 4 min hard / 3 min easy','30–40 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','2 km walk test'];
 
-const ytSearch=(q)=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' short proper form');
 const videoLinks={
-  'Goblet squat':'https://www.youtube.com/watch?v=TzU5zkTEkg8',
-  'Ring row / pull-up':ytSearch('ring row pull up technique'),
-  'Ring row':ytSearch('ring row technique'),
-  'Kettlebell Romanian deadlift':'https://www.youtube.com/watch?v=Hv2M23ZfipA',
-  '1-arm kettlebell press':'https://www.youtube.com/watch?v=X-uFqWtjpGI',
-  'Suitcase carry':'https://www.youtube.com/watch?v=Q1GjhRDAil0',
-  'Plank shoulder tap':ytSearch('plank shoulder tap anti rotation proper form'),
-  'Kettlebell deadlift':'https://www.youtube.com/watch?v=LDfnyt0Rmaw',
-  'Band pull-apart':'https://www.youtube.com/watch?v=JObYtU7Y7ag',
-  'Single-leg calf raise':ytSearch('single leg calf raise'),
-  'Reverse lunge':'https://www.youtube.com/watch?v=xrPteyQLGAo',
-  'Push-up':'https://www.youtube.com/watch?v=WDIpL0pjun0',
-  '1-arm kettlebell row':'https://www.youtube.com/watch?v=IyQAMOV0WAc',
-  'Back extension':'https://www.youtube.com/watch?v=dF_V3358Dkc',
-  'Standing kettlebell cross-body lift':ytSearch('standing kettlebell cross body lift wood chop'),
-  '2-hand kettlebell swing':'https://www.youtube.com/watch?v=1cVT3ee9mgU',
-  'Lateral lunge':'https://www.youtube.com/watch?v=YCdVdzN0L_w',
-  'Plank shoulder tap / cross-body lift':ytSearch('plank shoulder tap kettlebell cross body lift'),
-  'Aerobic intervals':ytSearch('4x4 VO2 max interval protocol'),
-  'Chin tuck':ytSearch('chin tuck neck exercise'),
-  'Open-book rotation':'https://www.youtube.com/watch?v=YqXJyXTKH3E',
-  'Wall slide':ytSearch('wall slide shoulder mobility'),
-  '90/90 hip rotation':'https://www.youtube.com/watch?v=t4Zz6-aG8Iw',
-  'Figure-four glute stretch':'https://www.youtube.com/watch?v=UDmKplc61t8',
-  'Lateral step + cross-body reach':ytSearch('lateral step cross body reach mobility')
+  'Goblet squat':[{label:'Form',url:'https://www.youtube.com/watch?v=nfX7IFK9UNI'}],
+  'Ring row / pull-up':[
+    {label:'Ring row',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'},
+    {label:'Pull-up',url:'https://www.youtube.com/watch?v=eGo4IYlbE5g'}
+  ],
+  'Ring row':[{label:'Form',url:'https://www.youtube.com/watch?v=xhlReCpAE9k'}],
+  'Kettlebell Romanian deadlift':[{label:'Form',url:'https://www.youtube.com/watch?v=Uc5rP5xs7qQ'}],
+  '1-arm kettlebell press':[{label:'Form',url:'https://www.youtube.com/watch?v=X-uFqWtjpGI'}],
+  'Suitcase carry':[{label:'Form',url:'https://www.youtube.com/watch?v=BaRMAhD7SP4'}],
+  'Plank shoulder tap':[{label:'Form',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'}],
+  'Kettlebell deadlift':[{label:'Form',url:'https://www.youtube.com/watch?v=LDfnyt0Rmaw'}],
+  'Band pull-apart':[{label:'Form',url:'https://www.youtube.com/watch?v=JObYtU7Y7ag'}],
+  'Single-leg calf raise':[{label:'Form',url:'https://www.youtube.com/watch?v=nSeQdvzehcU'}],
+  'Reverse lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=xrPteyQLGAo'}],
+  'Push-up':[{label:'Form',url:'https://www.youtube.com/watch?v=WDIpL0pjun0'}],
+  '1-arm kettlebell row':[{label:'Form',url:'https://www.youtube.com/watch?v=IyQAMOV0WAc'}],
+  'Back extension':[{label:'Form',url:'https://www.youtube.com/watch?v=H8Swl1N-uis'}],
+  'Kettlebell woodchop':[{label:'Form',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}],
+  '2-hand kettlebell swing':[{label:'Form',url:'https://www.youtube.com/watch?v=1cVT3ee9mgU'}],
+  'Lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}],
+  'Plank shoulder tap / kettlebell woodchop':[
+    {label:'Shoulder tap',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'},
+    {label:'Woodchop',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}
+  ],
+  'Aerobic intervals':[{label:'4×4',url:'https://www.youtube.com/watch?v=o3SjPbS9ovA'}],
+  'Chin tuck':[{label:'Form',url:'https://www.youtube.com/watch?v=u8C5LgpK3r4'}],
+  'Open-book rotation':[{label:'Form',url:'https://www.youtube.com/watch?v=OW6YHlxY6JI'}],
+  'Wall slide':[{label:'Form',url:'https://www.youtube.com/watch?v=Eaj_NG5_hIo'}],
+  '90/90 hip rotation':[{label:'Form',url:'https://www.youtube.com/watch?v=t4Zz6-aG8Iw'}],
+  'Figure-four glute stretch':[{label:'Form',url:'https://www.youtube.com/watch?v=-g0nuyTHMrI'}],
+  'Bodyweight lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}]
 };
-function videoFor(name){return videoLinks[name]||ytSearch(name)}
+function videosFor(name){return videoLinks[name]||[]}
 </script>
 <script>const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,steps:7000};
 let settings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||defaultSettings;
@@ -173,7 +178,8 @@ function formatDate(){return new Intl.DateTimeFormat('en-AU',{weekday:'short',da
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
 </script>
-<script>function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+<script>function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
+function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
   <section class="hero"><div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${completedOn(todayISO(),d)?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
@@ -181,7 +187,7 @@ function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>bodyweight-linked</small></div><div class="diet-grid"><div class="card diet-card"><span class="tag">Today</span><div class="big ${d===1?'fast':''}">${diet[0]}</div><p>${diet[1]} · ${diet[2]}</p></div><div class="card diet-card"><span class="tag">Fat-loss target</span><div class="big">${fat?`${fat.low}–${fat.high}`:'SET WEIGHT'}</div><p>${fat?`kg/week · 1% guardrail ${fat.cap} kg/week`:'Add bodyweight in Settings or Progress.'}</p></div></div></section>
-  <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><div class="card row"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral reach</p></div><div class="right">↗</div></div></section>
+  <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><div class="card row"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></div></section>
   </div></div>`;
 }
 function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Same structure every week. Only load, leverage and aerobic output progress.</p></div><div class="section day-list cards">`;
@@ -189,10 +195,10 @@ function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page
 }
 function exId(day,i,date){return `${date}-${day}-${i}`}
 function dateForProgramDay(day){const s=new Date(settings.startDate+'T00:00:00');const w=weekNo();const monday=new Date(s);monday.setDate(s.getDate()+(w-1)*7);const offset=day===0?6:day-1;const d=new Date(monday);d.setDate(monday.getDate()+offset);return iso(d)}
-function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===4)target=swingTargets[w-1];if(day===6)target=aerobicTargets[w-1];exHtml+=`<div class="exercise ${state.done?'complete':''}" id="ex-${id}"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} <a class="video-link" href="${videoFor(x[0])}" target="_blank" rel="noopener noreferrer">▶ Form</a></h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
+function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===4)target=swingTargets[w-1];if(day===6)target=aerobicTargets[w-1];exHtml+=`<div class="exercise ${state.done?'complete':''}" id="ex-${id}"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
       <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div></div>`});
- let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} <a class="video-link" href="${videoFor(m[0])}" target="_blank" rel="noopener noreferrer">▶ Form</a></h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
+ let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const diet=dietText(day), key=`${date}-${day}`;
  document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="timer"><div class="eyebrow">Session / rest timer</div><div class="clock" id="clock">00:00</div><div class="timer-actions"><button class="primary" onclick="toggleTimer()" id="timerToggle">Start</button><button onclick="setTimer(60)">1:00</button><button onclick="setTimer(90)">1:30</button><button onclick="resetTimer()">Reset</button></div></div>
