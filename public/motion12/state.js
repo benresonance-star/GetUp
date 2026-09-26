@@ -1,12 +1,12 @@
 const previousDefaultPortionsV1={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
 const previousDefaultPortionsV2={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:94,lunchRice:180,dinnerRice:180,veg:225,oil:10,powder:30,shakeMilk:250};
 const defaultPortions={yogurt:250,berries:200,nuts:20,seeds:10,latteMilk:200,meat:66,lunchRice:90,dinnerRice:90,legumes:120,veg:225,oil:11.5,powder:30,shakeMilk:250};
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:3,portions:defaultPortions};
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
 const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
 const storedPortions=storedSettings.portions||{};
 function matchesPortionPreset(preset){return Object.keys(preset).every(k=>Number(storedPortions[k])===preset[k])}
 const shouldUpgradePortions=matchesPortionPreset(previousDefaultPortionsV1)||matchesPortionPreset(previousDefaultPortionsV2);
-let settings={...defaultSettings,...storedSettings,portionPresetVersion:3,portions:shouldUpgradePortions?{...defaultPortions}:{...defaultPortions,...storedPortions}};
+let settings={...defaultSettings,...storedSettings,portionPresetVersion:4,lunchProtein:storedSettings.lunchProtein||'chicken',dinnerProtein:storedSettings.dinnerProtein||'chicken',portions:shouldUpgradePortions?{...defaultPortions}:{...defaultPortions,...storedPortions}};
 let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
 let measurements=JSON.parse(localStorage.getItem('motion12.measurements')||'{}');
 let timerInt=null;
@@ -42,7 +42,9 @@ function foodReferences(){
     nuts:{kcal:600,protein:20,carbs:20,fat:49,per:100},
     seeds:{kcal:535,protein:18.3,carbs:28.9,fat:42.2,per:100},
     milk:{kcal:64,protein:3.3,carbs:4.8,fat:3.5,per:100},
-    meat:{kcal:165,protein:30,carbs:0,fat:5,per:100},
+    chicken:{kcal:165,protein:31,carbs:0,fat:3.6,per:100},
+    leanMince:{kcal:180,protein:26,carbs:0,fat:8,per:100},
+    oilyFish:{kcal:206,protein:23,carbs:0,fat:12,per:100},
     rice:{kcal:125,protein:3,carbs:26,fat:1,per:100},
     legumes:{kcal:120,protein:8.5,carbs:20.5,fat:.7,per:100},
     veg:{kcal:35,protein:2,carbs:7,fat:.3,per:100},
@@ -60,6 +62,28 @@ function sumMacros(...items){
 }
 function roundMacros(m){
   return {kcal:Math.round(m.kcal),protein:Math.round(m.protein),carbs:Math.round(m.carbs),fat:Math.round(m.fat)};
+}
+function proteinFood(type){
+  const map={
+    chicken:{ref:'chicken',label:'chicken breast'},
+    leanMince:{ref:'leanMince',label:'lean mince'},
+    oilyFish:{ref:'oilyFish',label:'oily fish'}
+  };
+  return map[type]||map.chicken;
+}
+function proteinPortion(type,targetProtein=20){
+  const food=proteinFood(type),ref=foodReferences()[food.ref];
+  return Math.round((targetProtein/ref.protein)*ref.per);
+}
+function proteinChoiceMacros(type,targetProtein=20){
+  const food=proteinFood(type),grams=proteinPortion(type,targetProtein);
+  return {food,grams,macros:roundMacros(itemMacros(food.ref,grams))};
+}
+function proteinPortionGuide(grams){
+  return handLabel(grams/80,'palm','palms')+' · '+cupMeasure(grams/140)+' cooked';
+}
+function proteinEquivalentsText(){
+  return 'Chicken ~'+proteinPortion('chicken')+' g · lean mince ~'+proteinPortion('leanMince')+' g · oily fish ~'+proteinPortion('oilyFish')+' g cooked ≈ 20 g protein each';
 }
 function handCount(n){
   const v=Math.round(n*2)/2;
@@ -98,7 +122,6 @@ function portionGuide(){
     berries:handLabel(p.berries/200,'fist','fists')+' · '+cupMeasure(p.berries/135),
     nuts:handLabel(p.nuts/15,'thumb','thumbs')+' · '+cupMeasure(p.nuts/100),
     seeds:tbspMeasure(p.seeds/10),
-    meat:handLabel(p.meat/80,'palm','palms')+' · '+cupMeasure(p.meat/140)+' chopped',
     lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.lunchRice/180),
     dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands')+' · '+cupMeasure(p.dinnerRice/180),
     legumes:handLabel(p.legumes/160,'cupped hand','cupped hands')+' · '+cupMeasure(p.legumes/160),
@@ -116,8 +139,9 @@ function beverageMacros(){
 function proteinSplit(){
   const p=settings.portions;
   const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts),itemMacros('seeds',p.seeds)));
-  const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
-  const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const lp=proteinChoiceMacros(settings.lunchProtein),dp=proteinChoiceMacros(settings.dinnerProtein);
+  const lunch=roundMacros(sumMacros(lp.macros,itemMacros('rice',p.lunchRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const dinner=roundMacros(sumMacros(dp.macros,itemMacros('rice',p.dinnerRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const bev=beverageMacros(),fruit=roundMacros(itemMacros('fruit',1));
   return {breakfast:breakfast.protein,lunch:lunch.protein,dinner:dinner.protein,shake:bev.shake.protein,latte1:bev.latte.protein,latte2:bev.latte.protein,fruit:fruit.protein*3,total:breakfast.protein+lunch.protein+dinner.protein+bev.shake.protein+bev.latte.protein*2+fruit.protein*3};
 }
@@ -169,18 +193,19 @@ function mealPlan(day){
   const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts),itemMacros('seeds',p.seeds)));
   const latte=roundMacros(itemMacros('milk',p.latteMilk));
   const fruit=roundMacros(itemMacros('fruit',1));
-  const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
-  const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const lp=proteinChoiceMacros(settings.lunchProtein),dp=proteinChoiceMacros(settings.dinnerProtein);
+  const lunch=roundMacros(sumMacros(lp.macros,itemMacros('rice',p.lunchRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const dinner=roundMacros(sumMacros(dp.macros,itemMacros('rice',p.dinnerRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const shake=roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)));
 
   const meals=[
     {id:'breakfast',name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g walnuts/almonds ('+g.nuts+') · ~'+p.seeds+' g ground flax/chia ('+g.seeds+')'},
     {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
     {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
-    {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked Mediterranean protein ('+g.meat+') · ~'+p.lunchRice+' g cooked whole grain ('+g.lunchRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
+    {id:'lunch',name:'Lunch',...lunch,portion:'~'+lp.grams+' g cooked '+lp.food.label+' ('+proteinPortionGuide(lp.grams)+') · ~20 g protein · ~'+p.lunchRice+' g cooked whole grain ('+g.lunchRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
     {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
     {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
-    {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked Mediterranean protein ('+g.meat+') · ~'+p.dinnerRice+' g cooked whole grain ('+g.dinnerRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
+    {id:'dinner',name:'Dinner',...dinner,portion:'~'+dp.grams+' g cooked '+dp.food.label+' ('+proteinPortionGuide(dp.grams)+') · ~20 g protein · ~'+p.dinnerRice+' g cooked whole grain ('+g.dinnerRice+') · ~'+p.legumes+' g cooked lentils/chickpeas/beans ('+g.legumes+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g extra-virgin olive oil ('+g.oil+')'},
     {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · vary colours across the week'},
     {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder (1 scoop) + ~'+p.shakeMilk+' ml full-cream milk ('+cupMeasure(p.shakeMilk/250)+') + 5 g creatine monohydrate'}
   ];
@@ -188,7 +213,7 @@ function mealPlan(day){
   const total=Math.round(totals.kcal);
   const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
   const gap=c.eatingDay-total;
-  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Whole-grain and legume grams are cooked weight. Mediterranean protein means oily fish/seafood regularly, poultry/eggs moderately, and red or processed meat infrequently. Extra-virgin olive oil is the default added fat. Household measures are approximate; cups use a 250 ml metric cup. Oily fish is more energy-dense than the representative lean-protein estimate, so use the calorie target as a guide rather than a laboratory value.'};
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Whole-grain and legume grams are cooked weight. Protein portions are cooked weights chosen to provide about 20 g protein: '+proteinEquivalentsText()+'. Extra-virgin olive oil is the default added fat. Household measures are approximate; cups use a 250 ml metric cup. Oily fish is more energy-dense than the representative lean-protein estimate, so use the calorie target as a guide rather than a laboratory value.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
