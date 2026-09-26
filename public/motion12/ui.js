@@ -187,8 +187,54 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
   <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><button class="card row mobility-home-card" type="button" onclick="openMobilityToday()"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></button></section>
   </div></div>`;
 }
-function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Same structure every week. Only load, leverage and aerobic output progress.</p></div><div class="section day-list cards">`;
- [1,2,3,4,5,6,0].forEach(day=>{const p=program[day];html+=`<div class="card row ${day===d?'todaycard':''}" onclick="openDay(${day})"><div><div class="label">${DAYS[day]} · ${p.time}</div><h3>${p.name}</h3><p>${weeklyTarget(day,w)}</p></div><div class="right ${p.tone}">→</div></div>`});html+='</div>';document.getElementById('daysPage').innerHTML=html;
+let expandedDayCard=null;
+function dayOverviewGroup(title,items,day,w,startIndex=1){
+  if(!items?.length)return '';
+  const rows=items.map((x,i)=>{
+    let target=x[1]||'';
+    if(day===6&&title==='Workout')target=aerobicTargets[w-1]||target;
+    if(title==='Support')target=supportTarget(x,w);
+    const num=title==='Workout'?String(startIndex+i).padStart(2,'0'):'';
+    return '<div class="day-overview-exercise">'+
+      (num?'<span class="day-overview-num">'+num+'</span>':'<span class="day-overview-dot">•</span>')+
+      '<div><b>'+x[0]+'</b><small>'+target+'</small></div>'+
+    '</div>';
+  }).join('');
+  return '<div class="day-overview-group"><div class="day-overview-group-title">'+title+'</div>'+rows+'</div>';
+}
+function toggleDayCard(day){
+  expandedDayCard=expandedDayCard===day?null:day;
+  renderDays();
+  if(expandedDayCard!==null)setTimeout(()=>document.getElementById('day-card-'+day)?.scrollIntoView({behavior:'smooth',block:'nearest'}),20);
+}
+function dayOverviewMarkup(day,w,p){
+  const prep=dayOverviewGroup('Movement prep',p.prep,day,w);
+  const work=dayOverviewGroup('Workout',p.work,day,w,1);
+  const support=dayOverviewGroup('Support',p.support,day,w);
+  return '<div class="day-overview">'+prep+work+support+
+    '<div class="day-overview-note">Daily mobility reset is available inside the session.</div>'+
+    '<button class="day-session-btn '+p.tone+'" type="button" onclick="event.stopPropagation();openDay('+day+')"><span>Go to session</span><span>→</span></button>'+
+  '</div>';
+}
+function renderDays(){
+  const d=programDay(),w=weekNo();
+  let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Tap a day to preview its exercises. Open the full session when you are ready to train.</p></div><div class="section day-list cards">`;
+  [1,2,3,4,5,6,0].forEach(day=>{
+    const p=program[day],expanded=expandedDayCard===day;
+    html+=`<div id="day-card-${day}" class="card day-card ${day===d?'todaycard':''} ${expanded?'expanded':''}" role="button" tabindex="0" aria-expanded="${expanded}" onclick="toggleDayCard(${day})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDayCard(${day})}">
+      <div class="day-card-head">
+        <div class="day-card-copy">
+          <div class="label">${DAYS[day]} · ${p.time}</div>
+          <h3>${p.name}</h3>
+          <p>${weeklyTarget(day,w)}</p>
+        </div>
+        <div class="day-chevron ${p.tone}" aria-hidden="true">⌄</div>
+      </div>
+      ${expanded?dayOverviewMarkup(day,w,p):''}
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('daysPage').innerHTML=html;
 }
 function exId(day,i,date){return `${date}-${day}-${i}`}
 function dateForProgramDay(day){const s=new Date(settings.startDate+'T00:00:00');const w=weekNo();const monday=new Date(s);monday.setDate(s.getDate()+(w-1)*7);const offset=day===0?6:day-1;const d=new Date(monday);d.setDate(monday.getDate()+offset);return iso(d)}
