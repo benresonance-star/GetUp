@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="streak-progress-20260926" />
+  <meta name="motion12-build" content="daily-quote-streak-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -887,6 +887,47 @@ html.standalone main{
   #homePage.compact-active .compact-streak > div{padding:6px 8px}
   #homePage.compact-active .compact-streak b{font-size:11px}
 }
+
+.streak-quote{
+  grid-column:1 / -1;
+  border-left:0 !important;
+  border-bottom:1px solid var(--line);
+  padding:8px 11px 7px !important;
+  color:#d9dadd;
+  font-size:10px;
+  line-height:1.3;
+  font-weight:750;
+  letter-spacing:0;
+  text-transform:none;
+}
+.streak-quote span{
+  display:inline;
+  color:var(--muted);
+  font-size:9px;
+  line-height:inherit;
+  font-weight:800;
+  letter-spacing:0;
+  text-transform:none;
+  white-space:normal;
+}
+.streak-band > .streak-main{
+  border-left:0 !important;
+}
+.compact-streak .streak-quote{
+  font-size:9.5px;
+  padding:7px 10px 6px !important;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+@media(max-height:760px){
+  #homePage.compact-active .compact-streak .streak-quote{
+    font-size:9px;
+    line-height:1.2;
+    padding:6px 8px 5px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1338,11 +1379,30 @@ function compactMealCount(day,date){
   const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
+const MOTIVATION_QUOTES=[
+  {text:"Don't count the days; make the days count.",by:"Muhammad Ali"},
+  {text:"It's hard to beat a person who never gives up.",by:"Babe Ruth"},
+  {text:"The first wealth is health.",by:"Ralph Waldo Emerson"},
+  {text:"Energy and persistence conquer all things.",by:"Benjamin Franklin"},
+  {text:"You miss 100% of the shots you don't take.",by:"Wayne Gretzky"},
+  {text:"Exercise is king. Nutrition is queen.",by:"Jack LaLanne"},
+  {text:"I can accept failure, but I can't accept not trying.",by:"Michael Jordan"},
+  {text:"Everything negative is all an opportunity for me to rise.",by:"Kobe Bryant"},
+  {text:"A champion is defined by how they recover when they fall.",by:"Serena Williams"},
+  {text:"Strength does not come from winning.",by:"Arnold Schwarzenegger"},
+  {text:"Champions keep playing until they get it right.",by:"Billie Jean King"},
+  {text:"Start where you are. Use what you have. Do what you can.",by:"Arthur Ashe"}
+]
+function dailyMotivationQuote(date=todayISO()){
+  const day=Math.floor(new Date(date+'T00:00:00').getTime()/86400000);
+  return MOTIVATION_QUOTES[((day%MOTIVATION_QUOTES.length)+MOTIVATION_QUOTES.length)%MOTIVATION_QUOTES.length];
+}
 function streakBand(compact=false){
-  const s=programProgressStats();
+  const s=programProgressStats(),q=dailyMotivationQuote();
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
   const program=s.completed+'/'+s.programDays;
   return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
+    '<div class="streak-quote">“'+q.text+'” <span>— '+q.by+'</span></div>'+
     '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
     '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
     '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
