@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="timer-next-stage-clearer-20260927" />
+  <meta name="motion12-build" content="strength-set-auto-recovery-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -1679,6 +1679,10 @@ const defaultSmartTimer={
   stopwatchStartedAt:0,
   exerciseName:'',
   exerciseCategory:'',
+  strengthPhase:'ready',
+  totalSets:0,
+  restSeconds:0,
+  target:'',
   dayKey:''
 };
 let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
@@ -1693,7 +1697,10 @@ const defaultInlineTimer={
   running:false,
   remaining:0,
   duration:0,
-  endAt:0
+  endAt:0,
+  sets:0,
+  setIndex:0,
+  target:''
 };
 let inlineTimer={...defaultInlineTimer,...(JSON.parse(localStorage.getItem('motion12.inlineTimer')||'null')||{})};
 
@@ -2204,6 +2211,8 @@ function inlineTimerPreset(name,day,target,isSupport=false){
     return {kind:'rest',rest:60,label:'Support recovery'};
   }
   const rec=exerciseRestPreset(name,day,weekNo());
+  const sm=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
+  if([1,3,5].includes(day)&&sm)return {kind:'strengthsets',sets:Number(sm[1]),target:sm[2],rest:rec.seconds||90,label:rec.category+' set flow'};
   if(rec.action==='rest')return {kind:'rest',rest:rec.seconds||90,label:rec.category+' recovery'};
   return {kind:'session',rest:0,label:'Session timer'};
 }
@@ -2211,6 +2220,19 @@ function inlineTimerMarkup(id){
   if(inlineTimer.activeId!==id)return '';
   if(inlineTimer.kind==='session'){
     return '<div class="inline-ex-timer" id="inlineExerciseTimer"><div class="inline-timer-main"><span>SESSION TIMER</span><b>Use full sequence</b></div><div class="inline-timer-actions"><button type="button" onclick="event.stopPropagation();showPage(\'timerPage\')">Open timer</button><button type="button" class="inline-close" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div></div>';
+  }
+  if(inlineTimer.kind==='strengthsets'){
+    const sec=inlineTimerSeconds(),readySet=Math.min(inlineTimer.sets,inlineTimer.setIndex+1);
+    const isRest=inlineTimer.phase==='rest',isDone=inlineTimer.phase==='complete';
+    const phase=isDone?'ALL SETS DONE':isRest?'REST':'SET '+readySet+' READY';
+    const main=isDone?'✓':isRest?timerFormat(sec):(inlineTimer.target||'SET');
+    const meta=isDone?inlineTimer.exerciseName:(isRest?'Next · Set '+(inlineTimer.setIndex+1)+' of '+inlineTimer.sets:inlineTimer.exerciseName+' · '+readySet+' of '+inlineTimer.sets);
+    const actions=isDone
+      ?'<button type="button" class="inline-timer-primary" onclick="event.stopPropagation();inlineTimerReset()">Start over</button>'
+      :isRest
+        ?'<button type="button" class="inline-timer-primary" onclick="event.stopPropagation();inlineTimerStartPause()">'+(inlineTimer.running?'Pause':'Resume')+'</button><button type="button" onclick="event.stopPropagation();inlineSkipStrengthRest()">Skip rest</button>'
+        :'<button type="button" class="inline-timer-primary" onclick="event.stopPropagation();inlineStrengthSetComplete()">Set complete</button>';
+    return '<div class="inline-ex-timer" id="inlineExerciseTimer"><div class="inline-timer-main"><span id="inlineTimerPhase">'+phase+'</span><strong id="inlineTimerClock">'+main+'</strong><small id="inlineTimerMeta">'+meta+'</small></div><div class="inline-timer-actions" id="inlineTimerActions">'+actions+'<button type="button" onclick="event.stopPropagation();inlineTimerReset()">Reset</button><button type="button" class="inline-close" aria-label="Close timer" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div></div>';
   }
   const sec=inlineTimerSeconds(),phase=inlineTimer.phase==='work'?'WORK':inlineTimer.phase==='rest'?'REST / TRANSITION':inlineTimer.phase==='complete'?'DONE':'REST';
   const primary=inlineTimer.phase==='complete'?'Again':(inlineTimer.running?'Pause':'Start');
@@ -2227,7 +2249,7 @@ function activateExerciseTimerFromCard(event,card){
   if(!id||!name)return;
   if(inlineTimer.activeId===id)return;
   const preset=inlineTimerPreset(name,day,target,isSupport);
-  inlineTimer={...defaultInlineTimer,activeId:id,exerciseName:name,kind:preset.kind,work:preset.work||0,rest:preset.rest||0,phase:preset.kind==='workrest'?'work':'rest',duration:preset.kind==='workrest'?(preset.work||0):(preset.rest||0),remaining:preset.kind==='workrest'?(preset.work||0):(preset.rest||0)};
+  inlineTimer={...defaultInlineTimer,activeId:id,exerciseName:name,kind:preset.kind,work:preset.work||0,rest:preset.rest||0,sets:preset.sets||0,setIndex:0,target:preset.target||'',phase:preset.kind==='strengthsets'?'ready':preset.kind==='workrest'?'work':'rest',duration:preset.kind==='strengthsets'?(preset.rest||0):preset.kind==='workrest'?(preset.work||0):(preset.rest||0),remaining:preset.kind==='strengthsets'?0:preset.kind==='workrest'?(preset.work||0):(preset.rest||0)};
   saveInlineTimer();
   document.querySelectorAll('.exercise.active-timer').forEach(el=>el.classList.remove('active-timer'));
   document.querySelectorAll('.inline-ex-timer').forEach(el=>el.remove());
@@ -2238,6 +2260,7 @@ function activateExerciseTimerFromCard(event,card){
 function inlineTimerStartPause(){
   timerPrimeAudio();
   if(inlineTimer.kind==='session')return;
+  if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase!=='rest')return;
   if(inlineTimer.phase==='complete'){
     inlineTimer.phase=inlineTimer.kind==='workrest'?'work':'rest';
     inlineTimer.duration=inlineTimer.kind==='workrest'?inlineTimer.work:inlineTimer.rest;
@@ -2256,12 +2279,42 @@ function inlineTimerStartPause(){
   }
   saveInlineTimer();inlineTimerEnsureTick();updateInlineExerciseTimer();
 }
+function inlineStrengthSetComplete(){
+  timerPrimeAudio();
+  if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='ready')return;
+  inlineTimer.setIndex++;
+  if(inlineTimer.setIndex>=inlineTimer.sets){
+    inlineTimer.running=false;
+    inlineTimer.remaining=0;
+    inlineTimer.endAt=0;
+    inlineTimer.phase='complete';
+    timerBeep();
+  }else{
+    inlineTimer.phase='rest';
+    inlineTimer.duration=inlineTimer.rest||90;
+    inlineTimer.remaining=inlineTimer.duration;
+    inlineTimer.endAt=Date.now()+inlineTimer.duration*1000;
+    inlineTimer.running=true;
+  }
+  saveInlineTimer();inlineTimerEnsureTick();
+  const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
+}
+function inlineSkipStrengthRest(){
+  if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest')return;
+  inlineTimer.running=false;inlineTimer.remaining=0;inlineTimer.endAt=0;inlineTimer.phase='ready';
+  saveInlineTimer();timerBeep();
+  const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
+}
 function inlineTimerReset(){
   inlineTimer.running=false;inlineTimer.endAt=0;
-  inlineTimer.phase=inlineTimer.kind==='workrest'?'work':'rest';
+  inlineTimer.setIndex=0;
+  inlineTimer.phase=inlineTimer.kind==='strengthsets'?'ready':inlineTimer.kind==='workrest'?'work':'rest';
   inlineTimer.duration=inlineTimer.kind==='workrest'?inlineTimer.work:inlineTimer.rest;
-  inlineTimer.remaining=inlineTimer.duration;
-  saveInlineTimer();updateInlineExerciseTimer();
+  inlineTimer.remaining=inlineTimer.kind==='strengthsets'?0:inlineTimer.duration;
+  saveInlineTimer();
+  if(inlineTimer.kind==='strengthsets'){
+    const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
+  }else updateInlineExerciseTimer();
 }
 function closeInlineExerciseTimer(){
   inlineTimer={...defaultInlineTimer};
@@ -2274,6 +2327,12 @@ function inlineTimerTick(){
   const now=Date.now();
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
+    if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase==='rest'){
+      inlineTimer.running=false;inlineTimer.phase=inlineTimer.setIndex>=inlineTimer.sets?'complete':'ready';inlineTimer.remaining=0;inlineTimer.endAt=0;timerBeep();
+      saveInlineTimer();
+      const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
+      return;
+    }
     if(inlineTimer.kind==='workrest'&&inlineTimer.phase==='work'&&inlineTimer.rest>0){
       inlineTimer.phase='rest';inlineTimer.duration=inlineTimer.rest;inlineTimer.remaining=inlineTimer.rest;inlineTimer.endAt=previousEnd+inlineTimer.rest*1000;timerBeep();
     }else{
@@ -2399,6 +2458,25 @@ function conditioningCircuitPlan(day,w){
   }
   return {kind:'intervals',title,note,rounds,phases,circuit:true};
 }
+function strengthExercisePlan(day=programDay(),w=weekNo(),preferredName=''){
+  const p=program[day];
+  if(!p?.work?.length)return null;
+  const exercise=(preferredName&&p.work.find(x=>x[0]===preferredName))||p.work[0];
+  if(!exercise)return null;
+  const target=day===6?(aerobicTargets[w-1]||exercise[1]):exercise[1];
+  const m=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
+  if(!m)return null;
+  const rest=exerciseRestPreset(exercise[0],day,w).seconds||90;
+  return {
+    kind:'strengthsets',
+    exerciseName:exercise[0],
+    sets:Number(m[1]),
+    target:m[2],
+    rest,
+    title:exercise[0]+' · '+target,
+    note:'Complete the lifting set, tap Set complete, then recovery starts automatically. The next set becomes ready when recovery ends.'
+  };
+}
 function timerSessionPlan(day=programDay(),w=weekNo()){
   if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w);
   if(day===6){
@@ -2414,7 +2492,7 @@ function timerSessionPlan(day=programDay(),w=weekNo()){
     }
     return {kind:'stopwatch',title:target,note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
   }
-  if(day===1||day===3||day===5)return {kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
+  if(day===1||day===3||day===5)return strengthExercisePlan(day,w,smartTimer.exerciseName)||{kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
   return {kind:'stopwatch',title:'Easy movement',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
 }
 function exerciseRestPreset(name,day=programDay(),w=weekNo()){
@@ -2448,6 +2526,13 @@ function timerUseExercisePreset(name){
     smartTimer.exerciseName=name;
     smartTimer.exerciseCategory=rec.category;
     saveSmartTimer();
+    renderTimerPage();
+    return;
+  }
+  if([1,3,5].includes(programDay())){
+    smartTimer.exerciseName=name;
+    smartTimer.exerciseCategory=rec.category;
+    timerConfigure('session',true);
     renderTimerPage();
     return;
   }
@@ -2496,6 +2581,16 @@ function timerConfigure(mode=smartTimer.mode||'session',force=false){
       smartTimer.phaseIndex=0;
       smartTimer.duration=plan.phases[0].seconds;
       smartTimer.remaining=plan.phases[0].seconds;
+    }else if(plan.kind==='strengthsets'){
+      smartTimer.kind='strengthsets';
+      smartTimer.exerciseName=plan.exerciseName;
+      smartTimer.strengthPhase='ready';
+      smartTimer.totalSets=plan.sets;
+      smartTimer.setIndex=0;
+      smartTimer.restSeconds=plan.rest;
+      smartTimer.target=plan.target;
+      smartTimer.duration=plan.rest;
+      smartTimer.remaining=0;
     }else if(plan.kind==='sets'||plan.kind==='rest'){
       smartTimer.duration=plan.rest;
       smartTimer.remaining=plan.rest;
@@ -2535,7 +2630,16 @@ function timerTick(){
     return;
   }
   const now=Date.now();
-  if(smartTimer.kind==='intervals'){
+  if(smartTimer.kind==='strengthsets'){
+    if(now>=smartTimer.endAt){
+      smartTimer.running=false;
+      smartTimer.remaining=0;
+      smartTimer.endAt=0;
+      smartTimer.strengthPhase=smartTimer.setIndex>=smartTimer.totalSets?'complete':'ready';
+      saveSmartTimer();
+      timerBeep();
+    }
+  }else if(smartTimer.kind==='intervals'){
     const plan=timerSessionPlan();
     let changed=false;
     while(smartTimer.running&&now>=smartTimer.endAt){
@@ -2568,6 +2672,7 @@ function timerSetMode(mode){timerConfigure(mode,true);renderTimerPage()}
 function timerStartPause(){
   timerPrimeAudio();
   timerConfigure(smartTimer.mode||'session',false);
+  if(smartTimer.kind==='strengthsets'&&smartTimer.strengthPhase!=='rest')return;
   if(smartTimer.running){
     if(smartTimer.kind==='stopwatch')smartTimer.stopwatchElapsed=timerCurrentSeconds();
     else smartTimer.remaining=timerCurrentSeconds();
@@ -2588,6 +2693,34 @@ function timerStartPause(){
     }
   }
   saveSmartTimer();timerEnsureTick();renderTimerPage();
+}
+function timerStrengthSetComplete(){
+  timerPrimeAudio();
+  timerConfigure('session',false);
+  if(smartTimer.kind!=='strengthsets'||smartTimer.strengthPhase!=='ready')return;
+  smartTimer.setIndex++;
+  if(smartTimer.setIndex>=smartTimer.totalSets){
+    smartTimer.running=false;
+    smartTimer.remaining=0;
+    smartTimer.endAt=0;
+    smartTimer.strengthPhase='complete';
+    timerBeep();
+  }else{
+    smartTimer.strengthPhase='rest';
+    smartTimer.duration=smartTimer.restSeconds||90;
+    smartTimer.remaining=smartTimer.duration;
+    smartTimer.endAt=Date.now()+smartTimer.duration*1000;
+    smartTimer.running=true;
+  }
+  saveSmartTimer();timerEnsureTick();renderTimerPage();
+}
+function timerSkipStrengthRest(){
+  if(smartTimer.kind!=='strengthsets'||smartTimer.strengthPhase!=='rest')return;
+  smartTimer.running=false;
+  smartTimer.remaining=0;
+  smartTimer.endAt=0;
+  smartTimer.strengthPhase=smartTimer.setIndex>=smartTimer.totalSets?'complete':'ready';
+  saveSmartTimer();timerBeep();renderTimerPage();
 }
 function timerReset(){timerConfigure(smartTimer.mode||'session',true);renderTimerPage()}
 function timerSetRest(sec,exerciseName='',exerciseCategory=''){
@@ -2632,7 +2765,32 @@ function timerViewModel(){
   timerConfigure(smartTimer.mode||'session',false);
   const plan=timerSessionPlan(),sec=timerCurrentSeconds(),kind=smartTimer.kind;
   let label='REST',meta=plan.title,progress=0,detail='',nextText='';
-  if(kind==='intervals'){
+  let clockText='';
+  if(kind==='strengthsets'){
+    const currentSet=Math.min(smartTimer.totalSets,smartTimer.setIndex+1);
+    if(smartTimer.strengthPhase==='complete'){
+      label='COMPLETE';
+      meta=smartTimer.exerciseName||plan.exerciseName;
+      progress=0;
+      clockText='✓';
+      detail=smartTimer.totalSets+' sets complete';
+      nextText='';
+    }else if(smartTimer.strengthPhase==='rest'){
+      label='REST';
+      meta='Set '+smartTimer.setIndex+' of '+smartTimer.totalSets+' complete';
+      progress=smartTimer.duration?sec/smartTimer.duration:0;
+      clockText=timerFormat(sec);
+      detail=plan.note;
+      nextText='Set '+(smartTimer.setIndex+1)+' · Ready';
+    }else{
+      label='SET '+currentSet+' READY';
+      meta=smartTimer.exerciseName||plan.exerciseName;
+      progress=0;
+      clockText=smartTimer.target||plan.target||'';
+      detail=plan.note;
+      nextText='Rest · '+timerFormat(smartTimer.restSeconds||plan.rest||90);
+    }
+  }else if(kind==='intervals'){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
     if(smartTimer.phaseIndex>=plan.phases.length){
       label='COMPLETE';meta=plan.title;progress=0;
@@ -2665,7 +2823,7 @@ function timerViewModel(){
   const normalizedProgress=Math.max(0,Math.min(1,progress));
   const transitioning=Date.now()<timerPhaseTransitionUntil;
   return {
-    plan,sec,kind,label,meta,detail,nextText,
+    plan,sec,kind,label,meta,detail,nextText,clockText,
     progress:normalizedProgress,
     ringProgress:transitioning?0:normalizedProgress,
     transitioning,
@@ -2674,6 +2832,7 @@ function timerViewModel(){
 }
 function timerPrimaryLabel(vm){
   if(smartTimer.running)return 'Pause';
+  if(vm.kind==='strengthsets'&&smartTimer.strengthPhase==='rest')return 'Resume';
   if(vm.kind==='stopwatch')return smartTimer.stopwatchElapsed>0?'Resume':'Start';
   if(vm.kind==='intervals'&&smartTimer.phaseIndex>=vm.plan.phases.length)return 'Start again';
   const sec=timerCurrentSeconds(),duration=Math.max(0,Number(smartTimer.duration)||0);
@@ -2683,6 +2842,11 @@ function timerPrimaryLabel(vm){
 }
 function timerControls(vm){
   const primary='<button class="timer-primary" onclick="timerStartPause()">'+timerPrimaryLabel(vm)+'</button>';
+  if(vm.kind==='strengthsets'){
+    if(smartTimer.strengthPhase==='complete')return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
+    if(smartTimer.strengthPhase==='ready')return '<button class="timer-primary" onclick="timerStrengthSetComplete()">Set complete</button><button onclick="timerReset()">Reset</button>';
+    return primary+'<button onclick="timerSkipStrengthRest()">Skip rest</button><button onclick="timerReset()">Reset</button>';
+  }
   if(vm.kind==='intervals')return primary+'<button onclick="timerSkipPhase()">Skip phase</button><button onclick="timerReset()">Reset</button>';
   if(vm.kind==='sets'){
     if(smartTimer.setIndex>=vm.plan.sets)return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
@@ -2705,7 +2869,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -2717,7 +2881,7 @@ function updateSmartTimerDisplay(){
   const clock=document.getElementById('smartClock');
   if(!clock)return;
   const vm=timerViewModel();
-  clock.textContent=timerFormat(vm.sec);
+  clock.textContent=vm.clockText||timerFormat(vm.sec);
   const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
   const next=document.getElementById('timerNext');
