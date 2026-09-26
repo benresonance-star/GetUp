@@ -911,7 +911,7 @@ function exerciseRestPreset(name,day=programDay(),w=weekNo()){
   if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
   const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
-  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
+  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
   if(name==='Aerobic intervals'){
     const plan=timerSessionPlan(day,w);
     if(plan.kind==='intervals'){
