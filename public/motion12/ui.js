@@ -6,8 +6,8 @@ function mealRows(day,date=todayISO()){
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
   return '<div class="meal-list">'+plan.meals.map((m,i)=>{
     const key=mealKey(date,i),done=!!logs[key]?.done;
-    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p></div><div class="meal-numbers"><b>'+m.kcal+'</b><span>kcal</span><b>'+m.protein+'g</b><span>protein</span></div><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span></button>';
-  }).join('')+'<div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
+    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
+  }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
 }
 function toggleMeal(key){
   logs[key]=logs[key]||{};
