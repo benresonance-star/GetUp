@@ -325,3 +325,13 @@ html.standalone main{
     margin-top:10px;
   }
 }
+
+.meal-grams{
+  margin-top:7px;
+  color:#c5c8cd;
+  font-size:11px;
+  line-height:1.45;
+}
+.meal-row.done .meal-grams{
+  opacity:.65;
+}
