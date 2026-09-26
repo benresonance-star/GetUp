@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="household-portions-20260926" />
+  <meta name="motion12-build" content="compact-calories-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -761,6 +761,25 @@ html.standalone main{
   #homePage.compact-active .compact-meal{min-height:32px;padding:5px 6px;font-size:9px}
   #homePage.compact-active .compact-week .daydot{min-height:36px;padding:5px 1px}
 }
+
+.compact-meal{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+}
+.compact-meal-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.compact-meal-kcal{
+  color:var(--volt);
+  font-size:9px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.compact-meal.done .compact-meal-kcal{
+  opacity:.7;
+}
 </style>
 </head>
 <body>
@@ -1167,7 +1186,7 @@ function compactMealChips(day,date){
   return '<div class="compact-meal-grid">'+plan.meals.map(m=>{
     const key=mealKey(date,m.id),done=mealDone(date,m);
     const label=m.name.replace('Protein shake','Shake');
-    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span>'+label+'</span></button>';
+    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span class="compact-meal-name">'+label+'</span><span class="compact-meal-kcal">'+m.kcal+'</span></button>';
   }).join('')+'</div>';
 }
 function compactMealCount(day,date){
