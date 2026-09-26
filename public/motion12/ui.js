@@ -675,6 +675,55 @@ function strengthCompletionSummary(id,name,target,entries){
     previous:previous?.id||''
   };
 }
+function strengthSessionPosition(id){
+  const m=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)$/);
+  if(!m)return null;
+  return {date:m[1],day:Number(m[2]),index:Number(m[3])};
+}
+function strengthNextExercise(id){
+  const pos=strengthSessionPosition(id);
+  if(!pos||![1,3,5].includes(pos.day))return null;
+  const work=program[pos.day]?.work||[];
+  for(let i=pos.index+1;i<work.length;i++){
+    const nextId=exId(pos.day,i,pos.date);
+    if(!logs[nextId]?.done)return {id:nextId,index:i,name:work[i][0],target:work[i][1],day:pos.day,date:pos.date};
+  }
+  return null;
+}
+function strengthSessionCueMarkup(id){
+  const next=strengthNextExercise(id);
+  if(next){
+    return '<div class="strength-session-cue">'+
+      '<div><span>Up next</span><strong>'+next.name+'</strong><small>'+next.target+'</small></div>'+
+      '<button type="button" onclick="event.stopPropagation();strengthContinueToNext(\''+id+'\',\''+next.id+'\')">Continue <b>→</b></button>'+
+    '</div>';
+  }
+  return '<div class="strength-session-cue final">'+
+    '<div><span>Strength work complete</span><strong>Finish the session</strong><small>Review anything you need, then mark today complete.</small></div>'+
+    '<button type="button" onclick="event.stopPropagation();strengthGoToSessionComplete()">Finish session <b>→</b></button>'+
+  '</div>';
+}
+function strengthContinueToNext(currentId,nextId){
+  document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
+  const next=document.getElementById('ex-'+nextId);
+  if(!next)return;
+  next.classList.add('session-current');
+  next.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{
+    const flow=next.querySelector('.strength-set-flow');
+    const first=flow?.querySelector('.strength-set-row.active input:not(:disabled)');
+    if(first){
+      try{first.focus({preventScroll:true})}catch(_){first.focus()}
+    }
+  },420);
+}
+function strengthGoToSessionComplete(){
+  const btn=document.getElementById('completeSessionButton');
+  if(!btn)return;
+  btn.classList.add('attention');
+  btn.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>btn.classList.remove('attention'),1800);
+}
 function strengthCompletionSummaryMarkup(id,name,target,entries){
   const s=strengthCompletionSummary(id,name,target,entries);
   if(!s)return '';
@@ -696,6 +745,7 @@ function strengthSetFlowMarkup(id,name,target){
   const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText;
   const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
   const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
+  const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
@@ -721,6 +771,7 @@ function strengthSetFlowMarkup(id,name,target){
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
     completionSummary+
+    sessionCue+
     '<div class="strength-flow-message" id="strength-flow-message-'+id+'"></div>'+
     '<div class="strength-flow-actions">'+actions+'</div>'+
   '</div>';
@@ -766,6 +817,9 @@ function strengthSetComplete(id,encodedName,encodedTarget){
     logs[id].done=true;
     localStorage.setItem('motion12.logs',JSON.stringify(logs));
     document.getElementById('ex-'+id)?.classList.add('complete');
+    const next=strengthNextExercise(id);
+    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
+    if(next)document.getElementById('ex-'+next.id)?.classList.add('session-current');
   }
   refreshStrengthFlow();
 }
@@ -807,7 +861,12 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
  <div>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  ${supportHtml}
- <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
+ <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
+ if([1,3,5].includes(day)){
+   const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
+   document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
+   if(firstIncomplete>=0)document.getElementById('ex-'+exId(day,firstIncomplete,date))?.classList.add('session-current');
+ }
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
