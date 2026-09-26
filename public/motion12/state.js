@@ -23,6 +23,10 @@ const defaultSmartTimer={
   stopwatchStartedAt:0,
   exerciseName:'',
   exerciseCategory:'',
+  strengthPhase:'ready',
+  totalSets:0,
+  restSeconds:0,
+  target:'',
   dayKey:''
 };
 let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
@@ -37,7 +41,10 @@ const defaultInlineTimer={
   running:false,
   remaining:0,
   duration:0,
-  endAt:0
+  endAt:0,
+  sets:0,
+  setIndex:0,
+  target:''
 };
 let inlineTimer={...defaultInlineTimer,...(JSON.parse(localStorage.getItem('motion12.inlineTimer')||'null')||{})};
 
