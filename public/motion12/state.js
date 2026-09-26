@@ -1,6 +1,7 @@
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0};
+const defaultPortions={yogurt:350,berries:200,nuts:20,latteMilk:200,meat:140,lunchRice:210,dinnerRice:200,veg:225,oil:7.5,powder:32,shakeMilk:250};
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,portions:defaultPortions};
 const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
-let settings={...defaultSettings,...storedSettings};
+let settings={...defaultSettings,...storedSettings,portions:{...defaultPortions,...(storedSettings.portions||{})}};
 let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
 let measurements=JSON.parse(localStorage.getItem('motion12.measurements')||'{}');
 let timerInt=null,timerSeconds=0,timerRunning=false;
@@ -13,27 +14,60 @@ function sessionKey(day=programDay()){return `${todayISO()}-${day}`}
 function protein(){return settings.bodyweight>0?Math.round(settings.bodyweight*1.8):null}
 function round5(n){return Math.round(n/5)*5}
 function round50(n){return Math.round(n/50)*50}
-function beverageMacros(){
+function foodReferences(){
   return {
-    latte:{kcal:135,protein:7,carbs:11,fat:7,milkMl:200},
-    shake:{kcal:280,protein:32,carbs:15,fat:11,milkMl:250}
+    yogurt:{kcal:65,protein:10,carbs:4,fat:.5,per:100},
+    berries:{kcal:50,protein:.7,carbs:12,fat:.3,per:100},
+    nuts:{kcal:607,protein:20,carbs:21,fat:54,per:100},
+    milk:{kcal:64,protein:3.3,carbs:4.8,fat:3.6,per:100},
+    meat:{kcal:165,protein:31,carbs:0,fat:3.6,per:100},
+    rice:{kcal:130,protein:2.7,carbs:28.2,fat:.3,per:100},
+    veg:{kcal:35,protein:2,carbs:7,fat:.3,per:100},
+    oil:{kcal:9,protein:0,carbs:0,fat:1,per:1},
+    powder:{kcal:400,protein:80,carbs:10,fat:7,per:100}
+  };
+}
+function itemMacros(refKey,amount){
+  const r=foodReferences()[refKey],factor=Number(amount||0)/r.per;
+  return {kcal:r.kcal*factor,protein:r.protein*factor,carbs:r.carbs*factor,fat:r.fat*factor};
+}
+function sumMacros(...items){
+  return items.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
+}
+function roundMacros(m){
+  return {kcal:Math.round(m.kcal),protein:Math.round(m.protein),carbs:Math.round(m.carbs),fat:Math.round(m.fat)};
+}
+function handCount(n){
+  const v=Math.round(n*2)/2;
+  return Number.isInteger(v)?String(v):v.toFixed(1);
+}
+function portionGuide(){
+  const p=settings.portions;
+  return {
+    yogurt:handCount(p.yogurt/175)+' cupped hands',
+    berries:handCount(p.berries/200)+' fist'+(p.berries/200>1.25?'s':''),
+    nuts:handCount(p.nuts/15)+' thumbs',
+    meat:handCount(p.meat/80)+' palms',
+    lunchRice:handCount(p.lunchRice/200)+' cupped hand'+(p.lunchRice/200>1.25?'s':''),
+    dinnerRice:handCount(p.dinnerRice/200)+' cupped hand'+(p.dinnerRice/200>1.25?'s':''),
+    veg:handCount(p.veg/112.5)+' fists',
+    oil:handCount(p.oil/7.5)+' thumb'
+  };
+}
+function beverageMacros(){
+  const p=settings.portions;
+  return {
+    latte:roundMacros(itemMacros('milk',p.latteMilk)),
+    shake:roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)))
   };
 }
 function proteinSplit(){
-  const p=protein(); if(!p)return null;
+  const p=settings.portions;
+  const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts)));
+  const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const bev=beverageMacros();
-  const beverageProtein=bev.shake.protein+bev.latte.protein*2;
-  const mealProtein=Math.max(0,p-beverageProtein);
-  const breakfast=round5(mealProtein*.32);
-  const lunch=round5((mealProtein-breakfast)/2);
-  const dinner=Math.max(0,mealProtein-breakfast-lunch);
-  return {
-    breakfast,lunch,dinner,
-    shake:bev.shake.protein,
-    latte1:bev.latte.protein,
-    latte2:bev.latte.protein,
-    total:p
-  };
+  return {breakfast:breakfast.protein,lunch:lunch.protein,dinner:dinner.protein,shake:bev.shake.protein,latte1:bev.latte.protein,latte2:bev.latte.protein,total:breakfast.protein+lunch.protein+dinner.protein+bev.shake.protein+bev.latte.protein*2};
 }
 function weeklyProteinAverage(){const p=protein();return p?Math.round((p*6)/7):null}
 function fatLossTargets(){if(!settings.bodyweight)return null;return {low:(settings.bodyweight*.005).toFixed(2),high:(settings.bodyweight*.008).toFixed(2),mid:settings.bodyweight*.0065,cap:(settings.bodyweight*.01).toFixed(2)}}
@@ -76,61 +110,36 @@ function calorieTargets(){
   };
 }
 function mealPlan(day){
-  const c=calorieTargets(),ps=proteinSplit(),bev=beverageMacros();
-  if(!c||!ps)return null;
-  if(day===1)return {total:0,meals:[],note:'Fast after the morning workout. Water, plain tea/coffee; resume meals Tuesday.'};
+  const c=calorieTargets(),p=settings.portions,g=portionGuide();
+  if(!c)return null;
+  if(day===1)return {total:0,target:c.eatingDay,gap:0,macroTotals:{protein:0,carbs:0,fat:0},meals:[],note:'Fast after the morning workout. Water, plain tea/coffee; resume meals Tuesday.'};
 
-  const total=c.eatingDay;
-  const latte1=bev.latte.kcal;
-  const latte2=bev.latte.kcal;
-  const shake=bev.shake.kcal;
-  const beverageCalories=latte1+latte2+shake;
-  const foodCalories=Math.max(0,total-beverageCalories);
+  const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts)));
+  const latte=roundMacros(itemMacros('milk',p.latteMilk));
+  const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const shake=roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)));
 
-  const breakfast=round50(foodCalories*.29);
-  const lunch=round50((foodCalories-breakfast)/2);
-  const dinner=foodCalories-breakfast-lunch;
-
-  const targetFat=round5((total*.30)/9);
-  const beverageFat=bev.shake.fat+bev.latte.fat*2;
-  const mealFat=Math.max(0,targetFat-beverageFat);
-  const breakfastFat=round5(mealFat*.30);
-  const lunchFat=round5((mealFat-breakfastFat)/2);
-  const dinnerFat=Math.max(0,mealFat-breakfastFat-lunchFat);
-
-  const macro=(kcal,protein,fat)=>({
-    protein,
-    fat,
-    carbs:Math.max(0,Math.round((kcal-protein*4-fat*9)/4))
-  });
-
-  const b=macro(breakfast,ps.breakfast,breakfastFat);
-  const l=macro(lunch,ps.lunch,lunchFat);
-  const d=macro(dinner,ps.dinner,dinnerFat);
-  const sh={protein:bev.shake.protein,carbs:bev.shake.carbs,fat:bev.shake.fat};
-  const la={protein:bev.latte.protein,carbs:bev.latte.carbs,fat:bev.latte.fat};
-
-  const macroTotals={
-    protein:b.protein+l.protein+d.protein+sh.protein+la.protein*2,
-    carbs:b.carbs+l.carbs+d.carbs+sh.carbs+la.carbs*2,
-    fat:b.fat+l.fat+d.fat+sh.fat+la.fat*2
-  };
-
-  return {total,macroTotals,meals:[
-    {name:'Breakfast',kcal:breakfast,...b,portion:'~350 g high-protein Greek yoghurt (≈2 cupped hands) · ~200 g berries (1 fist) · ~20 g nuts (1–2 thumbs)'},
-    {name:'Latte 1',kcal:latte1,...la,portion:'1 espresso + ~200 ml full-cream milk · no added sugar'},
-    {name:'Lunch',kcal:lunch,...l,portion:'~140 g cooked lean meat/fish (1½–2 palms) · ~210 g cooked rice (1 cupped hand) · ~225 g vegetables (2 fists) · ~5–10 g oil/fat (1 thumb)'},
-    {name:'Latte 2',kcal:latte2,...la,portion:'1 espresso + ~200 ml full-cream milk · no added sugar'},
-    {name:'Dinner',kcal:dinner,...d,portion:'~140 g cooked lean meat/fish (1½–2 palms) · ~200 g cooked rice (1 cupped hand) · ~225 g vegetables (2 fists) · ~5–10 g oil/fat (1 thumb)'},
-    {name:'Protein shake',kcal:shake,...sh,portion:'~30–35 g protein powder (1 scoop) + ~250 ml full-cream milk'}
-  ],note:'Milk calories are included. Weights are approximate calibration guides; hand portions are shown in brackets. Keep protein stable; adjust rice and added fats first when calories need moving.'};
+  const meals=[
+    {name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g nuts ('+g.nuts+')'},
+    {name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
+    {name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
+    {name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder + ~'+p.shakeMilk+' ml full-cream milk'}
+  ];
+  const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
+  const total=Math.round(totals.kcal);
+  const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
+  const gap=c.eatingDay-total;
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Check labels for your actual yoghurt, milk and protein powder. A positive gap means calories remain in the daily target.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
   if(!p||!f)return 'Add bodyweight to calculate protein and weekly fat-loss targets.';
   if(!c)return 'Protein ~'+p+' g/day · target loss '+f.low+'–'+f.high+' kg/week. Add height, age and sex for a better calorie estimate.';
   if(day===1)return 'Monday fast · 0 kcal assumption · estimated maintenance ~'+c.maintenance+' kcal · planned loss ~'+c.predictedLoss+' kg/week.';
-  return '~'+m.total+' kcal today · protein ~'+p+' g · planned loss ~'+c.predictedLoss+' kg/week ('+c.predictedPct+'% bodyweight) · target range '+f.low+'–'+f.high+' kg/week.';
+  return 'Meal plan ~'+m.total+' kcal vs '+c.eatingDay+' kcal target · protein target ~'+p+' g · planned loss ~'+c.predictedLoss+' kg/week ('+c.predictedPct+'% bodyweight).';
 }
 function dietText(day){
   const p=protein(),ps=proteinSplit(),c=calorieTargets();
