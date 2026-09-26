@@ -41,17 +41,21 @@ function handCount(n){
   const v=Math.round(n*2)/2;
   return Number.isInteger(v)?String(v):v.toFixed(1);
 }
+function handLabel(n,singular,plural){
+  const v=Math.round(n*2)/2;
+  return handCount(n)+' '+(v===1?singular:plural);
+}
 function portionGuide(){
   const p=settings.portions;
   return {
-    yogurt:handCount(p.yogurt/175)+' cupped hands',
-    berries:handCount(p.berries/200)+' fist'+(p.berries/200>1.25?'s':''),
-    nuts:handCount(p.nuts/15)+' thumbs',
-    meat:handCount(p.meat/80)+' palms',
-    lunchRice:handCount(p.lunchRice/200)+' cupped hand'+(p.lunchRice/200>1.25?'s':''),
-    dinnerRice:handCount(p.dinnerRice/200)+' cupped hand'+(p.dinnerRice/200>1.25?'s':''),
-    veg:handCount(p.veg/112.5)+' fists',
-    oil:handCount(p.oil/7.5)+' thumb'
+    yogurt:handLabel(p.yogurt/175,'cupped hand','cupped hands'),
+    berries:handLabel(p.berries/200,'fist','fists'),
+    nuts:handLabel(p.nuts/15,'thumb','thumbs'),
+    meat:handLabel(p.meat/80,'palm','palms'),
+    lunchRice:handLabel(p.lunchRice/200,'cupped hand','cupped hands'),
+    dinnerRice:handLabel(p.dinnerRice/200,'cupped hand','cupped hands'),
+    veg:handLabel(p.veg/112.5,'fist','fists'),
+    oil:handLabel(p.oil/7.5,'thumb','thumbs')
   };
 }
 function beverageMacros(){
