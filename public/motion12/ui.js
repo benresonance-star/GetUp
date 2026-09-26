@@ -80,7 +80,7 @@ function compactMealChips(day,date){
   return '<div class="compact-meal-grid">'+plan.meals.map(m=>{
     const key=mealKey(date,m.id),done=mealDone(date,m);
     const label=m.name.replace('Protein shake','Shake');
-    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span>'+label+'</span></button>';
+    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span class="compact-meal-name">'+label+'</span><span class="compact-meal-kcal">'+m.kcal+'</span></button>';
   }).join('')+'</div>';
 }
 function compactMealCount(day,date){
