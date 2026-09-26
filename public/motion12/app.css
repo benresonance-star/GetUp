@@ -190,3 +190,44 @@ html.standalone main{
 }
 
 .mobility-home-card{width:100%;text-align:left;color:var(--ink);cursor:pointer;-webkit-appearance:none;appearance:none}.mobility-home-card .right{font-size:22px;color:var(--volt)}
+
+.meal-toggle{
+  width:100%;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  font:inherit;
+}
+.meal-check{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid #45484f;
+  display:grid;
+  place-items:center;
+  flex:none;
+  font-size:16px;
+  font-weight:950;
+  color:#0b0c0e;
+}
+.meal-row.done{
+  opacity:.68;
+}
+.meal-row.done .meal-check{
+  background:var(--volt);
+  border-color:var(--volt);
+}
+.meal-row.done .meal-name{
+  text-decoration:line-through;
+  text-decoration-thickness:1.5px;
+}
+.meal-row{
+  grid-template-columns:1fr auto auto;
+}
+@media(max-width:390px){
+  .meal-row{grid-template-columns:1fr auto}
+  .meal-check{grid-column:2;grid-row:1}
+  .meal-numbers{grid-column:2;grid-row:2}
+}
