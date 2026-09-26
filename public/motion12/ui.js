@@ -237,6 +237,7 @@ function activateExerciseTimerFromCard(event,card){
   if(event.target.closest('button,input,a,select,textarea,label'))return;
   const id=card.dataset.timerId,day=Number(card.dataset.timerDay),name=decodeURIComponent(card.dataset.timerName||''),target=decodeURIComponent(card.dataset.timerTarget||''),isSupport=card.dataset.timerSupport==='1';
   if(!id||!name)return;
+  if(inlineTimer.activeId===id)return;
   const preset=inlineTimerPreset(name,day,target,isSupport);
   inlineTimer={...defaultInlineTimer,activeId:id,exerciseName:name,kind:preset.kind,work:preset.work||0,rest:preset.rest||0,phase:preset.kind==='workrest'?'work':'rest',duration:preset.kind==='workrest'?(preset.work||0):(preset.rest||0),remaining:preset.kind==='workrest'?(preset.work||0):(preset.rest||0)};
   saveInlineTimer();
