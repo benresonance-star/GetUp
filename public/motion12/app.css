@@ -759,3 +759,110 @@ html.standalone main{
 .compact-meal.done .compact-meal-kcal{
   opacity:.7;
 }
+
+/* Completed-day streak + adherence */
+.streak-band{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:1.35fr .8fr .8fr;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#111316;
+  overflow:hidden;
+}
+.streak-band > div{
+  min-width:0;
+  padding:9px 11px;
+}
+.streak-band > div + div{
+  border-left:1px solid var(--line);
+}
+.streak-band span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.streak-band b{
+  display:block;
+  margin-top:3px;
+  font-size:13px;
+  line-height:1;
+  white-space:nowrap;
+}
+.streak-main b{color:var(--volt)}
+.compact-streak{
+  margin-top:0;
+  border-radius:14px;
+}
+.compact-streak > div{
+  padding:8px 10px;
+}
+.compact-streak b{
+  font-size:12px;
+}
+.adherence-card{
+  border-color:rgba(255,77,46,.28);
+  background:linear-gradient(135deg,rgba(255,77,46,.08),var(--surface) 45%);
+}
+.adherence-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  margin-top:12px;
+}
+.adherence-grid > div{
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:10px 8px;
+  background:#101215;
+}
+.adherence-grid b{
+  display:block;
+  color:var(--volt);
+  font-size:20px;
+  line-height:1;
+}
+.adherence-grid span{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.2;
+  text-transform:uppercase;
+  font-weight:850;
+}
+.adherence-track{
+  height:7px;
+  margin-top:12px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#282b30;
+}
+.adherence-track i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--volt);
+}
+.adherence-card small{
+  display:block;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+@media(max-width:390px){
+  .streak-band > div{padding:8px 8px}
+  .streak-band span{font-size:7px}
+  .streak-band b{font-size:11px}
+  .adherence-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-height:760px){
+  #homePage.compact-active .compact-streak > div{padding:6px 8px}
+  #homePage.compact-active .compact-streak b{font-size:11px}
+}
