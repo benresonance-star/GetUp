@@ -54,6 +54,96 @@
 .meal-note{font-size:11px;color:var(--muted);line-height:1.5;padding:6px 4px 0}
 .fast-card{border-color:rgba(255,77,46,.3);background:linear-gradient(135deg,rgba(255,77,46,.08),var(--surface) 45%)}
 @media(max-width:390px){.meal-row{grid-template-columns:1fr}.meal-numbers{text-align:left;width:max-content}.settings-grid{grid-template-columns:1fr}}
+
+/* iPhone header + settings usability */
+.top{
+  padding:calc(env(safe-area-inset-top, 0px) + 14px) 18px 10px;
+  background:linear-gradient(to bottom,rgba(13,14,16,.98) 72%,rgba(13,14,16,.82) 88%,transparent);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+}
+.topline{min-height:52px;align-items:center}
+.brand{font-size:25px;line-height:1}
+.date{
+  margin-top:7px;
+  color:#e4e5e7;
+  opacity:1;
+  font-size:13px;
+  line-height:1.2;
+  letter-spacing:.10em;
+  font-weight:900;
+}
+.gear{
+  width:auto;
+  min-width:52px;
+  height:46px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid #3a3d43;
+  background:#191b1f;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  position:relative;
+  z-index:30;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.gear-icon{font-size:18px;line-height:1}
+.gear-label{font-size:12px;font-weight:900;letter-spacing:.02em}
+.settings-overlay{
+  z-index:300;
+  padding-top:env(safe-area-inset-top, 0px);
+  pointer-events:none;
+}
+.settings-overlay.show{display:flex;pointer-events:auto}
+.sheet{
+  position:relative;
+  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(26px + env(safe-area-inset-bottom, 0px));
+}
+.sheet .field label{
+  font-size:11px;
+  margin-bottom:7px;
+}
+.sheet input,
+.sheet select{
+  min-height:50px;
+  font-size:16px;
+  line-height:1.2;
+  touch-action:manipulation;
+}
+.sheet select{
+  -webkit-appearance:auto;
+  appearance:auto;
+}
+.sheet-actions{
+  position:sticky;
+  bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  background:linear-gradient(to top,#17191d 78%,rgba(23,25,29,0));
+  padding-top:16px;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+  z-index:4;
+}
+.sheet-actions button{
+  min-height:50px;
+  font-size:15px;
+  touch-action:manipulation;
+}
+@media(max-width:520px){
+  .app{padding-top:0}
+  main{padding-top:8px}
+  .settings-overlay{align-items:flex-end}
+  .sheet{border-radius:28px 28px 0 0}
+}
+@media(max-width:360px){
+  .gear-label{display:none}
+  .gear{width:46px;min-width:46px;padding:0}
+}
 </style>
 </head>
 <body>
@@ -61,7 +151,7 @@
   <header class="top">
     <div class="topline">
       <div><div class="brand">MOTION<i>12</i></div><div class="date" id="todayDate"></div></div>
-      <button class="gear" id="settingsBtn" aria-label="Settings">⚙</button>
+      <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon">⚙</span><span class="gear-label">Settings</span></button>
     </div>
   </header>
   <main>
@@ -270,7 +360,7 @@ function dietText(day){
   if(day===2)return ['REFEED',c?'~'+c.eatingDay+' kcal today':'Break fast after recovery',p?'3 whole-food meals + shake · ~'+p+' g protein total.':'Protein-rich first meal.'];
   return p?[c?'~'+c.eatingDay+' KCAL':'~'+p+' G PROTEIN','3 whole-food meals + protein shake',ps?'Protein: ~'+ps.breakfast+' g breakfast · '+ps.lunch+' g lunch · '+ps.dinner+' g dinner · '+ps.shake+' g shake.':'Protein + plants.']:['SET WEIGHT','3 meals + shake','Add bodyweight in settings to calculate targets.'];
 }
-function formatDate(){return new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short'}).format(new Date())}
+function formatDate(){const d=new Date();const weekday=new Intl.DateTimeFormat('en-AU',{weekday:'long'}).format(d).toUpperCase();const rest=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d).toUpperCase();return weekday+' · '+rest}
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
 </script>
