@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="daily-quote-streak-20260926" />
+  <meta name="motion12-build" content="readable-quotes-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -928,6 +928,63 @@ html.standalone main{
     padding:6px 8px 5px !important;
   }
 }
+
+/* Readable daily quote treatment */
+.streak-quote{
+  padding:12px 14px 11px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,0));
+}
+.streak-quote-text{
+  display:block !important;
+  color:#f0f1f2 !important;
+  font-size:13px !important;
+  line-height:1.38 !important;
+  font-weight:850 !important;
+  letter-spacing:-.01em !important;
+  text-transform:none !important;
+  white-space:normal !important;
+}
+.streak-quote-by{
+  display:block !important;
+  margin-top:4px;
+  color:#a9adb4 !important;
+  font-size:10px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  letter-spacing:.01em !important;
+  text-transform:none !important;
+  white-space:normal !important;
+}
+.compact-streak .streak-quote{
+  padding:10px 12px 9px !important;
+  display:block;
+  overflow:visible;
+  -webkit-line-clamp:unset;
+}
+.compact-streak .streak-quote-text{
+  font-size:12px !important;
+  line-height:1.34 !important;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+.compact-streak .streak-quote-by{
+  font-size:9.5px !important;
+  margin-top:3px;
+}
+@media(max-height:760px){
+  #homePage.compact-active .compact-streak .streak-quote{
+    padding:8px 10px 7px !important;
+  }
+  #homePage.compact-active .compact-streak .streak-quote-text{
+    font-size:11px !important;
+    line-height:1.28 !important;
+  }
+  #homePage.compact-active .compact-streak .streak-quote-by{
+    font-size:9px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1402,7 +1459,7 @@ function streakBand(compact=false){
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
   const program=s.completed+'/'+s.programDays;
   return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
-    '<div class="streak-quote">“'+q.text+'” <span>— '+q.by+'</span></div>'+
+    '<div class="streak-quote"><span class="streak-quote-text">“'+q.text+'”</span><span class="streak-quote-by">— '+q.by+'</span></div>'+
     '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
     '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
     '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
