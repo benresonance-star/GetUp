@@ -26,6 +26,21 @@ const defaultSmartTimer={
   dayKey:''
 };
 let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
+let inlineTimerInt=null;
+const defaultInlineTimer={
+  activeId:'',
+  exerciseName:'',
+  kind:'',
+  work:0,
+  rest:0,
+  phase:'work',
+  running:false,
+  remaining:0,
+  duration:0,
+  endAt:0
+};
+let inlineTimer={...defaultInlineTimer,...(JSON.parse(localStorage.getItem('motion12.inlineTimer')||'null')||{})};
+
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function getMondayISO(d){const x=new Date(d);const day=x.getDay()||7;x.setDate(x.getDate()-day+1);return iso(x)}
 function todayISO(){const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
