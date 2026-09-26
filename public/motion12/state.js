@@ -148,7 +148,7 @@ function mealPlan(day){
     {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
     {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
     {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice, cooked weight ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
+    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk ('+cupMeasure(p.latteMilk/250)+') · no added sugar'},
     {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
     {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice, cooked weight ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
     {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit (~1 cup chopped) · ~80 kcal planning average'},
