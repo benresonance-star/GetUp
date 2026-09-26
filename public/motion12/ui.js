@@ -316,6 +316,17 @@ function supportTarget(exercise,w){
   }
   return exercise[1];
 }
+function prepBlockMarkup(day,date,p){
+  if(!p.prep?.length)return '';
+  const cards=p.prep.map((x,i)=>{
+    const id=`${date}-${day}-prep-${i}`,state=logs[id]||{};
+    return `<div class="exercise prep-exercise ${state.done?'complete':''}" id="ex-${id}">
+      <div class="ex-top"><div class="num">P${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${x[1]}</p></div><button class="check" type="button" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
+      <div class="tip">${x[2]}</div>
+    </div>`;
+  }).join('');
+  return `<section class="section prep-section"><div class="section-head"><h2>Movement prep</h2><small>light · controlled</small></div>${cards}</section>`;
+}
 function supportBlockMarkup(day,date,w,p){
   if(!p.support?.length)return '';
   const cards=p.support.map((x,i)=>{
@@ -334,12 +345,13 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
       <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>${loadGuideMarkup(x[4])}</div>`});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
+ const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <button class="session-timer-link" type="button" onclick="showPage('timerPage')"><div><span class="tag">Smart timer</span><h3>Use today’s prescribed timing</h3><p>Rest, sets or aerobic intervals are configured automatically.</p></div><span class="session-timer-arrow">→</span></button>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
- <div><section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
+ <div>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  ${supportHtml}
  <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  window.scrollTo({top:0,behavior:'smooth'});
@@ -371,12 +383,12 @@ function conditioningCircuitPlan(day,w){
     note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by 30 seconds easy recovery.';
   }else if(day===4){
     stations=[
+      {label:'KB COMPLEX',work:40,rest:60},
       {label:'SWINGS',work:20,rest:40},
-      {label:'PUSH-UPS',work:20,rest:40},
-      {label:'SQUATS',work:20,rest:40}
+      {label:'PUSH-UPS',work:20,rest:40}
     ];
     title=conditioningTarget(day,w);
-    note='Power circuit: keep every work interval crisp. The 40-second recovery is part of the prescription.';
+    note='Power circuit: use the full 40/60 window for the kettlebell complex, then keep swings and push-ups crisp at 20/40. Quality beats speed.';
   }else if(day===0){
     stations=[
       {label:'SQUAT + CALF',work:40,rest:20},
@@ -419,9 +431,12 @@ function timerSessionPlan(day=programDay(),w=weekNo()){
 }
 function exerciseRestPreset(name,day=programDay(),w=weekNo()){
   if(day===2)return {category:'Recovery circuit',seconds:30,action:'session',label:'30s / 30s',note:'Use the complete Restore circuit timer.'};
-  if(day===4)return {category:'Power circuit',seconds:40,action:'session',label:'20s / 40s',note:'Use the complete Power circuit timer.'};
+  if(day===4){
+    const complex=name==='Kettlebell squat → jerk → strict press';
+    return {category:'Power circuit',seconds:complex?60:40,action:'session',label:complex?'40s / 60s':'20s / 40s',note:'Use the complete Power circuit timer.'};
+  }
   if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
-  const strength120=new Set(['Goblet squat','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
+  const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
   const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
   if(name==='Aerobic intervals'){
