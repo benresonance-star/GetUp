@@ -1164,3 +1164,53 @@ html.standalone main{
   .exercise-rest-preset b{font-size:12px}
   .exercise-rest-preset strong{font-size:13px}
 }
+
+/* Readable ingredient lists in detailed meal cards */
+.meal-items{
+  list-style:none;
+  margin:10px 0 0;
+  padding:0;
+  display:grid;
+  gap:9px;
+  text-align:left;
+}
+.meal-items li{
+  position:relative;
+  padding-left:15px;
+  color:var(--ink);
+  font-size:12px;
+  line-height:1.35;
+}
+.meal-items li::before{
+  content:"•";
+  position:absolute;
+  left:0;
+  top:-1px;
+  color:var(--volt);
+  font-size:15px;
+  line-height:1.15;
+  font-weight:950;
+}
+.meal-items strong{
+  display:block;
+  color:#e9eaec;
+  font-size:12.5px;
+  line-height:1.32;
+  font-weight:850;
+}
+.meal-items span{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.3;
+  font-weight:650;
+}
+.meal-row.done .meal-items{
+  opacity:.58;
+}
+@media(max-width:390px){
+  .meal-items{gap:8px;margin-top:9px}
+  .meal-items strong{font-size:12px}
+  .meal-items span{font-size:10px}
+}
