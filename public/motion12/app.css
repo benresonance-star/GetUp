@@ -665,3 +665,78 @@ html.standalone main{
   .home-mode-toggle{padding:0 8px}
   .home-mode-label{display:none}
 }
+
+/* Relaxed compact Home spacing */
+@media(max-width:520px){
+  #homePage.compact-active .compact-home{
+    gap:12px;
+  }
+  #homePage.compact-active .compact-session{
+    padding:18px 17px;
+    border-radius:24px;
+    min-height:112px;
+  }
+  #homePage.compact-active .compact-session h1{
+    font-size:31px;
+    margin:7px 0 5px;
+  }
+  #homePage.compact-active .compact-session p{
+    font-size:11.5px;
+  }
+  #homePage.compact-active .compact-session-right{
+    gap:10px;
+  }
+  #homePage.compact-active .compact-session-right span{
+    padding:9px 12px;
+  }
+  #homePage.compact-active .compact-week{
+    gap:6px;
+  }
+  #homePage.compact-active .compact-week .daydot{
+    min-height:44px;
+    padding:8px 2px 7px;
+    border-radius:13px;
+  }
+  #homePage.compact-active .compact-metrics,
+  #homePage.compact-active .compact-bottom-grid{
+    gap:10px;
+  }
+  #homePage.compact-active .compact-card{
+    padding:14px 14px;
+    border-radius:20px;
+  }
+  #homePage.compact-active .compact-card strong{
+    margin-top:8px;
+    font-size:22px;
+  }
+  #homePage.compact-active .compact-card small{
+    margin-top:7px;
+    font-size:10.5px;
+  }
+  #homePage.compact-active .compact-card-head{
+    margin-bottom:11px;
+  }
+  #homePage.compact-active .compact-meal-grid{
+    gap:7px;
+  }
+  #homePage.compact-active .compact-meal{
+    min-height:40px;
+    padding:7px 8px;
+    border-radius:12px;
+    font-size:10px;
+  }
+  #homePage.compact-active .compact-meal .meal-check{
+    width:20px;
+    height:20px;
+    min-width:20px;
+  }
+}
+@media(max-width:380px),(max-height:760px){
+  #homePage.compact-active .compact-home{gap:8px}
+  #homePage.compact-active .compact-session{padding:13px 14px;min-height:auto}
+  #homePage.compact-active .compact-session h1{font-size:25px}
+  #homePage.compact-active .compact-card{padding:10px 11px}
+  #homePage.compact-active .compact-card strong{font-size:18px}
+  #homePage.compact-active .compact-meal{min-height:32px;padding:5px 6px;font-size:9px}
+  #homePage.compact-active .compact-week .daydot{min-height:36px;padding:5px 1px}
+}
