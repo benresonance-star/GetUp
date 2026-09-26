@@ -1,10 +1,38 @@
 function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
 function mealKey(date,index){return 'meal:'+date+':'+index}
+function intakeTotals(day,date){
+  const plan=mealPlan(day);
+  if(!plan||!plan.meals.length)return null;
+  const consumed=plan.meals.reduce((acc,m,i)=>{
+    if(logs[mealKey(date,i)]?.done){
+      acc.kcal+=m.kcal; acc.protein+=m.protein; acc.carbs+=m.carbs; acc.fat+=m.fat;
+    }
+    return acc;
+  },{kcal:0,protein:0,carbs:0,fat:0});
+  const remaining={
+    kcal:Math.max(0,plan.total-consumed.kcal),
+    protein:Math.max(0,plan.macroTotals.protein-consumed.protein),
+    carbs:Math.max(0,plan.macroTotals.carbs-consumed.carbs),
+    fat:Math.max(0,plan.macroTotals.fat-consumed.fat)
+  };
+  return {consumed,remaining,total:{kcal:plan.total,...plan.macroTotals}};
+}
+function intakeStripInner(day,date){
+  const t=intakeTotals(day,date);
+  if(!t)return '';
+  return '<div class="intake-row"><span class="intake-label">Consumed</span><b>'+t.consumed.kcal+' kcal</b><span>P '+t.consumed.protein+'g</span><span>C '+t.consumed.carbs+'g</span><span>F '+t.consumed.fat+'g</span></div>'+
+         '<div class="intake-row remaining"><span class="intake-label">Remaining</span><b>'+t.remaining.kcal+' kcal</b><span>P '+t.remaining.protein+'g</span><span>C '+t.remaining.carbs+'g</span><span>F '+t.remaining.fat+'g</span></div>';
+}
+function updateIntakeStrips(day,date){
+  document.querySelectorAll('[data-intake-date="'+date+'"]').forEach(el=>{
+    el.innerHTML=intakeStripInner(day,date);
+  });
+}
 function mealRows(day,date=todayISO()){
   const plan=mealPlan(day);
   if(!plan)return '<div class="card"><p>Add bodyweight to create the meal plan.</p></div>';
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
-  return '<div class="meal-list">'+plan.meals.map((m,i)=>{
+  return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+'</div><div class="meal-list">'+plan.meals.map((m,i)=>{
     const key=mealKey(date,i),done=!!logs[key]?.done;
     return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span><p>'+m.portion+'</p><div class="meal-grams">'+m.grams+'</div><div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
   }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Hand portions are a starting point; use labels or a food scale once or twice to calibrate them to your calorie budget.</div></div>';
@@ -13,11 +41,15 @@ function toggleMeal(key){
   logs[key]=logs[key]||{};
   logs[key].done=!logs[key].done;
   localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  const parts=key.split(':');
+  const date=parts[1];
+  const day=new Date(date+'T00:00:00').getDay();
   document.querySelectorAll('[data-meal-key="'+key+'"]').forEach(el=>{
     el.classList.toggle('done',logs[key].done);
     const check=el.querySelector('.meal-check');
     if(check)check.textContent=logs[key].done?'✓':'';
   });
+  updateIntakeStrips(day,date);
 }
 function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').innerHTML=`
