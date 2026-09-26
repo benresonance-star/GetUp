@@ -1,4 +1,4 @@
-const defaultPortions={yogurt:350,berries:200,nuts:20,latteMilk:200,meat:140,lunchRice:210,dinnerRice:200,veg:225,oil:7.5,powder:32,shakeMilk:250};
+const defaultPortions={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
 const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,portions:defaultPortions};
 const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
 let settings={...defaultSettings,...storedSettings,portions:{...defaultPortions,...(storedSettings.portions||{})}};
@@ -16,15 +16,15 @@ function round5(n){return Math.round(n/5)*5}
 function round50(n){return Math.round(n/50)*50}
 function foodReferences(){
   return {
-    yogurt:{kcal:65,protein:10,carbs:4,fat:.5,per:100},
-    berries:{kcal:50,protein:.7,carbs:12,fat:.3,per:100},
-    nuts:{kcal:607,protein:20,carbs:21,fat:54,per:100},
-    milk:{kcal:64,protein:3.3,carbs:4.8,fat:3.6,per:100},
-    meat:{kcal:165,protein:31,carbs:0,fat:3.6,per:100},
+    yogurt:{kcal:63,protein:10,carbs:4,fat:.8,per:100},
+    berries:{kcal:50,protein:.7,carbs:12,fat:.2,per:100},
+    nuts:{kcal:600,protein:20,carbs:20,fat:49,per:100},
+    milk:{kcal:64,protein:3.3,carbs:4.8,fat:3.5,per:100},
+    meat:{kcal:165,protein:30,carbs:0,fat:5,per:100},
     rice:{kcal:130,protein:2.7,carbs:28.2,fat:.3,per:100},
     veg:{kcal:35,protein:2,carbs:7,fat:.3,per:100},
     oil:{kcal:9,protein:0,carbs:0,fat:1,per:1},
-    powder:{kcal:400,protein:80,carbs:10,fat:7,per:100}
+    powder:{kcal:400,protein:80,carbs:10,fat:4.5,per:100}
   };
 }
 function itemMacros(refKey,amount){
