@@ -208,15 +208,245 @@ function renderProgress(){
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
   document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
-function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='homePage')renderHome();if(id==='daysPage')renderDays();if(id==='progressPage')renderProgress();window.scrollTo({top:0,behavior:'smooth'})}
-function updateClock(){const el=document.getElementById('clock');if(el){const m=Math.floor(timerSeconds/60),s=timerSeconds%60;el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}}
-function toggleTimer(){timerRunning=!timerRunning;const b=document.getElementById('timerToggle');if(b)b.textContent=timerRunning?'Pause':'Start';clearInterval(timerInt);if(timerRunning)timerInt=setInterval(()=>{timerSeconds++;updateClock()},1000)}
-function setTimer(sec){clearInterval(timerInt);timerSeconds=sec;timerRunning=true;updateClock();const b=document.getElementById('timerToggle');if(b)b.textContent='Pause';timerInt=setInterval(()=>{timerSeconds--;updateClock();if(timerSeconds<=0){clearInterval(timerInt);timerRunning=false;if(navigator.vibrate)navigator.vibrate([180,100,180]);const b=document.getElementById('timerToggle');if(b)b.textContent='Start'}},1000)}
-function resetTimer(){clearInterval(timerInt);timerSeconds=0;timerRunning=false;updateClock();const b=document.getElementById('timerToggle');if(b)b.textContent='Start'}
+function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
+
+function timerSessionPlan(day=programDay(),w=weekNo()){
+  if(day===6){
+    const target=aerobicTargets[w-1]||'Aerobic session';
+    const m=target.match(/(\d+)\s*×\s*(\d+)\s*min hard\s*\/\s*(\d+)\s*min easy/i);
+    if(m){
+      const rounds=Number(m[1]),hard=Number(m[2])*60,easy=Number(m[3])*60,phases=[];
+      for(let r=1;r<=rounds;r++){
+        phases.push({label:'HARD',seconds:hard,round:r});
+        if(r<rounds)phases.push({label:'RECOVER',seconds:easy,round:r});
+      }
+      return {kind:'intervals',title:target,note:'Run the prescribed work/recovery sequence automatically.',rounds,phases};
+    }
+    return {kind:'stopwatch',title:target,note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
+  }
+  if(day===4){
+    const target=swingTargets[w-1]||'Swing sets';
+    const m=target.match(/(\d+)\s*×\s*(\d+)/);
+    const sets=m?Number(m[1]):8,reps=m?Number(m[2]):10;
+    return {kind:'sets',title:target,note:'Complete a crisp set, then let the timer control a 60-second recovery.',sets,reps,rest:60};
+  }
+  if(day===2)return {kind:'rest',title:'Restore · easy recovery',note:'Keep rests short because today is deliberately low fatigue.',rest:60};
+  if(day===1||day===3||day===5)return {kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
+  return {kind:'stopwatch',title:'Reset · mobility',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
+}
+function saveSmartTimer(){localStorage.setItem('motion12.timer',JSON.stringify(smartTimer))}
+function timerFormat(sec){
+  sec=Math.max(0,Math.floor(sec||0));
+  const m=Math.floor(sec/60),s=sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function timerConfigure(mode=smartTimer.mode||'session',force=false){
+  const dayKey=todayISO()+':'+weekNo();
+  if(!force&&smartTimer.dayKey===dayKey&&smartTimer.mode===mode&&smartTimer.kind)return;
+  const plan=timerSessionPlan();
+  smartTimer={...defaultSmartTimer,mode,dayKey};
+  if(mode==='rest'){
+    smartTimer.kind='rest'; smartTimer.duration=90; smartTimer.remaining=90;
+  }else if(mode==='stopwatch'){
+    smartTimer.kind='stopwatch'; smartTimer.remaining=0; smartTimer.duration=0;
+  }else{
+    smartTimer.kind=plan.kind;
+    if(plan.kind==='intervals'){
+      smartTimer.phaseIndex=0;
+      smartTimer.duration=plan.phases[0].seconds;
+      smartTimer.remaining=plan.phases[0].seconds;
+    }else if(plan.kind==='sets'||plan.kind==='rest'){
+      smartTimer.duration=plan.rest;
+      smartTimer.remaining=plan.rest;
+    }else{
+      smartTimer.remaining=0; smartTimer.duration=0;
+    }
+  }
+  saveSmartTimer();
+}
+function timerCurrentSeconds(){
+  if(smartTimer.kind==='stopwatch'){
+    return smartTimer.stopwatchElapsed+(smartTimer.running?Math.floor((Date.now()-smartTimer.stopwatchStartedAt)/1000):0);
+  }
+  return smartTimer.running?Math.max(0,Math.ceil((smartTimer.endAt-Date.now())/1000)):Math.max(0,smartTimer.remaining||0);
+}
+function timerBeep(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    window.__motionTimerAudio=window.__motionTimerAudio||new AC();
+    const ctx=window.__motionTimerAudio,o=ctx.createOscillator(),g=ctx.createGain();
+    o.frequency.value=880;g.gain.value=.05;o.connect(g);g.connect(ctx.destination);
+    o.start();o.stop(ctx.currentTime+.16);
+  }catch(e){}
+}
+function timerTick(){
+  if(!smartTimer.running){
+    if(document.getElementById('timerPage')?.classList.contains('active'))updateSmartTimerDisplay();
+    return;
+  }
+  const now=Date.now();
+  if(smartTimer.kind==='intervals'){
+    const plan=timerSessionPlan();
+    let changed=false;
+    while(smartTimer.running&&now>=smartTimer.endAt){
+      const previousEnd=smartTimer.endAt;
+      smartTimer.phaseIndex++;
+      changed=true;
+      if(smartTimer.phaseIndex>=plan.phases.length){
+        smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;timerBeep();break;
+      }
+      const phase=plan.phases[smartTimer.phaseIndex];
+      smartTimer.duration=phase.seconds;
+      smartTimer.remaining=phase.seconds;
+      smartTimer.endAt=previousEnd+phase.seconds*1000;
+      timerBeep();
+    }
+    if(changed)saveSmartTimer();
+  }else if(smartTimer.kind!=='stopwatch'&&now>=smartTimer.endAt){
+    smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;saveSmartTimer();timerBeep();
+  }
+  if(document.getElementById('timerPage')?.classList.contains('active'))updateSmartTimerDisplay();
+}
+function timerEnsureTick(){
+  if(timerInt)return;
+  timerInt=setInterval(timerTick,250);
+}
+function timerSetMode(mode){timerConfigure(mode,true);renderTimerPage()}
+function timerStartPause(){
+  timerConfigure(smartTimer.mode||'session',false);
+  if(smartTimer.running){
+    if(smartTimer.kind==='stopwatch')smartTimer.stopwatchElapsed=timerCurrentSeconds();
+    else smartTimer.remaining=timerCurrentSeconds();
+    smartTimer.running=false;smartTimer.endAt=0;smartTimer.stopwatchStartedAt=0;
+  }else{
+    if(smartTimer.kind==='stopwatch'){
+      smartTimer.stopwatchStartedAt=Date.now();smartTimer.running=true;
+    }else{
+      if(timerCurrentSeconds()<=0){
+        if(smartTimer.kind==='intervals'){
+          const plan=timerSessionPlan();
+          if(smartTimer.phaseIndex>=plan.phases.length)smartTimer.phaseIndex=0;
+          smartTimer.duration=plan.phases[smartTimer.phaseIndex].seconds;
+          smartTimer.remaining=smartTimer.duration;
+        }else smartTimer.remaining=smartTimer.duration||90;
+      }
+      smartTimer.endAt=Date.now()+smartTimer.remaining*1000;smartTimer.running=true;
+    }
+  }
+  saveSmartTimer();timerEnsureTick();renderTimerPage();
+}
+function timerReset(){timerConfigure(smartTimer.mode||'session',true);renderTimerPage()}
+function timerSetRest(sec){
+  smartTimer={...defaultSmartTimer,mode:'rest',kind:'rest',duration:sec,remaining:sec,dayKey:todayISO()+':'+weekNo()};
+  saveSmartTimer();renderTimerPage();
+}
+function timerAdjust(delta){
+  if(smartTimer.kind==='stopwatch')return;
+  if(smartTimer.running)smartTimer.endAt=Math.max(Date.now(),smartTimer.endAt+delta*1000);
+  else smartTimer.remaining=Math.max(0,(smartTimer.remaining||0)+delta);
+  smartTimer.duration=Math.max(15,(smartTimer.duration||0)+delta);
+  saveSmartTimer();updateSmartTimerDisplay();
+}
+function timerSkipPhase(){
+  if(smartTimer.kind!=='intervals')return;
+  const plan=timerSessionPlan();
+  smartTimer.phaseIndex++;
+  if(smartTimer.phaseIndex>=plan.phases.length){
+    smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;
+  }else{
+    const phase=plan.phases[smartTimer.phaseIndex];
+    smartTimer.duration=phase.seconds;smartTimer.remaining=phase.seconds;
+    if(smartTimer.running)smartTimer.endAt=Date.now()+phase.seconds*1000;
+  }
+  saveSmartTimer();timerBeep();renderTimerPage();
+}
+function timerCompleteSet(){
+  const plan=timerSessionPlan();
+  if(smartTimer.kind!=='sets'||smartTimer.running||smartTimer.setIndex>=plan.sets)return;
+  smartTimer.setIndex++;
+  if(smartTimer.setIndex>=plan.sets){
+    smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;timerBeep();
+  }else{
+    smartTimer.duration=plan.rest;smartTimer.remaining=plan.rest;
+    smartTimer.endAt=Date.now()+plan.rest*1000;smartTimer.running=true;
+  }
+  saveSmartTimer();renderTimerPage();
+}
+function timerViewModel(){
+  timerConfigure(smartTimer.mode||'session',false);
+  const plan=timerSessionPlan(),sec=timerCurrentSeconds(),kind=smartTimer.kind;
+  let label='REST',meta=plan.title,progress=0,detail='';
+  if(kind==='intervals'){
+    const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
+    if(smartTimer.phaseIndex>=plan.phases.length){label='COMPLETE';meta=plan.title;progress=1;detail='All '+plan.rounds+' hard intervals complete';}
+    else{label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;progress=smartTimer.duration?1-sec/smartTimer.duration:0;detail=plan.title;}
+  }else if(kind==='sets'){
+    label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
+    meta=smartTimer.setIndex>=plan.sets?plan.sets+' sets complete':(smartTimer.setIndex+1)+' of '+plan.sets+' · '+plan.reps+' reps';
+    progress=smartTimer.running&&smartTimer.duration?1-sec/smartTimer.duration:smartTimer.setIndex/plan.sets;
+    detail=plan.title;
+  }else if(kind==='stopwatch'){
+    label='ELAPSED';meta=plan.title;detail=plan.note;
+  }else{
+    label='REST';meta=smartTimer.mode==='session'?plan.title:'Manual rest';
+    progress=smartTimer.duration?1-sec/smartTimer.duration:0;
+    detail=smartTimer.mode==='session'?plan.note:'Use this for any set that needs a different recovery time.';
+  }
+  return {plan,sec,kind,label,meta,detail,progress:Math.max(0,Math.min(1,progress))};
+}
+function timerControls(vm){
+  const primary='<button class="timer-primary" onclick="timerStartPause()">'+(smartTimer.running?'Pause':'Start')+'</button>';
+  if(vm.kind==='intervals')return primary+'<button onclick="timerSkipPhase()">Skip phase</button><button onclick="timerReset()">Reset</button>';
+  if(vm.kind==='sets'){
+    if(smartTimer.setIndex>=vm.plan.sets)return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
+    if(smartTimer.running)return primary+'<button onclick="timerAdjust(15)">+15 sec</button><button onclick="timerReset()">Reset</button>';
+    return '<button class="timer-primary" onclick="timerCompleteSet()">Set complete → rest</button><button onclick="timerReset()">Reset</button>';
+  }
+  if(vm.kind==='stopwatch')return primary+'<button onclick="timerReset()">Reset</button>';
+  return primary+'<button onclick="timerAdjust(-15)">−15 sec</button><button onclick="timerAdjust(15)">+15 sec</button><button onclick="timerReset()">Reset</button>';
+}
+function renderTimerPage(){
+  timerConfigure(smartTimer.mode||'session',false);
+  const vm=timerViewModel(),p=program[programDay()];
+  const presets=vm.kind==='rest'?'<div class="timer-presets"><button onclick="timerSetRest(60)">1:00</button><button onclick="timerSetRest(90)">1:30</button><button onclick="timerSetRest(120)">2:00</button></div>':'';
+  document.getElementById('timerPage').innerHTML=
+    '<div class="page-title timer-title"><div class="eyebrow">Today · '+p.name+'</div><h1>Timer</h1><p>'+vm.plan.title+'</p></div>'+
+    '<div class="timer-mode-tabs">'+
+      '<button class="'+(smartTimer.mode==='session'?'active':'')+'" onclick="timerSetMode(\'session\')">Session</button>'+
+      '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
+      '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
+    '</div>'+
+    '<section class="smart-timer-card">'+
+      '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.progress*360)+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small></div></div>'+
+      '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
+      presets+
+    '</section>'+
+    '<section class="section"><div class="card timer-guidance"><span class="tag">Why this timer</span><h3>'+vm.plan.title+'</h3><p>'+vm.detail+'</p></div></section>';
+  timerEnsureTick();
+}
+function updateSmartTimerDisplay(){
+  const clock=document.getElementById('smartClock');
+  if(!clock)return;
+  const vm=timerViewModel();
+  clock.textContent=timerFormat(vm.sec);
+  const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
+  const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
+  const ring=document.getElementById('timerRing');if(ring)ring.style.setProperty('--timer-progress',(vm.progress*360)+'deg');
+  const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
+  document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  if(id==='homePage')renderHome();
+  if(id==='daysPage')renderDays();
+  if(id==='progressPage')renderProgress();
+  if(id==='timerPage')renderTimerPage();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
-document.getElementById('quickTimer').onclick=()=>{openDay(programDay());setTimer(60)};
 document.getElementById('homeModeToggle').onclick=toggleHomeMode;
 updateHomeModeToggle();
 document.getElementById('settingsBtn').onclick=()=>{
