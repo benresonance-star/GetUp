@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="monday-strength-generalized-set-flow-20260927" />
+  <meta name="motion12-build" content="monday-strength-generalized-set-flow-final-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -2751,8 +2751,10 @@ function strengthCompletionSummary(id,name,target,entries){
     strengthNormalizeLoad(previous.sets[0]?.load)===normalized[0]&&
     strengthQualifiesForProgression(previous.sets,cfg.top);
   const targetPattern=entries.map(()=>cfg.top).join('/');
-  let title='Build reps at this '+cfg.noun;
-  let text='Keep the current '+cfg.noun+' next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
+  let title=name==='Suitcase carry'?'Build carry time at this load':'Build reps at this '+cfg.noun;
+  let text=name==='Suitcase carry'
+    ?'Keep the current load next Monday and build toward 60 seconds per side while keeping posture and grip controlled.'
+    :'Keep the current '+cfg.noun+' next Monday and aim to add 1 total rep while keeping about 2 reps in reserve.';
   let tone='hold';
   if(qualifies&&previousQualifies){
     title=cfg.advanceTitle;
@@ -2764,7 +2766,9 @@ function strengthCompletionSummary(id,name,target,entries){
     tone='ready';
   }else if(reps.some(r=>r<cfg.low)||rirs.some(r=>r<1)){
     title='Hold the '+cfg.noun;
-    text='Do not progress yet. Bring every set back into the prescribed range with cleaner reserve before making it harder.';
+    text=name==='Suitcase carry'
+      ?'Do not progress yet. Bring both carries back into the 45–60 second range with upright posture and cleaner reserve before increasing load.'
+      :'Do not progress yet. Bring every set back into the prescribed range with cleaner reserve before making it harder.';
   }else if(rirs.some(r=>r<2)){
     title='Hold the '+cfg.noun;
     text='At least one set finished below 2 reps in reserve. Keep the '+cfg.noun+' stable and make the same work feel easier next Monday.';
