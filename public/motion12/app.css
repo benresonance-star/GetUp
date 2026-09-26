@@ -1214,3 +1214,32 @@ html.standalone main{
   .meal-items strong{font-size:12px}
   .meal-items span{font-size:10px}
 }
+
+/* Conditioning loading guidance */
+.load-rule{
+  margin-top:8px;
+  border-color:rgba(255,77,46,.26);
+  background:linear-gradient(135deg,rgba(255,77,46,.06),#111316 62%);
+}
+.load-rule-label{
+  display:block;
+  margin-bottom:6px;
+  color:var(--volt);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.load-rule p{
+  margin:0;
+  color:#cfd2d7;
+  font-size:11px;
+  line-height:1.5;
+}
+.load-rule p b{
+  color:#f1f2f3;
+  font-weight:950;
+}
+@media(max-width:390px){
+  .load-rule p{font-size:10.5px;line-height:1.45}
+}
