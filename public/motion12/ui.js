@@ -272,7 +272,8 @@ function exercisePresetMarkup(){
   return '<section class="section timer-exercise-section"><div class="section-head"><h2>Exercise recovery</h2><small>tap to load</small></div><div class="exercise-rest-list">'+
     p.work.map(x=>{
       const name=x[0],rec=exerciseRestPreset(name),active=smartTimer.exerciseName===name?' active':'';
-      return '<button class="exercise-rest-preset'+active+'" type="button" onclick="timerUseExercisePreset('+JSON.stringify(name)+')">'+
+      const safeName=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return '<button class="exercise-rest-preset'+active+'" type="button" onclick="timerUseExercisePreset(\''+safeName+'\')">'+
         '<span><b>'+name+'</b><small>'+rec.category+'</small></span>'+
         '<strong>'+rec.label+'</strong>'+
       '</button>';
