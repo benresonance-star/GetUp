@@ -47,3 +47,33 @@ const mobility=[
 ];
 const swingTargets=['6 × 8 = 48','7 × 8 = 56','8 × 8 = 64','10 × 8 = 80','8 × 10 = 80','9 × 10 = 90','10 × 10 = 100','6 × 8 = 48 deload','10 × 10 = 100','11 × 10 = 110','12 × 10 = 120','8 × 8 = 64 consolidate'];
 const aerobicTargets=['40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','3 × 3 min hard / 3 min easy','4 × 3 min hard / 3 min easy','4 × 4 min hard / 3 min easy','30–40 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','2 km walk test'];
+
+const ytSearch=(q)=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' short proper form');
+const videoLinks={
+  'Goblet squat':'https://www.youtube.com/watch?v=MWHIs0zxkCU',
+  'Ring row / pull-up':ytSearch('ring row pull up technique'),
+  'Ring row':ytSearch('ring row technique'),
+  'Kettlebell Romanian deadlift':ytSearch('kettlebell Romanian deadlift'),
+  '1-arm kettlebell press':'https://www.youtube.com/watch?v=1r7_B5NT6Eo',
+  'Suitcase carry':'https://www.youtube.com/watch?v=Q1GjhRDAil0',
+  'Pallof press':'https://www.youtube.com/watch?v=axgv7H_VQOo',
+  'Kettlebell deadlift':ytSearch('kettlebell deadlift'),
+  'Band face pull':ytSearch('band face pull'),
+  'Single-leg calf raise':ytSearch('single leg calf raise'),
+  'Reverse lunge':ytSearch('kettlebell reverse lunge'),
+  'Push-up':'https://www.youtube.com/watch?v=WDIpL0pjun0',
+  '1-arm kettlebell row':ytSearch('one arm kettlebell row'),
+  'Back extension':'https://www.youtube.com/watch?v=dF_V3358Dkc',
+  'Band chop':ytSearch('resistance band wood chop'),
+  '2-hand kettlebell swing':ytSearch('StrongFirst two hand kettlebell swing'),
+  'Lateral lunge':ytSearch('kettlebell lateral lunge'),
+  'Pallof press / band chop':ytSearch('Pallof press band chop'),
+  'Aerobic intervals':ytSearch('4x4 VO2 max interval protocol'),
+  'Chin tuck':ytSearch('chin tuck neck exercise'),
+  'Open-book rotation':ytSearch('open book thoracic rotation'),
+  'Wall slide':ytSearch('wall slide shoulder mobility'),
+  '90/90 hip rotation':ytSearch('90 90 hip rotation'),
+  'Figure-four glute stretch':ytSearch('figure four glute stretch'),
+  'Lateral step + cross-body reach':ytSearch('lateral step cross body reach mobility')
+};
+function videoFor(name){return videoLinks[name]||ytSearch(name)}
