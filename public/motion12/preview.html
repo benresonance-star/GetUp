@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="strength-set-auto-recovery-final-20260927" />
+  <meta name="motion12-build" content="days-collapsible-exercises-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -43,7 +43,31 @@
     .exercise{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:17px;margin-bottom:10px}.ex-top{display:flex;justify-content:space-between;gap:14px}.num{width:30px;height:30px;flex:none;border-radius:10px;background:var(--surface2);display:grid;place-items:center;font-weight:950;color:var(--volt)}.ex-name{flex:1}.ex-name h3{margin:1px 0 4px;font-size:18px}.ex-name p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.check{width:34px;height:34px;border:1px solid #3a3d43;border-radius:50%;background:none;cursor:pointer}.exercise.complete{opacity:.58}.exercise.complete .check{background:var(--volt);border-color:var(--volt)}.exercise.complete .check:after{content:"✓";color:#0b0c0e;font-weight:950}
     .inputs{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;margin-top:14px}.field label{display:block;font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.07em;margin:0 0 5px 3px}.field input,.field select{width:100%;border:1px solid var(--line);background:#101215;color:var(--ink);border-radius:12px;padding:10px 8px;outline:none}.tip{margin-top:12px;padding:10px 11px;border-left:3px solid var(--cyan);background:rgba(59,231,225,.05);font-size:11px;color:#c9cccf;line-height:1.45}.progress-rule{border-left-color:var(--volt);background:rgba(255,77,46,.05)}
     .complete-session{width:100%;border:0;background:var(--volt);color:#0a0b0c;padding:16px;border-radius:18px;font-size:15px;font-weight:950;margin:10px 0;cursor:pointer}.complete-session.done{background:var(--cyan)}
-    .day-list .card{cursor:pointer}.day-list .label{font-size:11px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.08em}.day-list h3{font-size:24px;letter-spacing:-.05em;text-transform:uppercase;margin:5px 0}.day-list .right{font-size:24px}.day-list .todaycard{border-color:var(--volt);box-shadow:0 0 0 1px rgba(255,77,46,.15) inset}
+    .day-list .card{cursor:pointer}.day-list .label{font-size:11px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.08em}.day-list h3{font-size:24px;letter-spacing:-.05em;text-transform:uppercase;margin:5px 0}.day-list .todaycard{border-color:var(--volt);box-shadow:0 0 0 1px rgba(255,77,46,.15) inset}
+    .day-card{display:block;padding:18px;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+    .day-card:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+    .day-card-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .day-card-copy{min-width:0;flex:1}
+    .day-card-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+    .day-chevron{flex:0 0 auto;width:36px;height:36px;display:grid;place-items:center;font-size:28px;line-height:1;font-weight:800;transform:rotate(0deg);transition:transform .18s ease}
+    .day-card.expanded .day-chevron{transform:rotate(180deg)}
+    .day-overview{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);animation:dayOverviewReveal .16s ease-out}
+    @keyframes dayOverviewReveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .day-overview-group+.day-overview-group{margin-top:14px}
+    .day-overview-group-title{margin-bottom:7px;color:var(--muted);font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+    .day-overview-exercise{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:start;padding:8px 0;border-top:1px solid rgba(255,255,255,.045)}
+    .day-overview-exercise:first-of-type{border-top:0}
+    .day-overview-num,.day-overview-dot{padding-top:1px;color:var(--volt);font-size:10px;font-weight:950;letter-spacing:.05em}
+    .day-overview-dot{font-size:16px;line-height:.8}
+    .day-overview-exercise b{display:block;color:#f1f2f3;font-size:13px;line-height:1.25}
+    .day-overview-exercise small{display:block;margin-top:3px;color:var(--muted);font-size:10.5px;line-height:1.3}
+    .day-overview-note{margin:13px 0 11px;color:var(--muted);font-size:10px;line-height:1.35}
+    .day-session-btn{width:100%;min-height:46px;border:1px solid rgba(255,77,46,.45);border-radius:14px;background:rgba(255,77,46,.11);display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#f5f5f0;font-size:12px;font-weight:950;text-align:left;cursor:pointer}
+    .day-session-btn.cyan{border-color:rgba(59,231,225,.35);background:rgba(59,231,225,.07)}
+    .day-session-btn.pink{border-color:rgba(255,79,163,.4);background:rgba(255,79,163,.08)}
+    .day-session-btn.orange{border-color:rgba(255,122,26,.42);background:rgba(255,122,26,.09)}
+    .day-session-btn span:last-child{font-size:18px}
+    @media(max-width:390px){.day-card{padding:16px}.day-list h3{font-size:22px}.day-overview-exercise{padding:7px 0}.day-session-btn{min-height:44px}}
     .measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.measure input{margin-top:10px;width:100%;background:#101215;border:1px solid var(--line);color:white;border-radius:12px;padding:11px}.savebar{position:sticky;bottom:82px;background:rgba(13,14,16,.93);padding:10px 0;backdrop-filter:blur(12px)}
     .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;z-index:100}.settings-overlay.show{display:flex}.sheet{width:min(520px,100%);margin:auto;background:#17191d;border-radius:30px 30px 0 0;padding:24px 20px calc(28px + env(safe-area-inset-bottom));border:1px solid var(--line)}.sheet h2{margin:0 0 16px}.sheet .field{margin:12px 0}.sheet input{width:100%;padding:12px;border-radius:13px;border:1px solid var(--line);background:#0f1113;color:white}.sheet-actions{display:flex;gap:8px;margin-top:18px}.sheet-actions button{flex:1;border:0;border-radius:14px;padding:13px;font-weight:900;cursor:pointer}.save{background:var(--volt);color:#0b0c0e}.cancel{background:#272a30;color:white}
     .fast{color:var(--orange)}.cyan{color:var(--cyan)}.volt{color:var(--volt)}.pink{color:var(--pink)}
@@ -2182,8 +2206,54 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
   <section class="section"><div class="section-head"><h2>Daily mobility</h2><small>6–8 min</small></div><button class="card row mobility-home-card" type="button" onclick="openMobilityToday()"><div><h3>7-move reset</h3><p>Neck · thoracic spine · shoulders · hips · lateral movement</p></div><div class="right">↗</div></button></section>
   </div></div>`;
 }
-function renderDays(){const d=programDay(),w=weekNo();let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Same structure every week. Only load, leverage and aerobic output progress.</p></div><div class="section day-list cards">`;
- [1,2,3,4,5,6,0].forEach(day=>{const p=program[day];html+=`<div class="card row ${day===d?'todaycard':''}" onclick="openDay(${day})"><div><div class="label">${DAYS[day]} · ${p.time}</div><h3>${p.name}</h3><p>${weeklyTarget(day,w)}</p></div><div class="right ${p.tone}">→</div></div>`});html+='</div>';document.getElementById('daysPage').innerHTML=html;
+let expandedDayCard=null;
+function dayOverviewGroup(title,items,day,w,startIndex=1){
+  if(!items?.length)return '';
+  const rows=items.map((x,i)=>{
+    let target=x[1]||'';
+    if(day===6&&title==='Workout')target=aerobicTargets[w-1]||target;
+    if(title==='Support')target=supportTarget(x,w);
+    const num=title==='Workout'?String(startIndex+i).padStart(2,'0'):'';
+    return '<div class="day-overview-exercise">'+
+      (num?'<span class="day-overview-num">'+num+'</span>':'<span class="day-overview-dot">•</span>')+
+      '<div><b>'+x[0]+'</b><small>'+target+'</small></div>'+
+    '</div>';
+  }).join('');
+  return '<div class="day-overview-group"><div class="day-overview-group-title">'+title+'</div>'+rows+'</div>';
+}
+function toggleDayCard(day){
+  expandedDayCard=expandedDayCard===day?null:day;
+  renderDays();
+  if(expandedDayCard!==null)setTimeout(()=>document.getElementById('day-card-'+day)?.scrollIntoView({behavior:'smooth',block:'nearest'}),20);
+}
+function dayOverviewMarkup(day,w,p){
+  const prep=dayOverviewGroup('Movement prep',p.prep,day,w);
+  const work=dayOverviewGroup('Workout',p.work,day,w,1);
+  const support=dayOverviewGroup('Support',p.support,day,w);
+  return '<div class="day-overview">'+prep+work+support+
+    '<div class="day-overview-note">Daily mobility reset is available inside the session.</div>'+
+    '<button class="day-session-btn '+p.tone+'" type="button" onclick="event.stopPropagation();openDay('+day+')"><span>Go to session</span><span>→</span></button>'+
+  '</div>';
+}
+function renderDays(){
+  const d=programDay(),w=weekNo();
+  let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Tap a day to preview its exercises. Open the full session when you are ready to train.</p></div><div class="section day-list cards">`;
+  [1,2,3,4,5,6,0].forEach(day=>{
+    const p=program[day],expanded=expandedDayCard===day;
+    html+=`<div id="day-card-${day}" class="card day-card ${day===d?'todaycard':''} ${expanded?'expanded':''}" role="button" tabindex="0" aria-expanded="${expanded}" onclick="toggleDayCard(${day})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDayCard(${day})}">
+      <div class="day-card-head">
+        <div class="day-card-copy">
+          <div class="label">${DAYS[day]} · ${p.time}</div>
+          <h3>${p.name}</h3>
+          <p>${weeklyTarget(day,w)}</p>
+        </div>
+        <div class="day-chevron ${p.tone}" aria-hidden="true">⌄</div>
+      </div>
+      ${expanded?dayOverviewMarkup(day,w,p):''}
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('daysPage').innerHTML=html;
 }
 function exId(day,i,date){return `${date}-${day}-${i}`}
 function dateForProgramDay(day){const s=new Date(settings.startDate+'T00:00:00');const w=weekNo();const monday=new Date(s);monday.setDate(s.getDate()+(w-1)*7);const offset=day===0?6:day-1;const d=new Date(monday);d.setDate(monday.getDate()+offset);return iso(d)}
