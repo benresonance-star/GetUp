@@ -650,7 +650,15 @@ function timerViewModel(){
     progress=smartTimer.duration?sec/smartTimer.duration:0;
     detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
-  return {plan,sec,kind,label,meta,detail,progress:Math.max(0,Math.min(1,progress))};
+  const duration=Math.max(0,Number(smartTimer.duration)||0);
+  const stepAngle=duration>0?360/duration:360;
+  const gapAngle=duration>0?Math.min(1.6,Math.max(.55,stepAngle*.16)):0;
+  const fillAngle=Math.max(.1,stepAngle-gapAngle);
+  return {
+    plan,sec,kind,label,meta,detail,
+    progress:Math.max(0,Math.min(1,progress)),
+    duration,stepAngle,gapAngle,fillAngle
+  };
 }
 function timerControls(vm){
   const primary='<button class="timer-primary" onclick="timerStartPause()">'+(smartTimer.running?'Pause':'Start')+'</button>';
@@ -676,7 +684,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.progress*360)+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.progress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+timerFormat(vm.sec)+'</strong><small id="timerMeta">'+vm.meta+'</small></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -691,7 +699,13 @@ function updateSmartTimerDisplay(){
   clock.textContent=timerFormat(vm.sec);
   const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
-  const ring=document.getElementById('timerRing');if(ring)ring.style.setProperty('--timer-progress',(vm.progress*360)+'deg');
+  const ring=document.getElementById('timerRing');
+  if(ring){
+    ring.style.setProperty('--timer-progress',(vm.progress*360)+'deg');
+    ring.style.setProperty('--timer-step-angle',vm.stepAngle+'deg');
+    ring.style.setProperty('--timer-gap-angle',vm.gapAngle+'deg');
+    ring.style.setProperty('--timer-fill-angle',vm.fillAngle+'deg');
+  }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
 }
 function showPage(id){
