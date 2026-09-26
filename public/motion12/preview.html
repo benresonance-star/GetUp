@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="compact-dashboard-20260926" />
+  <meta name="motion12-build" content="header-toggle-20260926" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -625,6 +625,67 @@ html.standalone main{
   .compact-meal{min-height:30px;padding:4px 5px}
   .compact-week .daydot{min-height:34px;padding:5px 1px}
 }
+
+/* Header Home-mode switch */
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.home-mode-toggle{
+  min-height:42px;
+  padding:0 10px;
+  border:1px solid #3a3d43;
+  border-radius:999px;
+  background:#191b1f;
+  color:var(--muted);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.home-mode-label{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.01em;
+}
+.switch-track{
+  width:34px;
+  height:20px;
+  padding:2px;
+  border-radius:999px;
+  background:#34373d;
+  display:flex;
+  align-items:center;
+  transition:background .18s ease;
+}
+.switch-knob{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:#d7d9dc;
+  transform:translateX(0);
+  transition:transform .18s ease,background .18s ease;
+}
+.home-mode-toggle.active{
+  color:var(--ink);
+  border-color:rgba(255,77,46,.4);
+}
+.home-mode-toggle.active .switch-track{
+  background:var(--volt);
+}
+.home-mode-toggle.active .switch-knob{
+  background:#0b0c0e;
+  transform:translateX(14px);
+}
+@media(max-width:390px){
+  .top-actions{gap:6px}
+  .home-mode-toggle{padding:0 8px}
+  .home-mode-label{display:none}
+}
 </style>
 </head>
 <body>
@@ -632,7 +693,12 @@ html.standalone main{
   <header class="top">
     <div class="topline">
       <div><div class="brand">MOTION<i>12</i></div><div class="date" id="todayDate"></div></div>
-      <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon">⚙</span><span class="gear-label">Settings</span></button>
+      <div class="top-actions">
+        <button class="home-mode-toggle" id="homeModeToggle" type="button" role="switch" aria-checked="false" aria-label="Use compact Home">
+          <span class="home-mode-label">Compact</span><span class="switch-track"><span class="switch-knob"></span></span>
+        </button>
+        <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon">⚙</span><span class="gear-label">Settings</span></button>
+      </div>
     </div>
   </header>
   <main>
@@ -660,13 +726,6 @@ html.standalone main{
     <div class="field"><label>Sex for calorie estimate</label><select id="sexInput"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option></select></div>
     <div class="field"><label>Daily step baseline</label><input type="number" id="stepsInput" step="500" min="0"></div>
     <div class="field"><label>Known maintenance calories — optional</label><input type="number" id="maintenanceInput" step="50" min="1200" max="6000" placeholder="Overrides estimate if known"></div>
-    <div class="field">
-      <label>Home screen layout</label>
-      <select id="homeModeInput">
-        <option value="full">Full detail</option>
-        <option value="compact">Compact dashboard</option>
-      </select>
-    </div>
     <details class="portion-settings">
       <summary>Portion calibration</summary>
       <p class="settings-note">Edit these once to match your usual portions. Calories/macros recalculate from representative food values.</p>
@@ -929,7 +988,20 @@ function formatDate(){const d=new Date();const weekday=new Intl.DateTimeFormat('
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
 function completedOn(date,day){return !!logs[`${date}-${day}`]?.completed}
 </script>
-<script>function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
+<script>function updateHomeModeToggle(){
+  const b=document.getElementById('homeModeToggle');
+  if(!b)return;
+  const compact=settings.homeMode==='compact';
+  b.setAttribute('aria-checked',compact?'true':'false');
+  b.classList.toggle('active',compact);
+}
+function toggleHomeMode(){
+  settings.homeMode=settings.homeMode==='compact'?'full':'compact';
+  localStorage.setItem('motion12.settings',JSON.stringify(settings));
+  updateHomeModeToggle();
+  if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
+function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
 function mealKey(date,index){return 'meal:'+date+':'+index}
 function intakeTotals(day,date){
   const plan=mealPlan(day);
@@ -1042,7 +1114,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
     </div>`;
 }
-function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').classList.remove('compact-active');
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
@@ -1097,6 +1169,8 @@ function resetTimer(){clearInterval(timerInt);timerSeconds=0;timerRunning=false;
 document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.getElementById('quickTimer').onclick=()=>{openDay(programDay());setTimer(60)};
+document.getElementById('homeModeToggle').onclick=toggleHomeMode;
+updateHomeModeToggle();
 document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('startDateInput').value=settings.startDate;
   document.getElementById('bodyweightInput').value=settings.bodyweight;
@@ -1105,7 +1179,6 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('sexInput').value=settings.sex||'';
   document.getElementById('stepsInput').value=settings.steps;
   document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';
-  document.getElementById('homeModeInput').value=settings.homeMode||'full';
   const p=settings.portions||defaultPortions;
   document.getElementById('yogurtInput').value=p.yogurt;
   document.getElementById('berriesInput').value=p.berries;
@@ -1132,7 +1205,6 @@ document.getElementById('saveSettings').onclick=()=>{
     sex:document.getElementById('sexInput').value||'',
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
-    homeMode:document.getElementById('homeModeInput').value||'full',
     portions:{
       yogurt:portionValue('yogurtInput',old.yogurt),
       berries:portionValue('berriesInput',old.berries),
