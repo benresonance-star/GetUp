@@ -1,7 +1,10 @@
-const defaultPortions={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portions:defaultPortions};
+const previousDefaultPortions={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
+const defaultPortions={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:94,lunchRice:180,dinnerRice:180,veg:225,oil:10,powder:30,shakeMilk:250};
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:2,portions:defaultPortions};
 const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
-let settings={...defaultSettings,...storedSettings,portions:{...defaultPortions,...(storedSettings.portions||{})}};
+const storedPortions=storedSettings.portions||{};
+const wasPreviousDefault=Object.keys(previousDefaultPortions).every(k=>Number(storedPortions[k])===previousDefaultPortions[k]);
+let settings={...defaultSettings,...storedSettings,portionPresetVersion:2,portions:wasPreviousDefault?{...defaultPortions}:{...defaultPortions,...storedPortions}};
 let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
 let measurements=JSON.parse(localStorage.getItem('motion12.measurements')||'{}');
 let timerInt=null,timerSeconds=0,timerRunning=false;
@@ -24,7 +27,8 @@ function foodReferences(){
     rice:{kcal:130,protein:2.7,carbs:28.2,fat:.3,per:100},
     veg:{kcal:35,protein:2,carbs:7,fat:.3,per:100},
     oil:{kcal:9,protein:0,carbs:0,fat:1,per:1},
-    powder:{kcal:400,protein:80,carbs:10,fat:4.5,per:100}
+    powder:{kcal:400,protein:80,carbs:10,fat:4.5,per:100},
+    fruit:{kcal:80,protein:1,carbs:20,fat:.3,per:1}
   };
 }
 function itemMacros(refKey,amount){
@@ -70,8 +74,8 @@ function proteinSplit(){
   const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts)));
   const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
-  const bev=beverageMacros();
-  return {breakfast:breakfast.protein,lunch:lunch.protein,dinner:dinner.protein,shake:bev.shake.protein,latte1:bev.latte.protein,latte2:bev.latte.protein,total:breakfast.protein+lunch.protein+dinner.protein+bev.shake.protein+bev.latte.protein*2};
+  const bev=beverageMacros(),fruit=roundMacros(itemMacros('fruit',1));
+  return {breakfast:breakfast.protein,lunch:lunch.protein,dinner:dinner.protein,shake:bev.shake.protein,latte1:bev.latte.protein,latte2:bev.latte.protein,fruit:fruit.protein*3,total:breakfast.protein+lunch.protein+dinner.protein+bev.shake.protein+bev.latte.protein*2+fruit.protein*3};
 }
 function weeklyProteinAverage(){const p=protein();return p?Math.round((p*6)/7):null}
 function fatLossTargets(){if(!settings.bodyweight)return null;return {low:(settings.bodyweight*.005).toFixed(2),high:(settings.bodyweight*.008).toFixed(2),mid:settings.bodyweight*.0065,cap:(settings.bodyweight*.01).toFixed(2)}}
@@ -120,17 +124,21 @@ function mealPlan(day){
 
   const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts)));
   const latte=roundMacros(itemMacros('milk',p.latteMilk));
+  const fruit=roundMacros(itemMacros('fruit',1));
   const lunch=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.lunchRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const dinner=roundMacros(sumMacros(itemMacros('meat',p.meat),itemMacros('rice',p.dinnerRice),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
   const shake=roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)));
 
   const meals=[
-    {name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g nuts ('+g.nuts+')'},
-    {name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
-    {name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
-    {name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder + ~'+p.shakeMilk+' ml full-cream milk'}
+    {id:'breakfast',name:'Breakfast',...breakfast,portion:'~'+p.yogurt+' g high-protein Greek yoghurt ('+g.yogurt+') · ~'+p.berries+' g berries ('+g.berries+') · ~'+p.nuts+' g nuts ('+g.nuts+')'},
+    {id:'latte1',name:'Latte 1',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
+    {id:'fruit1',name:'Fruit 1',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
+    {id:'lunch',name:'Lunch',...lunch,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.lunchRice+' g cooked rice ('+g.lunchRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {id:'latte2',name:'Latte 2',...latte,portion:'1 espresso + ~'+p.latteMilk+' ml full-cream milk · no added sugar'},
+    {id:'fruit2',name:'Fruit 2',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
+    {id:'dinner',name:'Dinner',...dinner,portion:'~'+p.meat+' g cooked lean meat/fish ('+g.meat+') · ~'+p.dinnerRice+' g cooked rice ('+g.dinnerRice+') · ~'+p.veg+' g vegetables ('+g.veg+') · ~'+p.oil+' g oil/fat ('+g.oil+')'},
+    {id:'fruit3',name:'Fruit 3',...fruit,portion:'1 medium piece fruit · ~80 kcal planning average'},
+    {id:'shake',name:'Protein shake',...shake,portion:'~'+p.powder+' g protein powder + ~'+p.shakeMilk+' ml full-cream milk'}
   ];
   const totals=meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{kcal:0,protein:0,carbs:0,fat:0});
   const total=Math.round(totals.kcal);
@@ -148,8 +156,8 @@ function nutritionSummary(day=programDay()){
 function dietText(day){
   const p=protein(),ps=proteinSplit(),c=calorieTargets();
   if(day===1)return ['FAST DAY','Morning workout → fast',c?'0 kcal after the workout today; eating-day target resumes Tuesday at ~'+c.eatingDay+' kcal.':'Water, plain tea/coffee. Add bodyweight for targets.'];
-  if(day===2)return ['REFEED',c?'~'+c.eatingDay+' kcal today':'Break fast after recovery',p?'3 whole-food meals + 2 full-cream lattes + milk-based protein shake · ~'+p+' g protein total.':'Protein-rich first meal.'];
-  return p?[c?'~'+c.eatingDay+' KCAL':'~'+p+' G PROTEIN','3 meals + 2 lattes + protein shake',ps?'Protein: ~'+ps.breakfast+' g breakfast · '+ps.lunch+' g lunch · '+ps.dinner+' g dinner · '+ps.shake+' g shake · '+ps.latte1+' g each latte.':'Protein + plants.']:['SET WEIGHT','3 meals + shake','Add bodyweight in settings to calculate targets.'];
+  if(day===2)return ['REFEED',c?'~'+c.eatingDay+' kcal today':'Break fast after recovery',p?'3 whole-food meals + 3 fruit + 2 full-cream lattes + milk-based protein shake · ~'+p+' g protein total.':'Protein-rich first meal.'];
+  return p?[c?'~'+c.eatingDay+' KCAL':'~'+p+' G PROTEIN','3 meals + 3 fruit + 2 lattes + protein shake',ps?'Protein: ~'+ps.breakfast+' g breakfast · '+ps.lunch+' g lunch · '+ps.dinner+' g dinner · '+ps.shake+' g shake · '+ps.latte1+' g each latte.':'Protein + plants.']:['SET WEIGHT','3 meals + shake','Add bodyweight in settings to calculate targets.'];
 }
 function formatDate(){const d=new Date();const weekday=new Intl.DateTimeFormat('en-AU',{weekday:'long'}).format(d).toUpperCase();const rest=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d).toUpperCase();return weekday+' · '+rest}
 function weeklyTarget(day,w){if(day===4)return swingTargets[w-1];if(day===6)return aerobicTargets[w-1];if(w===8)return 'DELOAD — reduce sets 35–40%';if(w===12)return 'CONSOLIDATE — reduce volume ~40%';if(w>=9)return '1–2 reps in reserve on final sets';if(w>=5)return '~2 reps in reserve';return w<=2?'~3 reps in reserve':'~2–3 reps in reserve'}
