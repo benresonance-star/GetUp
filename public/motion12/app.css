@@ -1371,9 +1371,9 @@ html.standalone main{
 }
 
 
-/* Monday Goblet squat — set-level logging vertical slice */
-.goblet-strength-slice{border-color:rgba(255,77,46,.3)}
-.goblet-set-flow{
+/* Monday Strength A — generalized set-level logging */
+.monday-strength-slice{border-color:rgba(255,77,46,.3)}
+.strength-set-flow{
   margin:13px 0 14px;
   padding:12px;
   border:1px solid rgba(255,77,46,.28);
@@ -1398,9 +1398,9 @@ html.standalone main{
 .strength-flow-status small{
   color:#b8bbc1;font-size:10px;line-height:1.3
 }
-.goblet-set-flow.resting .strength-flow-status{border-color:rgba(255,122,26,.38);background:rgba(255,122,26,.075)}
-.goblet-set-flow.complete .strength-flow-status{border-color:rgba(59,231,225,.28);background:rgba(59,231,225,.055)}
-.goblet-set-flow.complete .strength-flow-status span{color:var(--cyan)}
+.strength-set-flow.resting .strength-flow-status{border-color:rgba(255,122,26,.38);background:rgba(255,122,26,.075)}
+.strength-set-flow.complete .strength-flow-status{border-color:rgba(59,231,225,.28);background:rgba(59,231,225,.055)}
+.strength-set-flow.complete .strength-flow-status span{color:var(--cyan)}
 .strength-set-grid{display:grid;gap:7px}
 .strength-set-row{
   display:grid;grid-template-columns:42px repeat(3,minmax(0,1fr));gap:7px;align-items:end;
@@ -1424,53 +1424,53 @@ html.standalone main{
 }
 .strength-set-row.active input:focus{border-color:rgba(255,77,46,.7);box-shadow:0 0 0 2px rgba(255,77,46,.08)}
 .strength-set-row input:disabled{opacity:.55;color:var(--muted)}
-.goblet-completion-summary{
+.strength-completion-summary{
   margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)
 }
-.goblet-summary-title{
+.strength-summary-title{
   display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px
 }
-.goblet-summary-title span{
+.strength-summary-title span{
   color:var(--cyan);font-size:9px;font-weight:950;letter-spacing:.09em;text-transform:uppercase
 }
-.goblet-summary-title b{
+.strength-summary-title b{
   color:var(--muted);font-size:9px;font-weight:850
 }
-.goblet-summary-metrics{
+.strength-summary-metrics{
   display:grid;grid-template-columns:repeat(3,1fr);gap:6px
 }
-.goblet-summary-metrics>div{
+.strength-summary-metrics>div{
   min-width:0;padding:8px;border:1px solid var(--line);border-radius:11px;background:#0d0f11
 }
-.goblet-summary-metrics span{
+.strength-summary-metrics span{
   display:block;color:var(--muted);font-size:7px;font-weight:900;letter-spacing:.07em;text-transform:uppercase
 }
-.goblet-summary-metrics b{
+.strength-summary-metrics b{
   display:block;margin-top:4px;color:#f2f3f4;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.goblet-next{
+.strength-next{
   margin-top:8px;padding:10px 11px;border:1px solid rgba(255,77,46,.22);border-radius:12px;background:rgba(255,77,46,.045)
 }
-.goblet-next>span{
+.strength-next>span{
   display:block;color:var(--volt);font-size:8px;font-weight:950;letter-spacing:.1em;text-transform:uppercase
 }
-.goblet-next strong{
+.strength-next strong{
   display:block;margin-top:4px;color:#f3f4f5;font-size:13px;line-height:1.2
 }
-.goblet-next p{
+.strength-next p{
   margin:5px 0 0;color:#bfc2c7;font-size:10px;line-height:1.4
 }
-.goblet-next.up{
+.strength-next.up{
   border-color:rgba(59,231,225,.28);background:rgba(59,231,225,.05)
 }
-.goblet-next.up>span{color:var(--cyan)}
-.goblet-next.ready{
+.strength-next.up>span{color:var(--cyan)}
+.strength-next.ready{
   border-color:rgba(255,122,26,.28);background:rgba(255,122,26,.055)
 }
-.goblet-next.ready>span{color:var(--orange)}
+.strength-next.ready>span{color:var(--orange)}
 
 .strength-flow-message{min-height:0;margin-top:7px;color:#ff927f;font-size:10px;font-weight:800;line-height:1.3}
-.goblet-set-flow.needs-input .strength-set-row.active{border-color:#ff735e}
+.strength-set-flow.needs-input .strength-set-row.active{border-color:#ff735e}
 .strength-flow-actions{display:flex;gap:7px;margin-top:10px}
 .strength-flow-actions button{
   min-height:42px;border-radius:12px;font-size:10px;font-weight:950;cursor:pointer
@@ -1484,15 +1484,15 @@ html.standalone main{
   flex:0 0 auto;border:1px solid var(--line);background:#17191c;color:#e0e2e4;padding:9px 11px
 }
 @media(max-width:390px){
-  .goblet-set-flow{padding:10px}
+  .strength-set-flow{padding:10px}
   .strength-set-row{grid-template-columns:34px repeat(3,minmax(0,1fr));gap:5px;padding:8px 6px}
   .strength-set-row label>span{font-size:7px;letter-spacing:.025em}
   .strength-set-row input{height:37px;padding:7px 5px;font-size:12px}
   .strength-flow-status{padding:10px}
   .strength-flow-status strong{font-size:20px}
-  .goblet-summary-metrics b{font-size:10.5px}
-  .goblet-next strong{font-size:12.5px}
-  .goblet-next p{font-size:9.7px}
+  .strength-summary-metrics b{font-size:10.5px}
+  .strength-next strong{font-size:12.5px}
+  .strength-next p{font-size:9.7px}
 }
 
 /* Low-fatigue support block beneath conditioning circuits */
