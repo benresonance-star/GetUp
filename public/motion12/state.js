@@ -19,6 +19,8 @@ const defaultSmartTimer={
   setIndex:0,
   stopwatchElapsed:0,
   stopwatchStartedAt:0,
+  exerciseName:'',
+  exerciseCategory:'',
   dayKey:''
 };
 let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
