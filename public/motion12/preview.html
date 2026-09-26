@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="monday-goblet-set-logging-final-20260927" />
+  <meta name="motion12-build" content="timer-full-exercise-labels-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -1069,13 +1069,15 @@ html.standalone main{
 }
 .timer-context span{
   color:var(--volt);
-  font-size:10px;
+  font-size:12px;
+  line-height:1.2;
   font-weight:950;
-  letter-spacing:.1em;
+  letter-spacing:.075em;
 }
 .timer-context b{
   color:var(--muted);
-  font-size:11px;
+  font-size:12px;
+  line-height:1.25;
   text-align:right;
 }
 .timer-ring{
@@ -1150,28 +1152,41 @@ html.standalone main{
   place-items:center;
   gap:5px;
 }
-.timer-ring span{
+.timer-ring span#timerPhase{
+  max-width:190px;
   color:var(--volt);
-  font-size:11px;
+  font-size:13px;
+  line-height:1.2;
   font-weight:950;
-  letter-spacing:.12em;
+  letter-spacing:.075em;
+  text-align:center;
+  text-transform:uppercase;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.timer-ring span#timerPhase.long{
+  max-width:200px;
+  font-size:11.5px;
+  line-height:1.18;
+  letter-spacing:.045em;
 }
 .timer-ring strong{
-  font-size:54px;
+  font-size:49px;
   line-height:.95;
-  letter-spacing:-.06em;
+  letter-spacing:-.055em;
   font-variant-numeric:tabular-nums;
 }
 .timer-ring small{
-  max-width:170px;
+  max-width:185px;
   color:var(--muted);
-  font-size:10px;
+  font-size:11.5px;
   line-height:1.3;
+  font-weight:650;
 }
 .timer-next{
-  min-height:34px;
-  margin-top:6px;
-  padding:6px 10px 7px;
+  min-height:36px;
+  margin-top:7px;
+  padding:7px 11px 8px;
   border:1px solid rgba(255,122,26,.22);
   border-radius:999px;
   background:rgba(255,122,26,.055);
@@ -1179,24 +1194,26 @@ html.standalone main{
   align-items:center;
   justify-content:center;
   gap:7px;
-  max-width:190px;
+  max-width:205px;
 }
 .timer-next:empty{display:none}
 .timer-next-label{
   color:var(--muted);
-  font-size:8px;
+  font-size:9.5px;
   line-height:1;
   font-weight:950;
-  letter-spacing:.12em;
+  letter-spacing:.11em;
   text-transform:uppercase;
+  flex:0 0 auto;
 }
 .timer-next-stage{
   color:#f2f3f4;
-  font-size:10px;
-  line-height:1.15;
+  font-size:11.5px;
+  line-height:1.2;
   font-weight:900;
-  letter-spacing:.01em;
-  white-space:nowrap;
+  letter-spacing:.005em;
+  white-space:normal;
+  text-align:left;
 }
 .timer-next-stage b{
   color:var(--orange);
@@ -1238,7 +1255,12 @@ html.standalone main{
 .timer-guidance p{font-size:12px}
 @media(max-width:390px){
   .timer-ring{width:min(225px,70vw)}
-  .timer-ring strong{font-size:48px}
+  .timer-ring strong{font-size:45px}
+  .timer-ring span#timerPhase{font-size:12px;max-width:175px}
+  .timer-ring span#timerPhase.long{font-size:10.8px;max-width:185px}
+  .timer-ring small{font-size:11px}
+  .timer-next{max-width:190px}
+  .timer-next-stage{font-size:11px}
 }
 
 .timer-exercise-section{margin-top:16px}
@@ -2723,27 +2745,27 @@ function conditioningCircuitPlan(day,w){
   let stations=[],roundRest=0,title='',note='';
   if(day===2){
     stations=[
-      {label:'KB DEADLIFT',work:30,rest:30},
-      {label:'RING ROW',work:30,rest:30},
-      {label:'REV LUNGE',work:30,rest:30},
-      {label:'SUITCASE',work:30,rest:30}
+      {label:'Kettlebell deadlift',work:30,rest:30},
+      {label:'Ring row',work:30,rest:30},
+      {label:'Alternating reverse lunge',work:30,rest:30},
+      {label:'Suitcase march / carry',work:30,rest:30}
     ];
     title=conditioningTarget(day,w);
     note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by 30 seconds easy recovery.';
   }else if(day===4){
     stations=[
-      {label:'KB COMPLEX',work:40,rest:60},
-      {label:'SWINGS',work:20,rest:40},
-      {label:'PUSH-UPS',work:20,rest:40}
+      {label:'Kettlebell squat → jerk → strict press',work:40,rest:60},
+      {label:'2-hand kettlebell swing',work:20,rest:40},
+      {label:'Push-up',work:20,rest:40}
     ];
     title=conditioningTarget(day,w);
     note='Power circuit: use the full 40/60 window for the kettlebell complex, then keep swings and push-ups crisp at 20/40. Quality beats speed.';
   }else if(day===0){
     stations=[
-      {label:'SQUAT + CALF',work:40,rest:20},
-      {label:'PUSH-UPS',work:40,rest:20},
-      {label:'REV LUNGE',work:40,rest:20},
-      {label:'SUITCASE',work:40,rest:20}
+      {label:'Squat-to-calf-raise',work:40,rest:20},
+      {label:'Push-up',work:40,rest:20},
+      {label:'Alternating reverse lunge',work:40,rest:20},
+      {label:'Suitcase march / carry',work:40,rest:20}
     ];
     roundRest=60;
     title=conditioningTarget(day,w);
@@ -3171,7 +3193,7 @@ function renderTimerPage(){
     '</div>'+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>'+
@@ -3184,7 +3206,11 @@ function updateSmartTimerDisplay(){
   if(!clock)return;
   const vm=timerViewModel();
   clock.textContent=vm.clockText||timerFormat(vm.sec);
-  const phase=document.getElementById('timerPhase');if(phase)phase.textContent=vm.label;
+  const phase=document.getElementById('timerPhase');
+  if(phase){
+    phase.textContent=vm.label;
+    phase.classList.toggle('long',String(vm.label).length>26);
+  }
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
   const next=document.getElementById('timerNext');
   if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
