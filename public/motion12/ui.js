@@ -77,7 +77,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
   document.getElementById('homePage').innerHTML=`
     <div class="compact-home">
       <button class="compact-session" type="button" onclick="openDay(${d},'${date}')">
-        <div><span class="compact-kicker">Week ${w} · Today</span><h1>${p.name}</h1><p>${weeklyTarget(d,w)}</p></div>
+        <div><span class="compact-kicker">Week ${w} · Today</span><h1>${p.name}</h1><p>${weeklyTarget(d,w)} · ${p.why}</p></div>
         <div class="compact-session-right"><b>${p.time}</b><span>START →</span></div>
       </button>
 
