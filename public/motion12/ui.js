@@ -50,8 +50,70 @@ function toggleMeal(key){
     if(check)check.textContent=logs[key].done?'✓':'';
   });
   updateIntakeStrips(day,date);
+  if(settings.homeMode==='compact' && document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
+function compactMealChips(day,date){
+  const plan=mealPlan(day);
+  if(!plan)return '<div class="compact-empty">Set bodyweight to build meals</div>';
+  if(!plan.meals.length)return '<div class="compact-fast">FAST DAY · water / plain coffee / tea</div>';
+  return '<div class="compact-meal-grid">'+plan.meals.map((m,i)=>{
+    const key=mealKey(date,i),done=!!logs[key]?.done;
+    const label=m.name.replace('Protein shake','Shake');
+    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+key+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span>'+label+'</span></button>';
+  }).join('')+'</div>';
+}
+function compactMealCount(day,date){
+  const plan=mealPlan(day);
+  if(!plan||!plan.meals.length)return '';
+  const done=plan.meals.reduce((n,m,i)=>n+(logs[mealKey(date,i)]?.done?1:0),0);
+  return done+' / '+plan.meals.length+' ✓';
+}
+function renderCompactHome(d,w,p,fat,cal,strip){
+  const date=todayISO(),tot=intakeTotals(d,date),plan=mealPlan(d);
+  const remaining=tot?.remaining;
+  const loss=cal?cal.predictedLoss:'—';
+  const mealCount=compactMealCount(d,date);
+  document.getElementById('homePage').classList.add('compact-active');
+  document.getElementById('homePage').innerHTML=`
+    <div class="compact-home">
+      <button class="compact-session" type="button" onclick="openDay(${d},'${date}')">
+        <div><span class="compact-kicker">Week ${w} · Today</span><h1>${p.name}</h1><p>${weeklyTarget(d,w)}</p></div>
+        <div class="compact-session-right"><b>${p.time}</b><span>START →</span></div>
+      </button>
+
+      <div class="compact-week">${strip}</div>
+
+      <div class="compact-metrics">
+        <div class="compact-card">
+          <span class="compact-label">Remaining today</span>
+          <strong>${d===1?'FAST':remaining?remaining.kcal.toLocaleString()+' kcal':'—'}</strong>
+          <small>${d===1?'0 kcal Monday':remaining?`P ${remaining.protein} · C ${remaining.carbs} · F ${remaining.fat} g`:'Set nutrition details'}</small>
+        </div>
+        <div class="compact-card">
+          <span class="compact-label">Fat loss</span>
+          <strong>${cal?'~'+loss+' kg/wk':'—'}</strong>
+          <small>${cal?cal.eatingDay.toLocaleString()+' kcal eating day':fat?fat.low+'–'+fat.high+' kg/wk':'Set bodyweight'}</small>
+        </div>
+      </div>
+
+      <div class="compact-card compact-meals-card">
+        <div class="compact-card-head"><span class="compact-label">Meals</span><b>${mealCount}</b></div>
+        ${compactMealChips(d,date)}
+      </div>
+
+      <div class="compact-bottom-grid">
+        <button class="compact-card compact-action" type="button" onclick="openMobilityToday()">
+          <span class="compact-label">Mobility</span><strong>7 moves</strong><small>6–8 min · OPEN →</small>
+        </button>
+        <div class="compact-card">
+          <span class="compact-label">Steps</span><strong>${settings.steps.toLocaleString()}</strong><small>daily baseline</small>
+        </div>
+      </div>
+    </div>`;
 }
 function renderHome(){const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+ document.getElementById('homePage').classList.remove('compact-active');
+ if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
   <section class="hero"><div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${completedOn(todayISO(),d)?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
@@ -112,6 +174,7 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('sexInput').value=settings.sex||'';
   document.getElementById('stepsInput').value=settings.steps;
   document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';
+  document.getElementById('homeModeInput').value=settings.homeMode||'full';
   const p=settings.portions||defaultPortions;
   document.getElementById('yogurtInput').value=p.yogurt;
   document.getElementById('berriesInput').value=p.berries;
@@ -138,6 +201,7 @@ document.getElementById('saveSettings').onclick=()=>{
     sex:document.getElementById('sexInput').value||'',
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
+    homeMode:document.getElementById('homeModeInput').value||'full',
     portions:{
       yogurt:portionValue('yogurtInput',old.yogurt),
       berries:portionValue('berriesInput',old.berries),
