@@ -684,9 +684,17 @@ function strengthNextExercise(id){
   const pos=strengthSessionPosition(id);
   if(!pos||![1,3,5].includes(pos.day))return null;
   const work=program[pos.day]?.work||[];
-  for(let i=pos.index+1;i<work.length;i++){
+  const candidate=(i)=>{
     const nextId=exId(pos.day,i,pos.date);
-    if(!logs[nextId]?.done)return {id:nextId,index:i,name:work[i][0],target:work[i][1],day:pos.day,date:pos.date};
+    return logs[nextId]?.done?null:{id:nextId,index:i,name:work[i][0],target:work[i][1],day:pos.day,date:pos.date,total:work.length};
+  };
+  for(let i=pos.index+1;i<work.length;i++){
+    const next=candidate(i);if(next)return next;
+  }
+  // If exercises were completed out of order, return to the first unfinished one
+  // rather than falsely declaring the strength session complete.
+  for(let i=0;i<pos.index;i++){
+    const next=candidate(i);if(next)return next;
   }
   return null;
 }
@@ -694,7 +702,7 @@ function strengthSessionCueMarkup(id){
   const next=strengthNextExercise(id);
   if(next){
     return '<div class="strength-session-cue">'+
-      '<div><span>Up next</span><strong>'+next.name+'</strong><small>'+next.target+'</small></div>'+
+      '<div><span>Up next · '+(next.index+1)+' of '+next.total+'</span><strong>'+next.name+'</strong><small>'+next.target+'</small></div>'+
       '<button type="button" onclick="event.stopPropagation();strengthContinueToNext(\''+id+'\',\''+next.id+'\')">Continue <b>→</b></button>'+
     '</div>';
   }
