@@ -374,7 +374,7 @@ function closeInlineExerciseTimer(){
   document.querySelectorAll('.inline-ex-timer').forEach(el=>el.remove());
 }
 function inlineTimerTick(){
-  if(!inlineTimer.running){updateInlineExerciseTimer();return}
+  if(!inlineTimer.running){updateGobletFlowLive();updateInlineExerciseTimer();return}
   const now=Date.now();
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
@@ -382,6 +382,7 @@ function inlineTimerTick(){
       inlineTimer.running=false;inlineTimer.phase=inlineTimer.setIndex>=inlineTimer.sets?'complete':'ready';inlineTimer.remaining=0;inlineTimer.endAt=0;timerBeep();
       saveInlineTimer();
       const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
+      refreshGobletFlow();
       return;
     }
     if(inlineTimer.kind==='workrest'&&inlineTimer.phase==='work'&&inlineTimer.rest>0){
@@ -391,6 +392,7 @@ function inlineTimerTick(){
     }
     saveInlineTimer();
   }
+  updateGobletFlowLive();
   updateInlineExerciseTimer();
 }
 function inlineTimerEnsureTick(){
@@ -446,9 +448,155 @@ function supportBlockMarkup(day,date,w,p){
   }).join('');
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
 }
-function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{const id=exId(day,i,date);const state=logs[id]||{};let target=x[1];if(day===6)target=aerobicTargets[w-1];const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);exHtml+=`<div class="exercise ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="0" onclick="activateExerciseTimerFromCard(event,this)"><div class="ex-top"><div class="num">${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>${inlineTimerMarkup(id)}
-      <div class="inputs"><div class="field"><label>Load / pace</label><input value="${state.load||''}" placeholder="e.g. 20 kg" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="2 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
-      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>${loadGuideMarkup(x[4])}</div>`});
+
+function strengthSetLogEntries(id,total){
+  logs[id]=logs[id]||{};
+  const current=Array.isArray(logs[id].sets)?logs[id].sets:[];
+  logs[id].sets=Array.from({length:total},(_,i)=>({...current[i]}));
+  return logs[id].sets;
+}
+function saveStrengthSetField(id,setIndex,key,value){
+  const entries=strengthSetLogEntries(id,3);
+  entries[setIndex]=entries[setIndex]||{};
+  entries[setIndex][key]=value;
+  logs[id].sets=entries;
+  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  const flow=document.getElementById('goblet-flow-'+id);
+  if(flow)flow.classList.remove('needs-input');
+  const msg=document.getElementById('goblet-flow-message-'+id);
+  if(msg)msg.textContent='';
+}
+function strengthSetCompletedCount(id,total){
+  const entries=strengthSetLogEntries(id,total);
+  let count=0;
+  for(let i=0;i<total;i++){
+    if(entries[i]?.complete)count++;
+    else break;
+  }
+  return count;
+}
+function gobletFlowState(id,target){
+  const m=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
+  const sets=m?Number(m[1]):3,targetText=m?m[2]:'6–10',rest=exerciseRestPreset('Goblet squat',1,weekNo()).seconds||120;
+  const completed=strengthSetCompletedCount(id,sets);
+  if(inlineTimer.activeId===id&&inlineTimer.kind==='strengthsets'){
+    return {sets,targetText,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds()};
+  }
+  return {sets,targetText,rest,setIndex:completed,phase:completed>=sets?'complete':'ready',running:false,sec:0};
+}
+function gobletEnsureTimer(id,target){
+  const state=gobletFlowState(id,target);
+  if(inlineTimer.activeId!==id||inlineTimer.kind!=='strengthsets'){
+    inlineTimer={...defaultInlineTimer,
+      activeId:id,exerciseName:'Goblet squat',kind:'strengthsets',
+      rest:state.rest,sets:state.sets,setIndex:state.setIndex,target:state.targetText,
+      phase:state.phase,duration:state.rest,remaining:0,running:false,endAt:0
+    };
+    saveInlineTimer();
+  }
+  return inlineTimer;
+}
+function gobletSetFlowMarkup(id,target){
+  const state=gobletFlowState(id,target),entries=strengthSetLogEntries(id,state.sets);
+  const readyIndex=Math.min(state.sets-1,state.setIndex);
+  const isRest=state.phase==='rest',isComplete=state.phase==='complete';
+  const statusTitle=isComplete?'GOBLET SQUAT COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
+  const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText+' reps';
+  const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
+  const rows=entries.map((set,i)=>{
+    const complete=!!set.complete;
+    const active=!isComplete&&!isRest&&i===readyIndex;
+    const future=!complete&&!active;
+    return '<div class="strength-set-row '+(complete?'logged ':'')+(active?'active ':'')+(future?'future':'')+'">'+
+      '<div class="strength-set-number"><span>SET</span><b>'+(i+1)+'</b>'+(complete?'<i>✓</i>':'')+'</div>'+
+      '<label><span>Load</span><input inputmode="decimal" type="number" min="0" step="0.5" value="'+(set.load??'')+'" placeholder="kg" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
+      '<label><span>Reps</span><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="6–10" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
+      '<label><span>Reps in reserve</span><input inputmode="numeric" type="number" min="0" max="5" step="1" value="'+(set.rir??'')+'" placeholder="RIR" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
+    '</div>';
+  }).join('');
+  let actions='';
+  if(isComplete){
+    actions='<button class="strength-flow-primary done" type="button" onclick="event.stopPropagation()">✓ Exercise complete</button>';
+  }else if(isRest){
+    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();gobletPauseResume(\''+id+'\',\''+target+'\')">'+(state.running?'Pause rest':'Resume rest')+'</button>'+
+      '<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();gobletSkipRest(\''+id+'\')">Skip rest</button>';
+  }else{
+    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();gobletStrengthSetComplete(\''+id+'\',\''+target+'\')">Set '+(readyIndex+1)+' complete <span>→ rest '+timerFormat(state.rest)+'</span></button>';
+  }
+  return '<div class="goblet-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="goblet-flow-'+id+'">'+
+    '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="goblet-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
+    '<div class="strength-set-grid">'+rows+'</div>'+
+    '<div class="strength-flow-message" id="goblet-flow-message-'+id+'"></div>'+
+    '<div class="strength-flow-actions">'+actions+'</div>'+
+  '</div>';
+}
+function refreshGobletFlow(){
+  if(inlineTimer.exerciseName!=='Goblet squat'||!inlineTimer.activeId)return;
+  const flow=document.getElementById('goblet-flow-'+inlineTimer.activeId);
+  if(!flow)return;
+  const card=flow.closest('.exercise');
+  const target=decodeURIComponent(card?.dataset.timerTarget||'3 × 6–10');
+  flow.outerHTML=gobletSetFlowMarkup(inlineTimer.activeId,target);
+}
+function updateGobletFlowLive(){
+  if(inlineTimer.exerciseName!=='Goblet squat'||inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest'||!inlineTimer.activeId)return;
+  const clock=document.getElementById('goblet-flow-clock-'+inlineTimer.activeId);
+  if(clock)clock.textContent=timerFormat(inlineTimerSeconds());
+}
+function gobletStrengthSetComplete(id,target){
+  const timer=gobletEnsureTimer(id,target),idx=timer.setIndex;
+  if(timer.phase!=='ready'||idx>=timer.sets)return;
+  const entries=strengthSetLogEntries(id,timer.sets),set=entries[idx]||{};
+  const validLoad=String(set.load??'').trim()!=='';
+  const validReps=Number(set.reps)>0;
+  const rirValue=String(set.rir??'').trim(),validRir=rirValue!==''&&Number(rirValue)>=0;
+  if(!validLoad||!validReps||!validRir){
+    const flow=document.getElementById('goblet-flow-'+id);if(flow)flow.classList.add('needs-input');
+    const msg=document.getElementById('goblet-flow-message-'+id);
+    if(msg)msg.textContent='Enter load, reps and reps in reserve before completing this set.';
+    return;
+  }
+  set.complete=true;set.completedAt=new Date().toISOString();
+  entries[idx]=set;
+  if(idx+1<timer.sets&&!entries[idx+1]?.load)entries[idx+1]={...(entries[idx+1]||{}),load:set.load};
+  logs[id].sets=entries;
+  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  inlineStrengthSetComplete();
+  if(inlineTimer.phase==='complete'){
+    logs[id].done=true;
+    localStorage.setItem('motion12.logs',JSON.stringify(logs));
+    document.getElementById('ex-'+id)?.classList.add('complete');
+  }
+  refreshGobletFlow();
+}
+function gobletPauseResume(id,target){
+  gobletEnsureTimer(id,target);
+  inlineTimerStartPause();
+  refreshGobletFlow();
+}
+function gobletSkipRest(id){
+  if(inlineTimer.activeId!==id)return;
+  inlineSkipStrengthRest();
+  refreshGobletFlow();
+}
+function exerciseCardMarkup(day,date,w,x,i){
+  const id=exId(day,i,date),state=logs[id]||{};
+  let target=x[1];if(day===6)target=aerobicTargets[w-1];
+  const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
+  if(day===1&&x[0]==='Goblet squat'){
+    return '<div class="exercise goblet-strength-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
+      '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+
+      gobletSetFlowMarkup(id,target)+
+      '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
+    '</div>';
+  }
+  return '<div class="exercise '+(state.done?'complete ':'')+(inlineTimer.activeId===id?'active-timer':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0" onclick="activateExerciseTimerFromCard(event,this)">'+
+    '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+inlineTimerMarkup(id)+
+    '<div class="inputs"><div class="field"><label>Load / pace</label><input value="'+(state.load||'')+'" placeholder="e.g. 20 kg" oninput="saveEx(\''+id+'\',\'load\',this.value)"></div><div class="field"><label>Actual</label><input value="'+(state.reps||'')+'" placeholder="sets/reps" oninput="saveEx(\''+id+'\',\'reps\',this.value)"></div><div class="field"><label>RIR / effort</label><input value="'+(state.rir||'')+'" placeholder="2 RIR" oninput="saveEx(\''+id+'\',\'rir\',this.value)"></div></div>'+
+    '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
+  '</div>';
+}
+function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{exHtml+=exerciseCardMarkup(day,date,w,x,i)});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
@@ -472,6 +620,7 @@ function renderProgress(){
   document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
+if(inlineTimer.activeId)inlineTimerEnsureTick();
 if(inlineTimer.activeId)inlineTimerEnsureTick();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
 function conditioningCircuitPlan(day,w){
