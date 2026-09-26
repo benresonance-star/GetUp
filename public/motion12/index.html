@@ -10,6 +10,13 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <title>MOTION 12 — 12-week fitness reset</title>
+  <script>
+    (function(){
+      var standalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      if (standalone) document.documentElement.classList.add('standalone');
+    })();
+  </script>
   <link rel="stylesheet" href="app.css" />
 </head>
 <body>
