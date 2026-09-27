@@ -1,3 +1,8 @@
+/* MOTION12 canonical application stylesheet — r21
+   Consolidated from the validated r7–r20 cascade. Historical versioned files
+   remain in the repository for reference but are no longer loaded by index.html. */
+
+/* ---- base ---- */
 *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.015em}
     button,input,select{font:inherit} button{color:inherit}.app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:92px;background:radial-gradient(circle at 90% -5%,rgba(255,77,46,.12),transparent 26%),var(--bg)}
     .top{padding:20px 18px 8px;position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 75%,transparent);backdrop-filter:blur(10px)}
@@ -2342,4 +2347,1434 @@ body.motion12-readonly .settings-overlay select{
   .inline-timer-actions{gap:4px}
   .inline-timer-actions button{min-width:42px;min-height:34px;padding:6px 7px;font-size:9px}
   .inline-timer-actions .inline-close{min-width:30px;width:30px}
+}
+
+/* ---- compact-r8 ---- */
+/* MOTION12 r8
+   Compact workout mode keeps the regular-size progress + dial timer.
+   Compact treatment starts at the exercise list below the timer. */
+
+/* Restore the normal progress block in Compact mode. */
+#dayPage.compact-active .workout-progress-block{
+  margin:4px 0 10px;
+}
+#dayPage.compact-active .timer-session-progress{
+  padding:11px 12px 10px;
+  border-radius:16px;
+}
+#dayPage.compact-active .strength-session-progress{
+  padding:12px;
+  border-radius:16px;
+}
+#dayPage.compact-active .timer-progress-head,
+#dayPage.compact-active .strength-progress-head{
+  margin-bottom:8px;
+}
+#dayPage.compact-active .timer-progress-head strong{
+  font-size:13px;
+}
+#dayPage.compact-active .strength-progress-head strong{
+  font-size:13px;
+}
+#dayPage.compact-active .timer-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px;
+  margin-top:7px;
+  font-size:8.5px;
+}
+#dayPage.compact-active .timer-progress-foot.continuous{
+  display:block;
+}
+#dayPage.compact-active .strength-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  margin-top:8px;
+  font-size:8.5px;
+}
+
+/* Restore the complete regular timer card in Compact mode. */
+#dayPage.compact-active .workout-timer-block{
+  margin:0 0 18px;
+}
+#dayPage.compact-active .workout-primary-timer{
+  padding:18px;
+  border-radius:28px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-context span,
+#dayPage.compact-active .workout-primary-timer .timer-context b{
+  font-size:12px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring{
+  width:min(250px,72vw);
+  margin:18px auto;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring:before{
+  inset:10px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring strong{
+  font-size:49px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
+  max-width:190px;
+  font-size:13px;
+  line-height:1.2;
+  letter-spacing:.075em;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase.long{
+  max-width:200px;
+  font-size:11.5px;
+  line-height:1.18;
+  letter-spacing:.045em;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring small{
+  max-width:185px;
+  font-size:11.5px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next{
+  min-height:36px;
+  margin-top:7px;
+  padding:7px 11px 8px;
+  max-width:205px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-label{
+  font-size:9.5px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-stage{
+  font-size:11.5px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls{
+  gap:7px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+  min-height:44px;
+  padding:10px 13px;
+  font-size:11px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-presets{
+  margin-top:12px;
+}
+
+/* Match the regular iPhone timer exactly at the narrow breakpoint. */
+@media(max-width:390px){
+  #dayPage.compact-active .workout-progress-block{
+    margin-top:2px;
+    margin-bottom:8px;
+  }
+  #dayPage.compact-active .timer-session-progress{
+    padding:10px 10px 9px;
+  }
+  #dayPage.compact-active .strength-session-progress{
+    padding:10px;
+  }
+  #dayPage.compact-active .timer-progress-head strong,
+  #dayPage.compact-active .strength-progress-head strong{
+    font-size:12px;
+  }
+  #dayPage.compact-active .timer-progress-foot{
+    display:grid;
+    gap:5px;
+    font-size:8px;
+  }
+  #dayPage.compact-active .timer-progress-foot.continuous{
+    display:block;
+  }
+  #dayPage.compact-active .strength-progress-foot{
+    display:grid;
+    gap:5px;
+    font-size:8px;
+  }
+  #dayPage.compact-active .workout-timer-block{
+    margin-bottom:16px;
+  }
+  #dayPage.compact-active .workout-primary-timer{
+    padding:15px;
+    border-radius:28px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring{
+    width:min(225px,70vw);
+    margin:14px auto;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring strong{
+    font-size:45px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
+    font-size:12px;
+    max-width:175px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase.long{
+    font-size:10.8px;
+    max-width:185px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring small{
+    font-size:11px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-next{
+    max-width:190px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-next-stage{
+    font-size:11px;
+  }
+}
+
+/* ---- compact-r9 ---- */
+/* MOTION12 r9
+   Mobility is a warm-up, so it appears first in every session.
+   Compact mode keeps mobility + support visible while retaining the full-size timer. */
+
+.mobility-warmup-section{
+  margin-top:0;
+}
+
+/* Compact mode previously hid these sections; keep them in the session flow. */
+#dayPage.compact-active .support-section,
+#dayPage.compact-active #mobilitySection{
+  display:block;
+}
+
+/* Compact mobility: readable warm-up rows without turning into full-size cards. */
+#dayPage.compact-active .mobility-warmup-section{
+  margin:0 0 10px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .mobility-warmup-section .cards{
+  gap:4px;
+}
+#dayPage.compact-active .mobility-warmup-section .card{
+  min-height:42px;
+  padding:7px 9px;
+  border-radius:12px;
+}
+#dayPage.compact-active .mobility-warmup-section .card h3{
+  margin:0 0 1px;
+  font-size:12px;
+  line-height:1.15;
+}
+#dayPage.compact-active .mobility-warmup-section .card p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .mobility-warmup-section .card .volt{
+  font-size:9px;
+}
+#dayPage.compact-active .mobility-warmup-section .video-link{
+  display:none;
+}
+
+/* Compact support: keep the block and every support movement visible.
+   Details collapse to the movement row until that support exercise is active. */
+#dayPage.compact-active .support-section{
+  margin-top:10px;
+}
+#dayPage.compact-active .support-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .support-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .support-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .support-section>.support-exercise{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .support-section>.support-exercise .num{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:9px;
+}
+#dayPage.compact-active .support-section>.support-exercise .check{
+  width:28px;
+  height:28px;
+}
+#dayPage.compact-active .support-section>.support-exercise .ex-name h3{
+  margin:0 0 1px;
+  font-size:13px;
+}
+#dayPage.compact-active .support-section>.support-exercise .ex-name p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .support-section>.support-exercise .video-link{
+  display:none;
+}
+#dayPage.compact-active .support-section>.support-exercise:not(.active-timer)>:not(.ex-top){
+  display:none !important;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer{
+  border-color:rgba(99,210,214,.55);
+  box-shadow:inset 3px 0 0 rgba(99,210,214,.55);
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer>.tip,
+#dayPage.compact-active .support-section>.support-exercise.active-timer>.load-rule{
+  display:none !important;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .inputs{
+  margin-top:9px;
+  gap:5px;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .field label{
+  font-size:7px;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .field input{
+  min-height:36px;
+  padding:7px 6px;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .mobility-warmup-section .card{
+    min-height:40px;
+    padding:6px 8px;
+  }
+}
+
+/* ---- compact-r10 ---- */
+/* MOTION12 r10
+   Canonical session contract:
+   mobility → prep → progress → timer → main → support → complete.
+   Compact mode is presentation-only and must not remove or reorder a stage. */
+
+.workout-session{
+  display:block;
+}
+.workout-session>.session-stage{
+  display:block;
+  position:relative;
+}
+.workout-session>.session-stage:empty{
+  display:none;
+}
+
+/* Guardrail: compact mode cannot hide canonical stages. */
+#dayPage.compact-active .workout-session>.session-stage{
+  display:block;
+}
+#dayPage.compact-active .workout-session>.session-stage:empty{
+  display:none;
+}
+
+/* Movement-specific prep remains part of Compact mode.
+   It is visually condensed, but the actual prep movements remain present. */
+#dayPage.compact-active .prep-section{
+  display:block;
+  margin:0 0 10px;
+}
+#dayPage.compact-active .prep-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .prep-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .prep-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .num{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:9px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .check{
+  width:28px;
+  height:28px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .ex-name h3{
+  margin:0 0 1px;
+  font-size:13px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .ex-name p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .video-link{
+  display:none;
+}
+#dayPage.compact-active .prep-section>.prep-exercise>.tip{
+  display:none;
+}
+
+/* Keep canonical stage spacing predictable in both views. */
+.session-stage-mobility{margin-top:0}
+.session-stage-prep,
+.session-stage-progress,
+.session-stage-timer,
+.session-stage-main,
+.session-stage-support,
+.session-stage-complete{
+  margin-top:0;
+}
+
+/* Complete is always the final actionable stage. */
+.session-stage-complete .complete-session{
+  margin-top:10px;
+}
+#dayPage.compact-active .session-stage-complete .complete-session{
+  margin-top:7px;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .prep-section>.prep-exercise{
+    padding:8px 9px;
+  }
+}
+
+/* ---- compact-r11 ---- */
+/* MOTION12 r11
+   Keep workout timer actions visibly attached beneath the dial in every view. */
+
+.workout-primary-timer,
+.workout-timer-block,
+.session-stage-timer{
+  overflow:visible !important;
+}
+
+.workout-timer-footer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative;
+  z-index:4;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+
+.workout-primary-timer .smart-timer-controls{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative;
+  z-index:5;
+  width:100%;
+  min-height:44px;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.workout-primary-timer .smart-timer-controls button{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  min-width:84px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--ink);
+  font-size:11px;
+  line-height:1;
+  font-weight:900;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.workout-primary-timer .smart-timer-controls .timer-primary{
+  min-width:112px;
+  background:var(--volt);
+  border-color:var(--volt);
+  color:#0b0c0e;
+}
+
+.workout-primary-timer .smart-timer-controls .timer-reset{
+  background:#101215;
+  color:var(--ink);
+}
+
+/* Compact changes spacing around the workout, not the visibility of its controls. */
+#dayPage.compact-active .workout-timer-footer{
+  display:block !important;
+  margin-top:12px;
+  padding-top:12px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls{
+  display:flex !important;
+  gap:8px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+  display:inline-flex !important;
+  min-height:44px;
+  padding:10px 14px;
+  font-size:11px;
+}
+
+@media(max-width:390px){
+  .workout-timer-footer{
+    margin-top:10px;
+    padding-top:10px;
+  }
+  .workout-primary-timer .smart-timer-controls{
+    gap:7px;
+  }
+  .workout-primary-timer .smart-timer-controls button,
+  #dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+    min-height:42px;
+    min-width:78px;
+    padding:9px 12px;
+    font-size:10.5px;
+  }
+  .workout-primary-timer .smart-timer-controls .timer-primary{
+    min-width:104px;
+  }
+}
+
+/* ---- meal-r12 ---- */
+/* MOTION12 r12 — five-component lunch/dinner configurator */
+
+.meal-configurable-wrap{
+  display:grid;
+  gap:0;
+}
+.meal-configurable-wrap>.meal-row{
+  border-radius:18px 18px 12px 12px;
+}
+.meal-swap-button{
+  width:100%;
+  min-height:38px;
+  margin-top:-1px;
+  border:1px solid rgba(255,77,46,.30);
+  border-radius:0 0 14px 14px;
+  background:rgba(255,77,46,.065);
+  color:var(--volt);
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.meal-swap-button span{
+  margin-right:5px;
+  font-size:14px;
+}
+.meal-stack-note{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+
+.compact-meal-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 30px;
+  align-items:stretch;
+  gap:3px;
+}
+.compact-meal-wrap .compact-meal{
+  min-width:0;
+}
+.compact-meal-swap{
+  width:30px;
+  min-width:30px;
+  border:1px solid rgba(255,77,46,.26);
+  border-radius:10px;
+  background:rgba(255,77,46,.06);
+  color:var(--volt);
+  font-size:15px;
+  font-weight:950;
+  cursor:pointer;
+}
+.compact-meal-swap:active,
+.meal-swap-button:active{
+  transform:translateY(1px);
+}
+
+.meal-config-overlay[hidden]{
+  display:none!important;
+}
+.meal-config-overlay{
+  position:fixed;
+  inset:0;
+  z-index:500;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding-top:env(safe-area-inset-top,0px);
+  background:rgba(0,0,0,.72);
+  opacity:0;
+  transition:opacity .16s ease;
+}
+.meal-config-overlay.show{
+  opacity:1;
+}
+.meal-config-sheet{
+  width:min(520px,100%);
+  max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:22px 18px calc(24px + env(safe-area-inset-bottom,0px));
+  border:1px solid var(--line);
+  border-bottom:0;
+  border-radius:28px 28px 0 0;
+  background:#17191d;
+  box-shadow:0 -20px 60px rgba(0,0,0,.36);
+  transform:translateY(18px);
+  transition:transform .16s ease;
+}
+.meal-config-overlay.show .meal-config-sheet{
+  transform:translateY(0);
+}
+.meal-config-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.meal-config-kicker{
+  display:block;
+  color:var(--volt);
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.11em;
+}
+.meal-config-head h2{
+  margin:6px 0 3px;
+  font-size:24px;
+  letter-spacing:-.04em;
+}
+.meal-config-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+.meal-config-close{
+  width:38px;
+  height:38px;
+  flex:0 0 auto;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:var(--surface2);
+  color:var(--ink);
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.meal-match-toggle{
+  margin:16px 0 12px;
+  padding:12px;
+  border:1px solid rgba(255,77,46,.28);
+  border-radius:16px;
+  background:rgba(255,77,46,.055);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  gap:12px;
+  align-items:center;
+  cursor:pointer;
+}
+.meal-match-toggle span{
+  min-width:0;
+}
+.meal-match-toggle b{
+  display:block;
+  color:#f2f3f4;
+  font-size:12px;
+}
+.meal-match-toggle small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+.meal-match-toggle input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+.meal-match-toggle i{
+  width:44px;
+  height:25px;
+  border-radius:999px;
+  background:#34383e;
+  position:relative;
+  transition:background .16s ease;
+}
+.meal-match-toggle i:after{
+  content:"";
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:19px;
+  height:19px;
+  border-radius:50%;
+  background:#f4f5f6;
+  transition:transform .16s ease;
+}
+.meal-match-toggle input:checked+i{
+  background:var(--volt);
+}
+.meal-match-toggle input:checked+i:after{
+  transform:translateX(19px);
+}
+
+.meal-config-components{
+  display:grid;
+  gap:7px;
+}
+.meal-config-component{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr) 52px;
+  gap:9px;
+  align-items:center;
+  padding:9px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#111316;
+}
+.meal-config-number{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  background:var(--surface2);
+  color:var(--volt);
+  font-size:11px;
+  font-weight:950;
+}
+.meal-config-choice{
+  min-width:0;
+}
+.meal-config-choice label{
+  display:block;
+  margin-bottom:4px;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.meal-config-choice select{
+  width:100%;
+  min-height:38px;
+  padding:7px 9px;
+  border:1px solid #34383e;
+  border-radius:10px;
+  background:#0d0f11;
+  color:var(--ink);
+  font-size:13px;
+  font-weight:850;
+}
+.meal-config-choice small{
+  display:block;
+  margin-top:4px;
+  color:#c8cbd0;
+  font-size:9px;
+  line-height:1.25;
+}
+.meal-component-swap{
+  min-height:46px;
+  border:1px solid rgba(255,77,46,.26);
+  border-radius:11px;
+  background:rgba(255,77,46,.055);
+  color:var(--volt);
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:1px;
+  font-size:15px;
+  font-weight:950;
+  cursor:pointer;
+}
+.meal-component-swap span{
+  font-size:7px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.meal-config-summary{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.meal-config-summary>div{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface);
+}
+.meal-config-summary span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.meal-config-summary b{
+  display:block;
+  margin-top:5px;
+  color:#f2f3f4;
+  font-size:11px;
+  line-height:1.3;
+}
+.meal-swap-all{
+  width:100%;
+  min-height:42px;
+  margin-top:8px;
+  border:1px dashed rgba(255,77,46,.34);
+  border-radius:13px;
+  background:transparent;
+  color:var(--volt);
+  font-size:10px;
+  font-weight:950;
+  cursor:pointer;
+}
+.meal-config-actions{
+  position:sticky;
+  bottom:calc(-1 * env(safe-area-inset-bottom,0px));
+  z-index:3;
+  margin-top:12px;
+  padding-top:12px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:8px;
+  background:linear-gradient(to top,#17191d 78%,rgba(23,25,29,0));
+}
+.meal-config-actions button{
+  min-height:48px;
+  border:0;
+  border-radius:14px;
+  background:#2a2d32;
+  color:var(--ink);
+  font-size:12px;
+  font-weight:950;
+  cursor:pointer;
+}
+.meal-config-actions button.primary{
+  background:var(--volt);
+  color:#0b0c0e;
+}
+.meal-config-note{
+  margin:10px 2px 0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.35;
+}
+
+@media(min-width:760px){
+  .meal-config-overlay{
+    align-items:center;
+    padding:24px;
+  }
+  .meal-config-sheet{
+    max-height:min(760px,calc(100dvh - 48px));
+    border-bottom:1px solid var(--line);
+    border-radius:28px;
+  }
+}
+@media(max-width:390px){
+  .meal-config-sheet{
+    padding:18px 14px calc(20px + env(safe-area-inset-bottom,0px));
+  }
+  .meal-config-head h2{font-size:22px}
+  .meal-config-component{
+    grid-template-columns:25px minmax(0,1fr) 47px;
+    gap:7px;
+    padding:8px;
+  }
+  .meal-config-number{width:25px;height:25px}
+  .meal-config-summary{grid-template-columns:1fr}
+}
+
+/* ---- palette-r13 ---- */
+/* MOTION12 r13 — app colour palettes selected in Settings.
+   Ember is the original red/orange MOTION12 palette. */
+
+:root,
+html[data-app-palette="ember"]{
+  --volt:#ff4d2e;
+  --orange:#ff7a1a;
+  --cyan:#3be7e1;
+  --pink:#ff4fa3;
+  --accent-rgb:255,77,46;
+  --accent2-rgb:255,122,26;
+}
+html[data-app-palette="ocean"]{
+  --volt:#38a6ff;
+  --orange:#20d6c7;
+  --cyan:#69e7ff;
+  --pink:#8f7cff;
+  --accent-rgb:56,166,255;
+  --accent2-rgb:32,214,199;
+}
+html[data-app-palette="forest"]{
+  --volt:#4fd270;
+  --orange:#b4df45;
+  --cyan:#42d9b7;
+  --pink:#efb451;
+  --accent-rgb:79,210,112;
+  --accent2-rgb:180,223,69;
+}
+html[data-app-palette="violet"]{
+  --volt:#8c72ff;
+  --orange:#d45cff;
+  --cyan:#63dcff;
+  --pink:#ff71b3;
+  --accent-rgb:140,114,255;
+  --accent2-rgb:212,92,255;
+}
+html[data-app-palette="gold"]{
+  --volt:#ffb62e;
+  --orange:#ff7a1a;
+  --cyan:#54d9c7;
+  --pink:#ff786e;
+  --accent-rgb:255,182,46;
+  --accent2-rgb:255,122,26;
+}
+html[data-app-palette="rose"]{
+  --volt:#ff5f8f;
+  --orange:#ff8c51;
+  --cyan:#62dce7;
+  --pink:#bc79ff;
+  --accent-rgb:255,95,143;
+  --accent2-rgb:255,140,81;
+}
+
+/* Replace legacy hard-coded ember glows with the selected palette. */
+.app{
+  background:
+    radial-gradient(circle at 90% -5%,rgba(var(--accent-rgb),.12),transparent 26%),
+    var(--bg);
+}
+.accent,
+.fast-card{
+  border-color:rgba(var(--accent-rgb),.28);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),var(--surface) 42%);
+}
+.progress-rule{
+  border-left-color:var(--volt);
+  background:rgba(var(--accent-rgb),.05);
+}
+.day-list .todaycard{
+  border-color:var(--volt);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.15) inset;
+}
+.day-session-btn{
+  border-color:rgba(var(--accent-rgb),.45);
+  background:rgba(var(--accent-rgb),.11);
+}
+.day-session-btn.orange{
+  border-color:rgba(var(--accent2-rgb),.42);
+  background:rgba(var(--accent2-rgb),.09);
+}
+.video-link{
+  border-color:rgba(var(--accent-rgb),.35);
+}
+.video-link:hover{
+  background:rgba(var(--accent-rgb),.10);
+}
+.session-mode-badge,
+.session-timer-link{
+  border-color:rgba(var(--accent-rgb),.35);
+  background:rgba(var(--accent-rgb),.07);
+}
+.exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current{
+  border-color:rgba(var(--accent-rgb),.62);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.07),var(--surface) 40%);
+  box-shadow:inset 3px 0 0 rgba(var(--accent-rgb),.82);
+}
+.strength-session-slice,
+.strength-set-flow,
+.strength-flow-status,
+.strength-set-row.active,
+.strength-session-cue{
+  border-color:rgba(var(--accent-rgb),.30);
+}
+.strength-set-row.active,
+.strength-session-cue{
+  background:rgba(var(--accent-rgb),.055);
+}
+.strength-set-flow.resting .strength-flow-status,
+.strength-next.ready{
+  border-color:rgba(var(--accent2-rgb),.34);
+  background:rgba(var(--accent2-rgb),.07);
+}
+.timer-ring{
+  --timer-red:var(--volt);
+  --timer-orange:var(--orange);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.018),
+    0 0 26px rgba(var(--accent-rgb),.065);
+}
+.timer-next{
+  border-color:rgba(var(--accent2-rgb),.24);
+  background:rgba(var(--accent2-rgb),.06);
+}
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.18),0 0 12px rgba(var(--accent-rgb),.12);
+}
+.meal-swap-button,
+.compact-meal-swap,
+.meal-component-swap,
+.meal-match-toggle,
+.meal-swap-all{
+  border-color:rgba(var(--accent-rgb),.30);
+  background-color:rgba(var(--accent-rgb),.06);
+}
+.meal-match-toggle{
+  background:rgba(var(--accent-rgb),.055);
+}
+
+/* Settings swatch picker */
+.app-colour-field{
+  margin-top:18px!important;
+}
+.app-colour-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.app-colour-head label{
+  margin:0!important;
+}
+.app-colour-head b{
+  color:var(--volt);
+  font-size:11px;
+  font-weight:950;
+}
+.palette-picker{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:7px;
+}
+.palette-swatch{
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#111316;
+  padding:6px 4px 7px;
+  display:grid;
+  place-items:center;
+  gap:5px;
+  color:var(--muted);
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.palette-swatch-preview{
+  width:100%;
+  max-width:42px;
+  aspect-ratio:1.45;
+  border-radius:9px;
+  background:
+    linear-gradient(135deg,var(--sw1) 0 52%,var(--sw2) 52% 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.palette-swatch small{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:7px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.palette-swatch.selected{
+  border-color:var(--volt);
+  color:var(--ink);
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb),.12);
+}
+.palette-swatch.selected .palette-swatch-preview{
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    0 0 0 2px rgba(var(--accent-rgb),.24);
+}
+.palette-picker-note{
+  margin:8px 2px 0!important;
+}
+body.motion12-readonly .palette-swatch{
+  pointer-events:none!important;
+  opacity:.45!important;
+}
+
+@media(max-width:420px){
+  .palette-picker{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .palette-swatch{
+    grid-template-columns:34px minmax(0,1fr);
+    justify-items:start;
+    padding:6px 7px;
+  }
+  .palette-swatch-preview{
+    width:34px;
+    max-width:none;
+  }
+  .palette-swatch small{
+    font-size:8px;
+  }
+}
+
+/* ---- workout-theme-r16 ---- */
+/* MOTION12 r16 — workout surfaces follow the selected app palette.
+   Workout identity is conveyed by labels/content; colour comes from the active theme. */
+
+/* Main Home workout card — full view */
+.hero{
+  background:linear-gradient(135deg,var(--volt) 0%,var(--orange) 100%);
+}
+
+/* Main Home workout card — compact view */
+.compact-session{
+  border-color:rgba(var(--accent-rgb),.48);
+  background:linear-gradient(135deg,var(--volt) 0%,var(--orange) 100%);
+  box-shadow:0 10px 30px rgba(var(--accent-rgb),.12);
+}
+
+/* Session launch buttons previously kept day-specific hard-coded colours.
+   They now inherit the active palette in all workout types. */
+.day-session-btn,
+.day-session-btn.cyan,
+.day-session-btn.pink,
+.day-session-btn.orange{
+  border-color:rgba(var(--accent-rgb),.42);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.12),rgba(var(--accent2-rgb),.07));
+}
+.day-session-btn:hover,
+.day-session-btn:focus-visible{
+  border-color:rgba(var(--accent-rgb),.70);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.18),rgba(var(--accent2-rgb),.10));
+}
+
+/* Workout/session focus and active states */
+.session-mode-badge{
+  border-color:rgba(var(--accent-rgb),.35);
+  color:var(--volt);
+  background:rgba(var(--accent-rgb),.07);
+}
+.workout-primary-timer{
+  border-color:rgba(var(--accent-rgb),.18);
+}
+.timer-context span,
+.timer-next-stage b{
+  color:var(--volt);
+}
+.timer-next{
+  border-color:rgba(var(--accent2-rgb),.24);
+  background:rgba(var(--accent2-rgb),.06);
+}
+.smart-timer-controls .timer-primary,
+.workout-primary-timer .smart-timer-controls .timer-primary{
+  background:var(--volt);
+  border-color:var(--volt);
+}
+
+/* Exercise/session state */
+.exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current,
+.strength-session-slice.session-current{
+  border-color:rgba(var(--accent-rgb),.64);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.075),var(--surface) 40%);
+  box-shadow:inset 3px 0 0 rgba(var(--accent-rgb),.86);
+}
+.strength-set-row.active{
+  border-color:rgba(var(--accent-rgb),.56);
+  background:rgba(var(--accent-rgb),.06);
+}
+.strength-set-row.active input:focus{
+  border-color:rgba(var(--accent-rgb),.72);
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb),.10);
+}
+
+/* Progress belongs to the selected theme as well. */
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.18),0 0 12px rgba(var(--accent-rgb),.14);
+}
+
+/* Preserve the dark high-contrast START pill on bright workout cards. */
+.compact-session-right span,
+.hero .cta{
+  background:#0b0c0e;
+  color:white;
+}
+
+/* ---- outlines-r17 ---- */
+/* MOTION12 r17 — theme-responsive outlines.
+   Neutral surfaces keep their dark fill; outlines pick up a subtle tint from the active palette. */
+
+:root{
+  --theme-line:rgba(var(--accent-rgb),.22);
+  --theme-line-soft:rgba(var(--accent-rgb),.14);
+  --theme-line-strong:rgba(var(--accent-rgb),.42);
+}
+
+/* Primary app containers */
+.app .card,
+.app .compact-card,
+.app .compact-meal,
+.app .daydot,
+.app .mini,
+.app .exercise,
+.app .meal-row,
+.app .target-chip,
+.app .timer-session-progress,
+.app .strength-session-progress,
+.app .smart-timer-card,
+.app .strength-set-flow,
+.app .strength-flow-status,
+.app .strength-set-row,
+.app .strength-next,
+.app .inline-ex-timer,
+.app .session-summary .mini{
+  border-color:var(--theme-line);
+}
+
+/* Header and navigation controls */
+.gear,
+.home-mode-toggle{
+  border-color:var(--theme-line-strong);
+}
+.home-mode-toggle.active{
+  border-color:rgba(var(--accent-rgb),.64);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.08) inset;
+}
+.bottomnav{
+  border-top-color:var(--theme-line-soft);
+}
+
+/* Interactive outlines */
+.app .check,
+.app .smallbtn,
+.app .timer-actions button,
+.app .smart-timer-controls button,
+.app .timer-presets button,
+.app .exercise-rest-preset,
+.app .strength-flow-actions button,
+.app .inline-timer-actions button{
+  border-color:var(--theme-line-strong);
+}
+.app .check{
+  border-color:rgba(var(--accent-rgb),.34);
+}
+
+/* Current/selected states remain stronger than passive outlines. */
+.app .daydot.today,
+.app .palette-swatch.selected,
+.app .exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current,
+.app .strength-set-row.active{
+  border-color:var(--volt);
+}
+
+/* Compact session containers visible in the supplied iPhone view. */
+#dayPage.compact-active .mobility-warmup-section .card,
+#dayPage.compact-active .prep-section>.prep-exercise,
+#dayPage.compact-active .support-section>.support-exercise,
+#dayPage.compact-active .timer-session-progress,
+#dayPage.compact-active .strength-session-progress,
+#dayPage.compact-active .workout-primary-timer{
+  border-color:var(--theme-line);
+}
+
+/* Progress-track container remains restrained, while current state uses theme colour. */
+.timer-progress-segment,
+.strength-progress-segment{
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.055);
+}
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.24),0 0 12px rgba(var(--accent-rgb),.14);
+}
+
+/* Settings sheet and common fields pick up the same tint without becoming visually noisy. */
+.settings-overlay .sheet{
+  border-color:var(--theme-line);
+}
+.settings-overlay .field input,
+.settings-overlay .field select,
+.settings-overlay .palette-swatch{
+  border-color:var(--theme-line);
+}
+.settings-overlay .palette-swatch.selected{
+  border-color:var(--volt);
+}
+
+/* Meal configurator follows the selected app palette too. */
+.meal-config-sheet,
+.meal-config-component,
+.meal-config-summary>div{
+  border-color:var(--theme-line);
+}
+.meal-config-choice select,
+.meal-config-close{
+  border-color:var(--theme-line-strong);
+}
+
+/* Preserve semantic completion/error colours where they convey state. */
+.exercise.complete .check,
+.compact-meal.done .meal-check{
+  border-color:var(--volt);
+}
+
+/* ---- timer-r20 ---- */
+/* MOTION12 r20 — true equal-length timer arcs.
+   The timer ring is rendered as SVG arc segments instead of conic-gradient wedges.
+   Every segment uses the same angular span, gap, radius and stroke width. */
+
+.timer-ring{
+  background:none!important;
+}
+
+.timer-ring:after{
+  content:none!important;
+  display:none!important;
+}
+
+.timer-ring:before{
+  z-index:1;
+}
+
+.timer-ring-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+  z-index:0;
+}
+
+.timer-ring-segment{
+  fill:none;
+  stroke:var(--timer-track,#292c31);
+  stroke-width:4;
+  stroke-linecap:butt;
+  transition:stroke .14s linear,opacity .14s linear;
+}
+
+.timer-ring-segment.remaining{
+  stroke:var(--volt,#ff4d2e);
+  opacity:1;
+}
+
+.timer-ring-segment.elapsed{
+  stroke:var(--timer-track,#292c31);
+  opacity:1;
+}
+
+.timer-ring > div{
+  position:relative;
+  z-index:2;
+}
+
+/* ---- canonical-r21: Lucide navigation + diagnostics ---- */
+.navbtn{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
+.nav-icon{
+  width:21px;
+  height:21px;
+  min-width:21px;
+  min-height:21px;
+  flex:0 0 21px;
+  display:block;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+.navbtn.active .nav-icon{
+  width:21px;
+  height:21px;
+  min-width:21px;
+  min-height:21px;
+  transform:none;
+}
+.gear{gap:8px}
+.gear-icon{display:grid;place-items:center}
+.gear-icon svg{
+  width:21px;
+  height:21px;
+  display:block;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+.app-diagnostics summary{cursor:pointer}
+.diagnostics-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.diagnostic-cell{
+  min-width:0;
+  border:1px solid var(--theme-line,var(--line));
+  border-radius:13px;
+  background:#101215;
+  padding:10px 11px;
+}
+.diagnostic-cell span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.diagnostic-cell b{
+  display:block;
+  margin-top:5px;
+  color:var(--ink);
+  font-size:11px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.diagnostic-cell b.ok{color:var(--volt)}
+.diagnostic-cell b.warn{color:var(--orange)}
+.diagnostics-note{
+  margin:10px 2px 0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.45;
+}
+@media(max-width:390px){
+  .nav-icon{width:20px;height:20px;min-width:20px;min-height:20px;flex-basis:20px}
+  .navbtn.active .nav-icon{width:20px;height:20px;min-width:20px;min-height:20px}
 }
