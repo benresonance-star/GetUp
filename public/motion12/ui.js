@@ -255,17 +255,32 @@ function streakBand(compact=false){
     '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
   '</div>';
 }
+function lucideTrophyMarkup(className='session-trophy-icon'){
+  return '<svg class="'+className+'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+    '<path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"/>'+
+    '<path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"/>'+
+    '<path d="M18 9h1.5a1 1 0 0 0 0-5H18"/>'+
+    '<path d="M4 22h16"/>'+
+    '<path d="M6 9a6 6 0 0 0 12 0V3H6z"/>'+
+    '<path d="M6 9H4.5a1 1 0 0 1 0-5H6"/>'+
+  '</svg>';
+}
 function renderCompactHome(d,w,p,fat,cal,strip){
   const date=todayISO(),tot=intakeTotals(d,date),plan=mealPlan(d);
   const remaining=tot?.remaining;
   const loss=cal?cal.predictedLoss:'—';
   const mealCount=compactMealCount(d,date);
+  const sessionComplete=completedOn(date,d);
   document.getElementById('homePage').classList.add('compact-active');
   document.getElementById('homePage').innerHTML=`
     <div class="compact-home">
-      <button class="compact-session" type="button" onclick="openDay(${d},'${date}')">
+      <button class="compact-session ${sessionComplete?'completed':''}" type="button" onclick="openDay(${d},'${date}')">
         <div><span class="compact-kicker">Week ${w} · Today</span><h1>${p.name}</h1><p>${weeklyTarget(d,w)} · ${p.why}</p></div>
-        <div class="compact-session-right"><b>${p.time}</b><span>START →</span></div>
+        <div class="compact-session-right">
+          ${sessionComplete?'<span class="compact-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</span>':''}
+          <b>${p.time}</b>
+          <span class="compact-session-cta">${sessionComplete?'REVIEW →':'START →'}</span>
+        </div>
       </button>
 
       <div class="compact-week">${strip}</div>
@@ -299,12 +314,12 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
     </div>`;
 }
-function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets(),sessionComplete=completedOn(todayISO(),d);const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').classList.remove('compact-active');
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
-  <section class="hero"><div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${completedOn(todayISO(),d)?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
+  <section class="hero ${sessionComplete?'completed':''}">${sessionComplete?'<div class="hero-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</div>':''}<div class="eyebrow">Week ${w} · Today</div><h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${sessionComplete?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
   <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div>${streakBand(false)}</section>
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
