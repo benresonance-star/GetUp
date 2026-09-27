@@ -81,7 +81,7 @@
     </details>
     <details class="data-settings">
       <summary>Training data</summary>
-      <p class="settings-note">MOTION12 now keeps a versioned v1 training store alongside the current app data. The pre-v1 source is retained as a rollback backup.</p>
+      <p class="settings-note">MOTION12 now stores live app and training data in IndexedDB. Existing localStorage data is read only once as migration input and is never modified by the new app.</p>
       <div class="data-settings-actions">
         <button type="button" id="exportDataBtn">Export backup</button>
       </div>
