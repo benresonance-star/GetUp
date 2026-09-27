@@ -1170,13 +1170,37 @@ function conditioningCircuitPlan(day,w){
 
   const phases=[];
   for(let r=1;r<=rounds;r++){
-    stations.forEach(st=>{
-      phases.push({label:st.label,seconds:st.work,round:r});
-      phases.push({label:'RECOVER',seconds:st.rest,round:r});
+    stations.forEach((st,stationIndex)=>{
+      phases.push({
+        label:st.label,
+        seconds:st.work,
+        round:r,
+        phaseType:'work',
+        stationIndex,
+        stationName:st.label
+      });
+      phases.push({
+        label:'RECOVER',
+        seconds:st.rest,
+        round:r,
+        phaseType:'transition',
+        stationIndex,
+        stationName:st.label,
+        nextStationIndex:stationIndex+1<stations.length?stationIndex+1:(r<rounds?0:null)
+      });
     });
-    if(roundRest&&r<rounds)phases.push({label:'ROUND REST',seconds:roundRest,round:r});
+    if(roundRest&&r<rounds){
+      phases.push({
+        label:'ROUND REST',
+        seconds:roundRest,
+        round:r,
+        phaseType:'round-rest',
+        stationIndex:stations.length-1,
+        nextStationIndex:0
+      });
+    }
   }
-  return {kind:'intervals',title,note,rounds,phases,circuit:true};
+  return {kind:'intervals',title,note,rounds,phases,circuit:true,stationCount:stations.length};
 }
 function strengthExercisePlan(day=timerContextDay(),w=timerContextWeek(),preferredName=''){
   const p=program[day];
@@ -1286,6 +1310,35 @@ function timerPhaseReadable(label){
     .replace(/\bkb\b/g,'KB')
     .replace(/\b\w/g,m=>m.toUpperCase());
 }
+function timerCircuitExerciseIndex(plan,phaseIndex=smartTimer.phaseIndex){
+  if(!plan?.circuit||!Array.isArray(plan.phases)||!plan.phases.length)return -1;
+  const idx=Math.max(0,Math.min(plan.phases.length-1,Number(phaseIndex)||0));
+  const phase=plan.phases[idx];
+
+  if(phase?.phaseType==='work'&&Number.isInteger(phase.stationIndex)){
+    return phase.stationIndex;
+  }
+  if(Number.isInteger(phase?.nextStationIndex)){
+    return phase.nextStationIndex;
+  }
+
+  for(let i=idx+1;i<plan.phases.length;i++){
+    const candidate=plan.phases[i];
+    if(candidate?.phaseType==='work'&&Number.isInteger(candidate.stationIndex)){
+      return candidate.stationIndex;
+    }
+  }
+  return Number.isInteger(phase?.stationIndex)?phase.stationIndex:-1;
+}
+function syncCircuitTimerExercise(plan=timerSessionPlan()){
+  if(!plan?.circuit)return;
+  const exerciseIndex=timerCircuitExerciseIndex(plan,smartTimer.phaseIndex);
+  const work=program[timerContextDay()]?.work||[];
+  if(exerciseIndex>=0&&work[exerciseIndex]){
+    smartTimer.exerciseName=work[exerciseIndex][0];
+    smartTimer.exerciseCategory='Circuit station';
+  }
+}
 function timerConfigure(mode=smartTimer.mode||'session',force=false){
   const dayKey=timerContextDate()+':'+timerContextWeek();
   if(!force&&smartTimer.dayKey===dayKey&&smartTimer.mode===mode&&smartTimer.kind)return;
@@ -1301,6 +1354,7 @@ function timerConfigure(mode=smartTimer.mode||'session',force=false){
       smartTimer.phaseIndex=0;
       smartTimer.duration=plan.phases[0].seconds;
       smartTimer.remaining=plan.phases[0].seconds;
+      syncCircuitTimerExercise(plan);
     }else if(plan.kind==='strengthsets'){
       smartTimer.kind='strengthsets';
       smartTimer.exerciseName=plan.exerciseName;
@@ -1373,6 +1427,7 @@ function timerTick(){
       smartTimer.duration=phase.seconds;
       smartTimer.remaining=phase.seconds;
       smartTimer.endAt=previousEnd+phase.seconds*1000;
+      syncCircuitTimerExercise(plan);
       timerBeep();
     }
     if(changed){
@@ -1407,6 +1462,7 @@ function timerStartPause(){
           if(smartTimer.phaseIndex>=plan.phases.length)smartTimer.phaseIndex=0;
           smartTimer.duration=plan.phases[smartTimer.phaseIndex].seconds;
           smartTimer.remaining=smartTimer.duration;
+          syncCircuitTimerExercise(plan);
         }else smartTimer.remaining=smartTimer.duration||90;
       }
       smartTimer.endAt=Date.now()+smartTimer.remaining*1000;smartTimer.running=true;
@@ -1464,6 +1520,7 @@ function timerSkipPhase(){
     const phase=plan.phases[smartTimer.phaseIndex];
     smartTimer.duration=phase.seconds;smartTimer.remaining=phase.seconds;
     if(smartTimer.running)smartTimer.endAt=Date.now()+phase.seconds*1000;
+    syncCircuitTimerExercise(plan);
   }
   timerPhaseTransitionUntil=Date.now()+190;
   saveSmartTimer();timerBeep();renderTimerPage();
@@ -1654,6 +1711,7 @@ function timerSessionProgressData(vm){
       completedCount,
       remainingCount,
       currentIndex:currentOrdinal,
+      exerciseIndex:plan.circuit?timerCircuitExerciseIndex(plan,phaseIndex):currentOrdinal,
       segments,
       eyebrow:plan.circuit?'Circuit progress':'Interval progress',
       currentName,
@@ -1750,18 +1808,29 @@ function updateTimerRingSegments(vm){
 }
 function syncCompactSessionFocus(vm){
   const page=document.getElementById('dayPage');
-  if(!page?.classList.contains('compact-active'))return;
+  if(!page)return;
+  const compact=page.classList.contains('compact-active');
   const cards=[...page.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
-  cards.forEach(card=>card.classList.remove('compact-current'));
+  cards.forEach(card=>{
+    card.classList.remove('compact-current');
+    if(![1,3,5].includes(timerContextDay()))card.classList.remove('session-current');
+  });
   if(!cards.length)return;
+
   const progress=timerSessionProgressData(vm||timerViewModel());
-  let index=progress?.currentIndex??-1;
+  let index=progress?.exerciseIndex??progress?.currentIndex??-1;
   if(index<0){
     index=cards.findIndex(card=>!card.classList.contains('complete'));
     if(index<0)index=cards.length-1;
   }
-  if(progress&&(progress.type==='circuit'||progress.type==='intervals'))index=index%cards.length;
-  cards[Math.max(0,Math.min(cards.length-1,index))]?.classList.add('compact-current');
+  if(progress&&progress.type==='intervals'&&!progress.exerciseIndex)index=index%cards.length;
+  index=Math.max(0,Math.min(cards.length-1,index));
+
+  const current=cards[index];
+  if(current){
+    current.classList.add('session-current');
+    if(compact)current.classList.add('compact-current');
+  }
 }
 function renderTimerPage(){
   const progressMount=document.getElementById('sessionProgressMount');
