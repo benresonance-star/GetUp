@@ -15,7 +15,7 @@
     .metric{font-size:28px;font-weight:950;letter-spacing:-.05em}.metric span{font-size:12px;color:var(--muted);font-weight:800;letter-spacing:.01em}.progressbar{height:8px;background:#24272c;border-radius:999px;overflow:hidden;margin-top:12px}.progressbar i{display:block;height:100%;background:var(--volt);border-radius:inherit}
     .weekstrip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.daydot{border:1px solid var(--line);background:var(--surface);border-radius:15px;padding:10px 2px;text-align:center;cursor:pointer}.daydot b{display:block;font-size:11px;text-transform:uppercase}.daydot span{display:block;margin-top:7px;width:7px;height:7px;border-radius:50%;background:#3a3d43;margin-inline:auto}.daydot.today{border-color:var(--volt)}.daydot.today span{background:var(--volt)}.daydot.done span{background:var(--cyan)}
     .diet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.diet-card{min-height:150px}.diet-card .big{font-size:30px;font-weight:950;margin:8px 0 4px;letter-spacing:-.05em}.tag{display:inline-block;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:6px 8px;border-radius:999px;color:var(--muted)}
-    .bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(4,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(13,14,16,.93);border-top:1px solid var(--line);backdrop-filter:blur(18px);z-index:50}.navbtn{background:none;border:0;color:var(--muted);padding:7px 4px;font-size:10px;font-weight:800;cursor:pointer}.navbtn strong{display:block;font-size:18px;margin-bottom:3px}.navbtn.active{color:var(--volt)}
+    .bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(3,1fr);padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(13,14,16,.93);border-top:1px solid var(--line);backdrop-filter:blur(18px);z-index:50}.navbtn{background:none;border:0;color:var(--muted);padding:7px 4px;font-size:10px;font-weight:800;cursor:pointer}.navbtn strong{display:block;font-size:18px;margin-bottom:3px}.navbtn.active{color:var(--volt)}
     .page{display:none}.page.active{display:block}.page-title{padding:10px 2px 2px}.page-title h1{font-size:42px;line-height:.95;text-transform:uppercase;letter-spacing:-.06em;margin:10px 0}.page-title p{color:var(--muted);line-height:1.5;margin:0}.back{border:0;background:none;color:var(--muted);padding:0;font-weight:850;cursor:pointer}
     .session-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.mini{background:var(--surface);border:1px solid var(--line);padding:13px;border-radius:16px}.mini b{font-size:19px;display:block}.mini span{font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:850}
     .timer{background:linear-gradient(145deg,#20242a,#15171a);border:1px solid var(--line);border-radius:26px;padding:18px;margin:16px 0}.clock{font-variant-numeric:tabular-nums;font-size:48px;font-weight:950;letter-spacing:-.06em}.timer-actions{display:flex;gap:8px}.timer-actions button,.smallbtn{border:1px solid var(--line);background:var(--surface2);padding:10px 13px;border-radius:999px;font-weight:850;cursor:pointer}.timer-actions .primary{background:var(--volt);color:#0b0c0e;border:0}
@@ -1181,6 +1181,42 @@ body.motion12-readonly .settings-overlay select{
   #homePage.compact-active .compact-streak .streak-quote-by{
     font-size:9px !important;
   }
+}
+
+/* Session-integrated runtime */
+.session-runtime-section{margin-top:0}
+.session-runtime{display:grid;gap:10px}
+.session-runtime .strength-session-progress,
+.session-runtime .timer-session-progress{
+  position:relative;
+  top:auto;
+  z-index:1;
+  margin:0;
+}
+.session-smart-timer{margin:0}
+.session-timer-tools{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface);
+  padding:0 11px 10px;
+}
+.session-timer-tools>summary{
+  cursor:pointer;
+  padding:11px 0 2px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  list-style:none;
+}
+.session-timer-tools>summary::-webkit-details-marker{display:none}
+.session-timer-tools>summary:after{content:"+";float:right;color:var(--volt);font-size:16px}
+.session-timer-tools[open]>summary:after{content:"−"}
+.session-timer-tools .timer-mode-tabs{margin-top:10px}
+.session-timer-tools .timer-exercise-section{margin-top:10px}
+@media(min-width:760px){
+  .session-runtime-section{margin-top:0}
 }
 
 /* Smart training timer */
