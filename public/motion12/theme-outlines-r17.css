@@ -1,0 +1,116 @@
+/* MOTION12 r17 — theme-responsive outlines.
+   Neutral surfaces keep their dark fill; outlines pick up a subtle tint from the active palette. */
+
+:root{
+  --theme-line:rgba(var(--accent-rgb),.22);
+  --theme-line-soft:rgba(var(--accent-rgb),.14);
+  --theme-line-strong:rgba(var(--accent-rgb),.42);
+}
+
+/* Primary app containers */
+.app .card,
+.app .compact-card,
+.app .compact-meal,
+.app .daydot,
+.app .mini,
+.app .exercise,
+.app .meal-row,
+.app .target-chip,
+.app .timer-session-progress,
+.app .strength-session-progress,
+.app .smart-timer-card,
+.app .strength-set-flow,
+.app .strength-flow-status,
+.app .strength-set-row,
+.app .strength-next,
+.app .inline-ex-timer,
+.app .session-summary .mini{
+  border-color:var(--theme-line);
+}
+
+/* Header and navigation controls */
+.gear,
+.home-mode-toggle{
+  border-color:var(--theme-line-strong);
+}
+.home-mode-toggle.active{
+  border-color:rgba(var(--accent-rgb),.64);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.08) inset;
+}
+.bottomnav{
+  border-top-color:var(--theme-line-soft);
+}
+
+/* Interactive outlines */
+.app .check,
+.app .smallbtn,
+.app .timer-actions button,
+.app .smart-timer-controls button,
+.app .timer-presets button,
+.app .exercise-rest-preset,
+.app .strength-flow-actions button,
+.app .inline-timer-actions button{
+  border-color:var(--theme-line-strong);
+}
+.app .check{
+  border-color:rgba(var(--accent-rgb),.34);
+}
+
+/* Current/selected states remain stronger than passive outlines. */
+.app .daydot.today,
+.app .palette-swatch.selected,
+.app .exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current,
+.app .strength-set-row.active{
+  border-color:var(--volt);
+}
+
+/* Compact session containers visible in the supplied iPhone view. */
+#dayPage.compact-active .mobility-warmup-section .card,
+#dayPage.compact-active .prep-section>.prep-exercise,
+#dayPage.compact-active .support-section>.support-exercise,
+#dayPage.compact-active .timer-session-progress,
+#dayPage.compact-active .strength-session-progress,
+#dayPage.compact-active .workout-primary-timer{
+  border-color:var(--theme-line);
+}
+
+/* Progress-track container remains restrained, while current state uses theme colour. */
+.timer-progress-segment,
+.strength-progress-segment{
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.055);
+}
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.24),0 0 12px rgba(var(--accent-rgb),.14);
+}
+
+/* Settings sheet and common fields pick up the same tint without becoming visually noisy. */
+.settings-overlay .sheet{
+  border-color:var(--theme-line);
+}
+.settings-overlay .field input,
+.settings-overlay .field select,
+.settings-overlay .palette-swatch{
+  border-color:var(--theme-line);
+}
+.settings-overlay .palette-swatch.selected{
+  border-color:var(--volt);
+}
+
+/* Meal configurator follows the selected app palette too. */
+.meal-config-sheet,
+.meal-config-component,
+.meal-config-summary>div{
+  border-color:var(--theme-line);
+}
+.meal-config-choice select,
+.meal-config-close{
+  border-color:var(--theme-line-strong);
+}
+
+/* Preserve semantic completion/error colours where they convey state. */
+.exercise.complete .check,
+.compact-meal.done .meal-check{
+  border-color:var(--volt);
+}
