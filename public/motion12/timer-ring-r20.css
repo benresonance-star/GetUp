@@ -30,7 +30,6 @@
   stroke:var(--timer-track,#292c31);
   stroke-width:4;
   stroke-linecap:butt;
-  vector-effect:non-scaling-stroke;
   transition:stroke .14s linear,opacity .14s linear;
 }
 
