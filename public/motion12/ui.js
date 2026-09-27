@@ -1141,12 +1141,14 @@ function exerciseCardMarkup(day,date,w,x,i){
     return '<div class="exercise strength-session-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
       '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+
       strengthSetFlowMarkup(id,x[0],target)+
+      exerciseNoteMarkup(id,state)+
       '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
     '</div>';
   }
   return '<div class="exercise '+(state.done?'complete ':'')+(inlineTimer.activeId===id?'active-timer':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0" onclick="activateExerciseTimerFromCard(event,this)">'+
     '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+inlineTimerMarkup(id)+
     '<div class="inputs"><div class="field"><label>Load / pace</label><input value="'+(state.load||'')+'" placeholder="e.g. 20 kg" oninput="saveEx(\''+id+'\',\'load\',this.value)"></div><div class="field"><label>Actual</label><input value="'+(state.reps||'')+'" placeholder="sets/reps" oninput="saveEx(\''+id+'\',\'reps\',this.value)"></div><div class="field"><label>RIR / effort</label><input value="'+(state.rir||'')+'" placeholder="2 RIR" oninput="saveEx(\''+id+'\',\'rir\',this.value)"></div></div>'+
+    exerciseNoteMarkup(id,state)+
     '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
   '</div>';
 }
@@ -1193,6 +1195,27 @@ function toggleExercise(id){
   }
 }
 function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;motion12SetItem('motion12.logs',JSON.stringify(logs))}
+function escapeExerciseNote(value){
+  return String(value??'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+function exerciseNoteMarkup(id,state={}){
+  const note=String(state.note||'');
+  return '<div class="exercise-note-card'+(note.trim()?' has-note':'')+'">'+
+    '<div class="exercise-note-head"><span>Notes</span><small>autosaves</small></div>'+
+    '<textarea class="exercise-note-input" rows="2" placeholder="e.g. eccentrics only · was too easy · increase load next time" oninput="saveExerciseNote(\''+id+'\',this)">'+escapeExerciseNote(note)+'</textarea>'+
+  '</div>';
+}
+function saveExerciseNote(id,textarea){
+  const value=textarea?.value??'';
+  logs[id]=logs[id]||{};
+  logs[id].note=value;
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  const card=textarea?.closest('.exercise-note-card');
+  if(card)card.classList.toggle('has-note',String(value).trim().length>0);
+}
 function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;motion12SetItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
 function renderProgress(){
   const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
