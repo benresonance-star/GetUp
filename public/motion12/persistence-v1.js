@@ -643,10 +643,12 @@
     currentData.meta.updatedAt=nowIso();
     projectView();
     queuePersist();
+    return true;
   }
   async function bootstrap(){
     readOnlyMode=false;
     recoverySource='';
+    lastError=null;
     repository.resetConnection();
     await repository.open();
     let data=await repository.load(),app=await repository.loadAppState();
@@ -663,10 +665,11 @@
       if(!checked.valid)throw new Error('MOTION12 IndexedDB data failed validation: '+checked.issues.filter(x=>x.severity==='error').map(x=>x.path+' '+x.message).join('; '));
       app={...defaultAppState(),...(app||{})};
     }
-    currentData=data;currentAppState=app;projectView();lastError=null;
+    currentData=data;
+    currentAppState=app;
+    projectView();
     return {valid:true,value:clone(currentData),issues:[],readOnly:false,source:'IndexedDB'};
   }
-
   async function readIndexedDbCandidate(){
     try{
       repository.resetConnection();
@@ -685,13 +688,19 @@
     const input=readLegacyLocalStorage();
     const data=initialDataFromLegacy(input);
     const checked=validate(data);
-    if(!checked.valid)throw new Error('Legacy recovery data failed validation: '+checked.issues.filter(x=>x.severity==='error').map(x=>x.path+' '+x.message).join('; '));
+    if(!checked.valid){
+      throw new Error('Legacy recovery data failed validation: '+checked.issues.filter(x=>x.severity==='error').map(x=>x.path+' '+x.message).join('; '));
+    }
     return {data,app:appStateFromLegacy(input),source:'localStorage migration snapshot'};
   }
   async function enterReadOnly(){
     let candidate=null;
     if(currentData&&validate(currentData).valid){
-      candidate={data:clone(currentData),app:{...defaultAppState(),...(clone(currentAppState)||{})},source:recoverySource||'in-memory recovery state'};
+      candidate={
+        data:clone(currentData),
+        app:{...defaultAppState(),...(clone(currentAppState)||{})},
+        source:recoverySource||'in-memory recovery state'
+      };
     }
     if(!candidate)candidate=await readIndexedDbCandidate();
     if(!candidate)candidate=legacyReadOnlyCandidate();
@@ -719,16 +728,55 @@
   }
   function parseBackupEnvelope(json){
     const parsed=safeParse(json,null);
-    if(!parsed)return {valid:false,issues:[issue('
+    if(!parsed)return {valid:false,issues:[issue('$','import.json','Backup is not valid JSON')]};
+    const data=parsed.format==='motion12-backup'?parsed.data:parsed;
+    const appState=parsed.format==='motion12-backup'?(parsed.appState||{}):{};
+    const checked=validate(data);
+    if(!checked.valid)return checked;
+    return {valid:true,value:data,appState:{...defaultAppState(),...appState},issues:[]};
+  }
+  async function recoverFromBackup(json){
+    const parsed=parseBackupEnvelope(json);
+    if(!parsed.valid)return parsed;
+    currentData=clone(parsed.value);
+    currentAppState=clone(parsed.appState);
+    projectView();
+    try{
+      repository.resetConnection();
+      await repository.open();
+      await repository.saveState(currentData,currentAppState);
+      readOnlyMode=false;
+      recoverySource='';
+      lastError=null;
+      return {valid:true,value:clone(currentData),issues:[],persisted:true,readOnly:false,source:'IndexedDB'};
+    }catch(err){
+      readOnlyMode=true;
+      recoverySource='imported backup';
+      emitPersistenceFailure(err,'backup-import');
+      return {
+        valid:true,value:clone(currentData),issues:[],
+        persisted:false,readOnly:true,source:recoverySource,
+        error:String(err&&err.message||err)
+      };
+    }
+  }
   function view(){
     if(!currentView)throw new Error('MOTION12 persistence has not finished bootstrapping');
     return clone(currentView);
   }
   function status(){
-    if(!currentData)return {valid:false,schemaVersion:null,sessions:0,measurements:0,storage:'IndexedDB',issues:[issue('$','data.not-ready','Repository not initialized')]};
+    if(!currentData){
+      return {
+        valid:false,schemaVersion:null,sessions:0,measurements:0,
+        storage:'IndexedDB',readOnly:false,recoverySource:null,pendingWrites:lastError?1:0,
+        lastError:lastError?String(lastError.message||lastError):null,
+        issues:[issue('$','data.not-ready','Repository not initialized')]
+      };
+    }
     const checked=validate(currentData);
     return {
-      valid:checked.valid,schemaVersion:currentData.schemaVersion,
+      valid:checked.valid,
+      schemaVersion:currentData.schemaVersion,
       sessions:Object.keys(currentData.sessions||{}).length,
       measurements:(currentData.measurements||[]).length,
       storage:readOnlyMode?'Read-only memory':'IndexedDB',
@@ -758,10 +806,15 @@
     },null,2);
   }
   async function downloadBackup(){
-    const text=await exportBackup(),blob=new Blob([text],{type:'application/json'});
+    const text=await exportBackup();
+    const blob=new Blob([text],{type:'application/json'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='motion12-backup-'+new Date().toISOString().slice(0,10)+'.json';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
+    a.href=url;
+    a.download='motion12-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),500);
   }
   async function importBackup(json){
     return recoverFromBackup(json);
@@ -775,85 +828,6 @@
     bootstrap,retryBootstrap,retryPersistence,enterReadOnly,recoverFromBackup,
     view,status,validate,flush,exportBackup,downloadBackup,importBackup,
     isReadOnly:()=>readOnlyMode,
-    stableUuid
-  };
-  global.IndexedDBMotion12Repository=IndexedDBMotion12Repository;
-  global.Motion12Persistence=api;
-  global.motion12SetItem=applyCompatWrite;
-})(window);
-,'import.json','Backup is not valid JSON')]};
-    const data=parsed.format==='motion12-backup'?parsed.data:parsed;
-    const appState=parsed.format==='motion12-backup'?(parsed.appState||{}):{};
-    const checked=validate(data);
-    if(!checked.valid)return checked;
-    return {valid:true,value:data,appState:{...defaultAppState(),...appState},issues:[]};
-  }
-  async function recoverFromBackup(json){
-    const parsed=parseBackupEnvelope(json);
-    if(!parsed.valid)return parsed;
-    currentData=clone(parsed.value);
-    currentAppState=clone(parsed.appState);
-    projectView();
-    try{
-      repository.resetConnection();
-      await repository.open();
-      await repository.saveState(currentData,currentAppState);
-      readOnlyMode=false;
-      recoverySource='';
-      lastError=null;
-      return {valid:true,value:clone(currentData),issues:[],persisted:true,readOnly:false,source:'IndexedDB'};
-    }catch(err){
-      readOnlyMode=true;
-      recoverySource='imported backup';
-      emitPersistenceFailure(err,'backup-import');
-      return {valid:true,value:clone(currentData),issues:[],persisted:false,readOnly:true,source:recoverySource,error:String(err&&err.message||err)};
-    }
-  }
-  function view(){
-    if(!currentView)throw new Error('MOTION12 persistence has not finished bootstrapping');
-    return clone(currentView);
-  }
-  function status(){
-    if(!currentData)return {valid:false,schemaVersion:null,sessions:0,measurements:0,storage:'IndexedDB',issues:[issue('$','data.not-ready','Repository not initialized')]};
-    const checked=validate(currentData);
-    return {
-      valid:checked.valid,schemaVersion:currentData.schemaVersion,
-      sessions:Object.keys(currentData.sessions||{}).length,
-      measurements:(currentData.measurements||[]).length,
-      storage:'IndexedDB',legacySource:'localStorage read-only migration input',
-      pendingWrites:lastError?1:0,issues:checked.issues
-    };
-  }
-  async function flush(){
-    await writeChain;
-    if(lastError)throw lastError;
-  }
-  async function exportBackup(){
-    await flush();return repository.exportBackup();
-  }
-  async function downloadBackup(){
-    const text=await exportBackup(),blob=new Blob([text],{type:'application/json'});
-    const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='motion12-backup-'+new Date().toISOString().slice(0,10)+'.json';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
-  }
-  async function importBackup(json){
-    await flush();
-    const result=await repository.importBackup(json);
-    if(result.valid){
-      currentData=await repository.load();
-      currentAppState={...defaultAppState(),...(await repository.loadAppState()||{})};
-      projectView();
-    }
-    return result;
-  }
-
-  const api={
-    SCHEMA_VERSION,PROGRAM_VERSION,DB_NAME,
-    repository,
-    catalogue:Object.freeze(Object.fromEntries(Object.entries(CATALOG).map(([id,v])=>[id,Object.freeze({id,name:v[0],category:v[1],measurementType:v[2],laterality:v[3]})]))),
-    legacyProgram:Object.freeze(LEGACY_PROGRAM_2026_09_27),
-    bootstrap,view,status,validate,flush,exportBackup,downloadBackup,importBackup,
     stableUuid
   };
   global.IndexedDBMotion12Repository=IndexedDBMotion12Repository;
