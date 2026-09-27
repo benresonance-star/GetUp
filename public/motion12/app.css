@@ -1469,6 +1469,89 @@ html.standalone main{
 }
 .strength-next.ready>span{color:var(--orange)}
 
+.strength-session-progress{
+  margin:14px 0 12px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:linear-gradient(145deg,#15181b,#101214);
+}
+.strength-progress-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.strength-progress-head>div{min-width:0}
+.strength-progress-head span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.strength-progress-head strong{
+  display:block;
+  margin-top:5px;
+  color:#f2f3f4;
+  font-size:13px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.strength-progress-head>b{
+  flex:0 0 auto;
+  color:#d9dbdf;
+  font-size:12px;
+  font-weight:950;
+  font-variant-numeric:tabular-nums;
+}
+.strength-progress-track{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  gap:4px;
+  height:9px;
+}
+.strength-progress-segment{
+  display:block;
+  min-width:0;
+  border-radius:999px;
+  background:#32363c;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+  transition:background .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.strength-progress-segment.complete{
+  background:var(--cyan);
+}
+.strength-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(255,77,46,.18),0 0 12px rgba(255,77,46,.12);
+  transform:scaleY(1.22);
+}
+.strength-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+  font-size:8.5px;
+  font-weight:850;
+}
+.strength-progress-foot .done{color:var(--cyan)}
+.strength-progress-foot .current{
+  color:#e9eaec;
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.strength-progress-foot .remain{color:var(--muted);text-align:right}
+
 .strength-session-cue{
   margin-top:10px;
   padding:11px;
@@ -1564,6 +1647,10 @@ html.standalone main{
   .strength-summary-metrics b{font-size:10.5px}
   .strength-next strong{font-size:12.5px}
   .strength-next p{font-size:9.7px}
+  .strength-session-progress{margin:12px 0 10px;padding:10px}
+  .strength-progress-head strong{font-size:12px}
+  .strength-progress-foot{font-size:8px;gap:5px}
+  .strength-progress-track{gap:3px;height:8px}
   .strength-session-cue{grid-template-columns:1fr;gap:8px;padding:10px}
   .strength-session-cue button{width:100%;min-height:42px}
 }
