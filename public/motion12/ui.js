@@ -265,6 +265,19 @@ function lucideTrophyMarkup(className='session-trophy-icon'){
     '<path d="M6 9H4.5a1 1 0 0 1 0-5H6"/>'+
   '</svg>';
 }
+function strengthWorkFullyComplete(date,day){
+  if(![1,3,5].includes(day))return false;
+  const work=program[day]?.work||[];
+  return work.length>0&&work.every((_,i)=>!!logs[date+'-'+day+'-'+i]?.done);
+}
+function reconcileStrengthSessionCompletion(date,day){
+  if(!strengthWorkFullyComplete(date,day))return false;
+  const key=date+'-'+day;
+  if(logs[key]?.completed)return true;
+  logs[key]={...(logs[key]||{}),completed:true,completedAt:logs[key]?.completedAt||new Date().toISOString(),source:'all-strength-work-complete'};
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  return true;
+}
 function renderCompactHome(d,w,p,fat,cal,strip){
   const date=todayISO(),tot=intakeTotals(d,date),plan=mealPlan(d);
   const remaining=tot?.remaining;
@@ -314,7 +327,8 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
     </div>`;
 }
-function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets(),sessionComplete=completedOn(todayISO(),d);const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets(),sessionComplete=completedOn(todayISO(),d);const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);reconcileStrengthSessionCompletion(ds,dd);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+ reconcileStrengthSessionCompletion(todayISO(),d);
  document.getElementById('homePage').classList.remove('compact-active');
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
@@ -1048,6 +1062,7 @@ function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true
 
   refreshStrengthFlowById(currentId);
   refreshStrengthSessionProgress(pos.day,pos.date);
+  reconcileStrengthSessionCompletion(pos.date,pos.day);
   if(syncInline){
     inlineTimer={...inlineTimer,running:false,remaining:0,endAt:0,phase:'complete',finalRest:false};
     saveInlineTimer();
