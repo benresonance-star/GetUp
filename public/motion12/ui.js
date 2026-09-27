@@ -1607,7 +1607,7 @@ updateHomeModeToggle();
 function updateDataStoreStatus(){
   const el=document.getElementById('dataStoreStatus');
   if(!el||!window.Motion12Persistence)return;
-  const s=Motion12Persistence.status();
+  const s=window.Motion12Persistence.status();
   el.className='data-store-status '+(s.valid?(s.readOnly?'readonly':'ok'):'error');
   el.textContent=s.valid
     ?(s.readOnly
@@ -1617,7 +1617,7 @@ function updateDataStoreStatus(){
 }
 document.getElementById('exportDataBtn').onclick=async()=>{
   try{
-    await Motion12Persistence.downloadBackup();
+    await window.Motion12Persistence.downloadBackup();
     updateDataStoreStatus();
   }catch(e){
     const el=document.getElementById('dataStoreStatus');
