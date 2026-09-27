@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r34-20260928" />
+  <meta name="motion12-build" content="canonical-r35-20260928" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -328,7 +328,7 @@
     var refreshButton=document.getElementById('appUpdateButton');
     var currentBuild=document.querySelector('meta[name="motion12-build"]')?.content||'unknown';
     var UPDATE_CHECK_KEY='m12.shell.lastUpdateCheck';
-    var UPDATE_CHECK_INTERVAL=6*60*60*1000;
+    var UPDATE_CHECK_INTERVAL=5*60*1000;
 
     function hideUpdate(){
       if(banner)banner.hidden=true;
