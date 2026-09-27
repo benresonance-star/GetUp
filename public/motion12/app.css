@@ -1182,61 +1182,31 @@ body.motion12-readonly .settings-overlay select{
   }
 }
 
-/* Workout-integrated dial timer + progress */
-.workout-session-section{position:relative}
-.workout-runtime-shell{
-  position:relative;
-  margin:0 0 14px;
+/* Flat workout flow: progress → full dial → exercises */
+.workout-progress-block{
+  margin:4px 0 10px;
 }
-.workout-dial-runtime{
-  display:grid;
-  gap:10px;
-}
-.workout-dial-runtime .strength-session-progress,
-.workout-dial-runtime .timer-session-progress{
+.workout-progress-block .strength-session-progress,
+.workout-progress-block .timer-session-progress{
   position:relative;
   top:auto;
   z-index:1;
   margin:0;
 }
-.session-smart-timer{
+.workout-timer-block{
+  margin:0 0 18px;
+}
+.workout-primary-timer{
   margin:0;
 }
-.session-timer-options{
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:var(--surface);
-  padding:0 11px 10px;
+.workout-exercises-section{
+  margin-top:0;
 }
-.session-timer-options>summary{
-  cursor:pointer;
-  padding:11px 0 2px;
-  color:var(--muted);
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  list-style:none;
-}
-.session-timer-options>summary::-webkit-details-marker{display:none}
-.session-timer-options>summary:after{
-  content:"+";
-  float:right;
-  color:var(--volt);
-  font-size:16px;
-}
-.session-timer-options[open]>summary:after{content:"−"}
-.session-timer-tools{
-  margin:0;
-  padding:0 0 2px;
-}
-.session-timer-tools .timer-mode-tabs{margin-top:10px}
-.session-timer-tools .timer-exercise-section{margin-top:10px}
-
 @media(max-width:390px){
-  .workout-runtime-shell{margin-bottom:12px}
-  .session-smart-timer{padding:15px}
-  .session-smart-timer .timer-ring{margin:14px auto}
+  .workout-progress-block{margin-top:2px;margin-bottom:8px}
+  .workout-timer-block{margin-bottom:16px}
+  .workout-primary-timer{padding:15px}
+  .workout-primary-timer .timer-ring{margin:14px auto}
 }
 
 /* Smart training timer */
