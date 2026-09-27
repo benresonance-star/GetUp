@@ -53,6 +53,7 @@ const defaultSmartTimer={
   totalSets:0,
   restSeconds:0,
   target:'',
+  finalRest:false,
   dayKey:''
 };
 let smartTimer={...defaultSmartTimer,...(motion12PersistedView.smartTimer||{})};
@@ -70,7 +71,8 @@ const defaultInlineTimer={
   endAt:0,
   sets:0,
   setIndex:0,
-  target:''
+  target:'',
+  finalRest:false
 };
 let inlineTimer={...defaultInlineTimer,...(motion12PersistedView.inlineTimer||{})};
 
