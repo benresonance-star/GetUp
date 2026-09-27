@@ -206,6 +206,43 @@ export interface ValidationResult<T> {
   issues: ValidationIssue[];
 }
 
+export interface Motion12AppStateV1 {
+  version: 1;
+
+  /**
+   * Compatibility-only application preferences that are not part of
+   * durable training history (nutrition portions, display preferences, etc.).
+   * Persisted in IndexedDB, never localStorage after migration.
+   */
+  compatSettings: Record<string, unknown>;
+
+  /**
+   * Non-training checklist/log entries such as meal completion.
+   */
+  miscLogs: Record<string, unknown>;
+
+  /**
+   * Current measurement form projection. Historical measurements remain
+   * append-only in Motion12DataV1.measurements.
+   */
+  measurementsCurrent: Record<string, unknown>;
+
+  /**
+   * Runtime state is persisted in IndexedDB so an active timer can recover
+   * after a reload, but it is not part of the training-history schema.
+   */
+  smartTimer: Record<string, unknown> | null;
+  inlineTimer: Record<string, unknown> | null;
+}
+
+export interface Motion12BackupV1 {
+  format: "motion12-backup";
+  backupVersion: 1;
+  exportedAt: ISODateTime;
+  data: Motion12DataV1;
+  appState: Motion12AppStateV1;
+}
+
 export interface Motion12Repository {
   load(): Promise<Motion12DataV1>;
   save(data: Motion12DataV1): Promise<void>;
@@ -215,6 +252,18 @@ export interface Motion12Repository {
   appendMeasurement(measurement: MeasurementRecordV1): Promise<void>;
   exportBackup(): Promise<string>;
   importBackup(json: string): Promise<ValidationResult<Motion12DataV1>>;
+}
+
+/**
+ * Production implementation uses IndexedDB database "motion12".
+ * localStorage is read only during the one-time bootstrap migration.
+ */
+export interface IndexedDBMotion12Repository extends Motion12Repository {
+  loadAppState(): Promise<Motion12AppStateV1 | null>;
+  saveState(
+    data: Motion12DataV1,
+    appState: Motion12AppStateV1
+  ): Promise<void>;
 }
 
 export const VALID_SESSION_TRANSITIONS = {
