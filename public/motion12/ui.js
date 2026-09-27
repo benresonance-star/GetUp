@@ -924,7 +924,7 @@ function openDay(day,date=null){
  const key=`${date}-${day}`;
  document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
- <div><section class="section session-runtime-section" id="sessionRuntimeSection"><div class="section-head"><h2>Session</h2><small>progress + timer</small></div><div id="sessionTimerMount"></div></section>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
+ <div>${prepHtml}<section class="section workout-session-section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div><div class="workout-runtime-shell" id="sessionRuntimeSection"><div id="sessionTimerMount"></div></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  ${supportHtml}
  <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  if([1,3,5].includes(day)){
@@ -968,8 +968,16 @@ function setActiveSessionTimerContext(day,date,w){
 function timerContextDay(){return Number.isInteger(activeSessionTimerContext?.day)?activeSessionTimerContext.day:programDay()}
 function timerContextDate(){return activeSessionTimerContext?.date||todayISO()}
 function timerContextWeek(){return Number(activeSessionTimerContext?.week)||weekNo()}
+function toggleSessionTimerDetails(forceOpen=null){
+  const details=document.getElementById('sessionTimerDetails');
+  if(!details)return;
+  const next=forceOpen===null?!details.open:!!forceOpen;
+  details.open=next;
+  const toggle=document.getElementById('sessionRuntimeExpand');
+  if(toggle)toggle.setAttribute('aria-expanded',String(next));
+}
 function scrollToSessionRuntime(){
-  document.getElementById('sessionRuntimeSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+  toggleSessionTimerDetails(true);
 }
 function conditioningCircuitPlan(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
@@ -1536,6 +1544,7 @@ function timerTopRightMeta(vm){
 function renderTimerPage(){
   const mount=document.getElementById('sessionTimerMount');
   if(!mount)return;
+  const wasOpen=!!document.getElementById('sessionTimerDetails')?.open;
   timerConfigure(smartTimer.mode||'session',false);
   const vm=timerViewModel(),day=timerContextDay(),date=timerContextDate();
   const presets=vm.kind==='rest'
@@ -1545,22 +1554,31 @@ function renderTimerPage(){
     ?strengthSessionProgressMarkup(day,date)
     :timerSessionProgressMarkup(vm);
   mount.innerHTML=
-    '<div class="session-runtime">'+
+    '<div class="session-runtime persistent-session-runtime">'+
       progress+
-      '<section class="smart-timer-card session-smart-timer">'+
-        '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
-        '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
-        '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
-        presets+
-      '</section>'+
-      '<details class="session-timer-tools">'+
-        '<summary>Timer options</summary>'+
-        '<div class="timer-mode-tabs">'+
-          '<button class="'+(smartTimer.mode==='session'?'active':'')+'" onclick="timerSetMode(\'session\')">Session</button>'+
-          '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
-          '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
+      '<div class="session-runtime-mini">'+
+        '<div class="session-runtime-mini-copy"><span id="sessionRuntimePhase">'+vm.label+'</span><b id="sessionRuntimeClock">'+(vm.clockText||timerFormat(vm.sec))+'</b><small id="sessionRuntimeMeta">'+vm.meta+'</small></div>'+
+        '<div class="session-runtime-mini-actions">'+
+          '<button type="button" class="session-runtime-primary" id="sessionRuntimePrimary" onclick="timerStartPause()">'+timerPrimaryLabel(vm)+'</button>'+
+          '<button type="button" class="session-runtime-expand" id="sessionRuntimeExpand" aria-expanded="'+String(wasOpen)+'" onclick="toggleSessionTimerDetails()">Timer <b>⌄</b></button>'+
         '</div>'+
-        exercisePresetMarkup()+
+      '</div>'+
+      '<details class="session-runtime-details" id="sessionTimerDetails" '+(wasOpen?'open':'')+'>'+
+        '<summary>Full timer</summary>'+
+        '<section class="smart-timer-card session-smart-timer">'+
+          '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
+          '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+          '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
+          presets+
+        '</section>'+
+        '<div class="session-timer-tools">'+
+          '<div class="timer-mode-tabs">'+
+            '<button class="'+(smartTimer.mode==='session'?'active':'')+'" onclick="timerSetMode(\'session\')">Session</button>'+
+            '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
+            '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
+          '</div>'+
+          exercisePresetMarkup()+
+        '</div>'+
       '</details>'+
     '</div>';
   timerEnsureTick();
@@ -1589,6 +1607,10 @@ function updateSmartTimerDisplay(){
     ring.style.setProperty('--timer-major-gap-angle',vm.majorGapAngle+'deg');
   }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
+  const runtimeClock=document.getElementById('sessionRuntimeClock');if(runtimeClock)runtimeClock.textContent=vm.clockText||timerFormat(vm.sec);
+  const runtimePhase=document.getElementById('sessionRuntimePhase');if(runtimePhase)runtimePhase.textContent=vm.label;
+  const runtimeMeta=document.getElementById('sessionRuntimeMeta');if(runtimeMeta)runtimeMeta.textContent=vm.meta;
+  const runtimePrimary=document.getElementById('sessionRuntimePrimary');if(runtimePrimary)runtimePrimary.textContent=timerPrimaryLabel(vm);
   updateTimerSessionProgress(vm);
   if([1,3,5].includes(timerContextDay()))refreshStrengthSessionProgress(timerContextDay(),timerContextDate());
 }
