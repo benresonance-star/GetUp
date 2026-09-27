@@ -1060,9 +1060,9 @@ function strengthSetFlowMarkup(id,name,target){
     const future=!complete&&!active;
     return '<div class="strength-set-row '+(complete?'logged ':'')+(active?'active ':'')+(future?'future':'')+'">'+
       '<div class="strength-set-number"><span>SET</span><b>'+(i+1)+'</b>'+(complete?'<i>✓</i>':'')+'</div>'+
-      '<label><span>Load</span><input type="text" inputmode="'+state.loadInputMode+'" autocomplete="off" value="'+(set.load??'')+'" placeholder="'+state.loadPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
-      '<label><span>Reps</span><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="'+state.repsPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
-      '<label><span>Reps in reserve</span><input inputmode="numeric" type="number" min="0" max="5" step="1" value="'+(set.rir??'')+'" placeholder="RIR" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
+      '<label aria-label="Load"><input type="text" inputmode="'+state.loadInputMode+'" autocomplete="off" value="'+(set.load??'')+'" placeholder="'+state.loadPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
+      '<label aria-label="Reps"><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="'+state.repsPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
+      '<label aria-label="Reps in reserve"><input inputmode="numeric" type="number" min="0" max="5" step="1" value="'+(set.rir??'')+'" placeholder="RIR" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
     '</div>';
   }).join('');
   let actions='';
@@ -1076,6 +1076,7 @@ function strengthSetFlowMarkup(id,name,target){
   }
   return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
+    '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>Reps</span><span>Reps in reserve</span></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
     completionSummary+
     sessionCue+
