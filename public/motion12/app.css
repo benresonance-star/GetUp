@@ -1209,6 +1209,233 @@ body.motion12-readonly .settings-overlay select{
   .workout-primary-timer .timer-ring{margin:14px auto}
 }
 
+/* Compact workout sessions — same Compact toggle as Home */
+#dayPage.compact-active .day-page-wrap{
+  display:block;
+}
+#dayPage.compact-active .sticky-col{
+  position:relative;
+  top:auto;
+  height:auto;
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  margin:0 0 8px;
+}
+#dayPage.compact-active .sticky-col .back{
+  flex:0 0 auto;
+  padding:7px 0;
+  font-size:10px;
+}
+#dayPage.compact-active .sticky-col .page-title{
+  flex:1;
+  min-width:0;
+  padding:0;
+}
+#dayPage.compact-active .sticky-col .page-title .eyebrow{
+  font-size:8px;
+}
+#dayPage.compact-active .sticky-col .page-title h1{
+  margin:3px 0 0;
+  font-size:24px;
+  line-height:1;
+}
+#dayPage.compact-active .sticky-col .page-title p,
+#dayPage.compact-active .sticky-col .session-summary,
+#dayPage.compact-active .sticky-col .accent,
+#dayPage.compact-active .prep-section,
+#dayPage.compact-active .support-section,
+#dayPage.compact-active #mobilitySection{
+  display:none;
+}
+
+#dayPage.compact-active .workout-progress-block{
+  margin:0 0 6px;
+}
+#dayPage.compact-active .timer-session-progress,
+#dayPage.compact-active .strength-session-progress{
+  padding:8px 9px 7px;
+  border-radius:13px;
+}
+#dayPage.compact-active .timer-progress-head,
+#dayPage.compact-active .strength-progress-head{
+  margin-bottom:6px;
+}
+#dayPage.compact-active .timer-progress-head strong,
+#dayPage.compact-active .strength-progress-head strong{
+  font-size:12px;
+}
+#dayPage.compact-active .timer-progress-foot,
+#dayPage.compact-active .strength-progress-foot{
+  display:none;
+}
+
+#dayPage.compact-active .workout-timer-block{
+  margin:0 0 8px;
+}
+#dayPage.compact-active .workout-primary-timer{
+  padding:10px 12px 11px;
+  border-radius:17px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-context span,
+#dayPage.compact-active .workout-primary-timer .timer-context b{
+  font-size:9px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring{
+  width:min(158px,43vw);
+  margin:8px auto 9px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring:before{
+  inset:8px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring strong{
+  font-size:37px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
+  max-width:118px;
+  font-size:9px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase.long{
+  max-width:122px;
+  font-size:8px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring small{
+  font-size:9px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next{
+  margin-top:1px;
+  padding:5px 8px;
+  max-width:132px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-label{
+  font-size:7px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-stage{
+  font-size:9px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls{
+  gap:6px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+  min-height:38px;
+  padding:8px 10px;
+  font-size:10px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-presets{
+  margin-top:7px;
+}
+
+#dayPage.compact-active .workout-exercises-section{
+  margin-top:0;
+}
+#dayPage.compact-active .workout-exercises-section>.section-head{
+  display:none;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current)>:not(.ex-top){
+  display:none !important;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .num{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:10px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .check{
+  width:28px;
+  height:28px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .ex-name h3{
+  margin:0 0 1px;
+  font-size:13px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .ex-name p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise .video-link{
+  display:none;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current{
+  padding:11px;
+  border-color:rgba(255,77,46,.55);
+  background:linear-gradient(145deg,rgba(255,77,46,.06),var(--surface) 42%);
+  box-shadow:inset 3px 0 0 rgba(255,77,46,.78);
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .ex-name h3{
+  font-size:15px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current>.tip,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current>.load-rule,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current>.inline-ex-timer{
+  display:none !important;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .inputs{
+  margin-top:9px;
+  gap:5px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .field label{
+  font-size:7px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .field input{
+  min-height:36px;
+  padding:7px 6px;
+}
+
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-flow{
+  margin:8px 0 0;
+  padding:8px;
+  border-radius:12px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-flow-status{
+  margin-bottom:7px;
+  padding:8px 9px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-flow-status strong{
+  font-size:18px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row.logged:not(.active),
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row.future{
+  display:none;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row{
+  grid-template-columns:34px repeat(3,minmax(0,1fr));
+  gap:5px;
+  padding:6px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row input{
+  height:35px;
+  padding:6px 5px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row label>span{
+  height:auto;
+  margin-bottom:3px;
+  font-size:7px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-session-cue,
+#dayPage.compact-active .strength-session-slice.compact-current .strength-completion-summary{
+  display:none;
+}
+
+#dayPage.compact-active .complete-session{
+  margin-top:7px;
+  padding:12px;
+  border-radius:14px;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .sticky-col{margin-bottom:6px}
+  #dayPage.compact-active .sticky-col .page-title h1{font-size:21px}
+  #dayPage.compact-active .workout-primary-timer .timer-ring{
+    width:min(146px,42vw);
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring strong{font-size:34px}
+}
+
 /* Smart training timer */
 .session-timer-link{
   width:100%;
