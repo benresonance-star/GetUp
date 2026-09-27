@@ -2,8 +2,8 @@
    User data is NOT stored here. Training/settings data remains in IndexedDB "motion12". */
 
 const CACHE_PREFIX = 'motion12-shell-';
-const BUILD_ID = 'canonical-r23-20260927';
-const CACHE_VERSION = '2026-09-27-r23';
+const BUILD_ID = 'canonical-r24-20260928';
+const CACHE_VERSION = '2026-09-28-r24';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
 const APP_SHELL = [
