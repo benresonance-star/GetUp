@@ -7,7 +7,7 @@ function updateHomeModeToggle(){
 }
 function toggleHomeMode(){
   settings.homeMode=settings.homeMode==='compact'?'full':'compact';
-  localStorage.setItem('motion12.settings',JSON.stringify(settings));
+  motion12SetItem('motion12.settings',JSON.stringify(settings));
   updateHomeModeToggle();
   if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
 }
@@ -69,7 +69,7 @@ function toggleMeal(date,id){
   if(!meal)return;
   const key=mealKey(date,id),current=mealDone(date,meal);
   logs[key]={...(logs[key]||{}),done:!current};
-  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
   const day=new Date(date+'T00:00:00').getDay();
   document.querySelectorAll('[data-meal-key="'+key+'"]').forEach(el=>{
     el.classList.toggle('done',!current);
@@ -249,7 +249,7 @@ function loadGuideMarkup(guide){
     .replace(/REDUCE one bell/g,'<b>Reduce one bell</b>');
   return '<div class="tip load-rule"><span class="load-rule-label">Loading</span><p>'+html+'</p></div>';
 }
-function saveInlineTimer(){localStorage.setItem('motion12.inlineTimer',JSON.stringify(inlineTimer))}
+function saveInlineTimer(){motion12SetItem('motion12.inlineTimer',JSON.stringify(inlineTimer))}
 function inlineTimerSeconds(){
   return inlineTimer.running?Math.max(0,Math.ceil((inlineTimer.endAt-Date.now())/1000)):Math.max(0,inlineTimer.remaining||0);
 }
@@ -562,7 +562,7 @@ function saveStrengthSetField(id,setIndex,key,value){
   entries[setIndex]=entries[setIndex]||{};
   entries[setIndex][key]=value;
   logs[id].sets=entries;
-  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
   const flow=document.getElementById('strength-flow-'+id);
   if(flow)flow.classList.remove('needs-input');
   const msg=document.getElementById('strength-flow-message-'+id);
@@ -870,11 +870,11 @@ function strengthSetComplete(id,encodedName,encodedTarget){
   entries[idx]=set;
   if(idx+1<timer.sets&&!entries[idx+1]?.load)entries[idx+1]={...(entries[idx+1]||{}),load:set.load};
   logs[id].sets=entries;
-  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
   inlineStrengthSetComplete();
   if(inlineTimer.phase==='complete'){
     logs[id].done=true;
-    localStorage.setItem('motion12.logs',JSON.stringify(logs));
+    motion12SetItem('motion12.logs',JSON.stringify(logs));
     document.getElementById('ex-'+id)?.classList.add('complete');
     const next=strengthNextExercise(id);
     document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
@@ -936,7 +936,7 @@ function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>doc
 function toggleExercise(id){
   logs[id]=logs[id]||{};
   logs[id].done=!logs[id].done;
-  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
   document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done);
   const pos=strengthSessionPosition(id);
   if(pos&&[1,3,5].includes(pos.day)){
@@ -947,15 +947,15 @@ function toggleExercise(id){
     refreshStrengthSessionProgress(pos.day,pos.date);
   }
 }
-function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;localStorage.setItem('motion12.logs',JSON.stringify(logs))}
-function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;localStorage.setItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
+function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;motion12SetItem('motion12.logs',JSON.stringify(logs))}
+function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;motion12SetItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
 function renderProgress(){
   const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
   const p=protein(),fat=fatLossTargets(),cal=calorieTargets(),ps=programProgressStats();
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
   document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
-function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;localStorage.setItem('motion12.settings',JSON.stringify(settings))}localStorage.setItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
+function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;motion12SetItem('motion12.settings',JSON.stringify(settings))}motion12SetItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
 if(inlineTimer.activeId)inlineTimerEnsureTick();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
 function conditioningCircuitPlan(day,w){
@@ -1096,7 +1096,7 @@ function exercisePresetMarkup(){
   '</div></section>';
 }
 let timerPhaseTransitionUntil=0;
-function saveSmartTimer(){localStorage.setItem('motion12.timer',JSON.stringify(smartTimer))}
+function saveSmartTimer(){motion12SetItem('motion12.timer',JSON.stringify(smartTimer))}
 function timerFormat(sec){
   sec=Math.max(0,Math.floor(sec||0));
   const m=Math.floor(sec/60),s=sec%60;
@@ -1581,6 +1581,25 @@ document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.getElementById('homeModeToggle').onclick=toggleHomeMode;
 updateHomeModeToggle();
+function updateDataStoreStatus(){
+  const el=document.getElementById('dataStoreStatus');
+  if(!el||!window.Motion12Persistence)return;
+  const s=Motion12Persistence.status();
+  el.className='data-store-status '+(s.valid?'ok':'error');
+  el.textContent=s.valid
+    ?'Schema v'+s.schemaVersion+' · '+s.sessions+' sessions · validated · rollback backup retained'
+    :'Data store needs attention · '+(s.issues?.filter(x=>x.severity==='error').length||0)+' validation errors';
+}
+document.getElementById('exportDataBtn').onclick=()=>{
+  try{
+    Motion12Persistence.syncFromLegacy();
+    Motion12Persistence.downloadBackup();
+    updateDataStoreStatus();
+  }catch(e){
+    const el=document.getElementById('dataStoreStatus');
+    if(el){el.className='data-store-status error';el.textContent='Backup failed: '+String(e.message||e)}
+  }
+};
 document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('startDateInput').value=settings.startDate;
   document.getElementById('bodyweightInput').value=settings.bodyweight;
@@ -1604,6 +1623,7 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('oilInput').value=p.oil;
   document.getElementById('powderInput').value=p.powder;
   document.getElementById('shakeMilkInput').value=p.shakeMilk;
+  updateDataStoreStatus();
   document.getElementById('settingsOverlay').classList.add('show');
 };
 document.getElementById('cancelSettings').onclick=()=>document.getElementById('settingsOverlay').classList.remove('show');
@@ -1635,8 +1655,8 @@ document.getElementById('saveSettings').onclick=()=>{
       shakeMilk:portionValue('shakeMilkInput',old.shakeMilk)
     }
   };
-  if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);localStorage.setItem('motion12.measurements',JSON.stringify(measurements))}
-  localStorage.setItem('motion12.settings',JSON.stringify(settings));
+  if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);motion12SetItem('motion12.measurements',JSON.stringify(measurements))}
+  motion12SetItem('motion12.settings',JSON.stringify(settings));
   document.getElementById('settingsOverlay').classList.remove('show');
   renderHome();renderDays();renderProgress();
 };
