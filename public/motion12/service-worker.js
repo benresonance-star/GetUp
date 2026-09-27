@@ -2,7 +2,8 @@
    User data is NOT stored here. Training/settings data remains in IndexedDB "motion12". */
 
 const CACHE_PREFIX = 'motion12-shell-';
-const CACHE_VERSION = '2026-09-27-r22';
+const BUILD_ID = 'canonical-r23-20260927';
+const CACHE_VERSION = '2026-09-27-r23';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
 const APP_SHELL = [
@@ -23,7 +24,9 @@ function shellUrl(url) {
 
 async function fetchFresh(url) {
   const absolute = shellUrl(url);
-  const response = await fetch(new Request(absolute, { cache: 'no-store' }));
+  const fetchUrl = new URL(absolute);
+  fetchUrl.searchParams.set('m12-build', BUILD_ID);
+  const response = await fetch(new Request(fetchUrl.href, { cache: 'reload' }));
   if (!response || !response.ok) {
     throw new Error('MOTION12 shell fetch failed: ' + url);
   }
@@ -55,8 +58,15 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (!event.data) return;
+
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
+  }
+
+  if (event.data.type === 'GET_BUILD' && event.ports && event.ports[0]) {
+    event.ports[0].postMessage({ build: BUILD_ID, cacheVersion: CACHE_VERSION });
   }
 });
 
