@@ -1398,6 +1398,127 @@ function timerControls(vm){
   if(vm.kind==='stopwatch')return primary+'<button onclick="timerReset()">Reset</button>';
   return primary+'<button onclick="timerAdjust(-15)">−15 sec</button><button onclick="timerAdjust(15)">+15 sec</button><button onclick="timerReset()">Reset</button>';
 }
+function timerIsRecoveryPhase(label){
+  const x=String(label||'').toUpperCase();
+  return x==='RECOVER'||x==='ROUND REST';
+}
+function timerSessionProgressData(vm){
+  const day=programDay(),w=weekNo(),p=program[day];
+  if(!p)return null;
+
+  if([1,3,5].includes(day)){
+    const date=dateForProgramDay(day),work=p.work||[];
+    const completed=work.map((_,i)=>!!logs[exId(day,i,date)]?.done);
+    let currentIndex=-1;
+    if(smartTimer.exerciseName){
+      const matched=work.findIndex(x=>x[0]===smartTimer.exerciseName);
+      if(matched>=0&&!completed[matched])currentIndex=matched;
+    }
+    if(currentIndex<0)currentIndex=completed.findIndex(done=>!done);
+    const completedCount=completed.filter(Boolean).length;
+    const remainingCount=Math.max(0,work.length-completedCount-(currentIndex>=0?1:0));
+    return {
+      type:'strength',
+      total:work.length,
+      completedCount,
+      remainingCount,
+      currentIndex,
+      segments:work.map((x,i)=>({
+        name:x[0],
+        state:completed[i]?'complete':i===currentIndex?'current':'remaining'
+      })),
+      eyebrow:'Strength session',
+      currentName:currentIndex>=0?work[currentIndex][0]:'Strength work complete',
+      currentDetail:currentIndex>=0?work[currentIndex][1]:'All '+work.length+' exercises complete',
+      countText:completedCount+' / '+work.length
+    };
+  }
+
+  const plan=timerSessionPlan(day,w);
+  if(plan?.kind==='intervals'&&Array.isArray(plan.phases)){
+    const workIndices=[];
+    plan.phases.forEach((phase,i)=>{
+      if(!timerIsRecoveryPhase(phase.label))workIndices.push(i);
+    });
+    if(!workIndices.length)return null;
+
+    const phaseIndex=smartTimer.kind==='intervals'?smartTimer.phaseIndex:0;
+    const completeSession=phaseIndex>=plan.phases.length;
+    const completedCount=completeSession?workIndices.length:workIndices.filter(i=>i<phaseIndex).length;
+    let currentOrdinal=-1;
+    if(!completeSession){
+      const exact=workIndices.indexOf(phaseIndex);
+      if(exact>=0)currentOrdinal=exact;
+      else currentOrdinal=workIndices.findIndex(i=>i>phaseIndex);
+    }
+    const currentPhase=!completeSession?plan.phases[Math.min(phaseIndex,plan.phases.length-1)]:null;
+    const nextWork=currentOrdinal>=0?plan.phases[workIndices[currentOrdinal]]:null;
+    const remainingCount=Math.max(0,workIndices.length-completedCount-(currentOrdinal>=0?1:0));
+    const segments=workIndices.map((idx,ordinal)=>({
+      name:plan.phases[idx].label,
+      state:idx<phaseIndex?'complete':ordinal===currentOrdinal?'current':'remaining'
+    }));
+
+    let currentName='Session complete',currentDetail='All '+workIndices.length+' work stations complete';
+    if(currentPhase){
+      if(timerIsRecoveryPhase(currentPhase.label)){
+        currentName=timerPhaseReadable(currentPhase.label);
+        currentDetail=nextWork?'Next · '+timerPhaseReadable(nextWork.label):'Final recovery';
+      }else{
+        currentName=timerPhaseReadable(currentPhase.label);
+        currentDetail='Round '+currentPhase.round+' of '+plan.rounds;
+      }
+    }
+    return {
+      type:plan.circuit?'circuit':'intervals',
+      total:workIndices.length,
+      completedCount,
+      remainingCount,
+      currentIndex:currentOrdinal,
+      segments,
+      eyebrow:plan.circuit?'Circuit progress':'Interval progress',
+      currentName,
+      currentDetail,
+      countText:plan.circuit
+        ?(currentPhase?'Round '+currentPhase.round+' / '+plan.rounds:plan.rounds+' / '+plan.rounds)
+        :completedCount+' / '+workIndices.length
+    };
+  }
+
+  if(plan?.kind==='stopwatch'){
+    return {
+      type:'continuous',
+      total:1,completedCount:0,remainingCount:0,currentIndex:0,
+      segments:[{name:plan.title,state:'current'}],
+      eyebrow:'Session progress',
+      currentName:plan.title,
+      currentDetail:'Continuous session',
+      countText:'In progress'
+    };
+  }
+  return null;
+}
+function timerSessionProgressMarkup(vm){
+  const s=timerSessionProgressData(vm);
+  if(!s)return '';
+  const segments=s.segments.map(x=>
+    '<span class="timer-progress-segment '+x.state+'" title="'+x.name+'" aria-label="'+x.name+' · '+x.state+'"></span>'
+  ).join('');
+  const footer=s.type==='continuous'
+    ?'<span class="current">Continuous session</span>'
+    :'<span class="done">'+s.completedCount+' complete</span><span class="current">'+s.currentDetail+'</span><span class="remain">'+s.remainingCount+' remaining</span>';
+  return '<div class="timer-session-progress" id="timerSessionProgress">'+
+    '<div class="timer-progress-head"><div><span>'+s.eyebrow+'</span><strong>'+s.currentName+'</strong></div><b>'+s.countText+'</b></div>'+
+    '<div class="timer-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+s.completedCount+' of '+s.total+' session steps complete">'+segments+'</div>'+
+    '<div class="timer-progress-foot '+(s.type==='continuous'?'continuous':'')+'">'+footer+'</div>'+
+  '</div>';
+}
+function updateTimerSessionProgress(vm){
+  const current=document.getElementById('timerSessionProgress');
+  if(!current)return;
+  const html=timerSessionProgressMarkup(vm);
+  if(html)current.outerHTML=html;
+}
 function renderTimerPage(){
   timerConfigure(smartTimer.mode||'session',false);
   const vm=timerViewModel(),p=program[programDay()];
@@ -1409,6 +1530,7 @@ function renderTimerPage(){
       '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
       '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
     '</div>'+
+    timerSessionProgressMarkup(vm)+
     '<section class="smart-timer-card">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
       '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
@@ -1442,6 +1564,7 @@ function updateSmartTimerDisplay(){
     ring.style.setProperty('--timer-major-gap-angle',vm.majorGapAngle+'deg');
   }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
+  updateTimerSessionProgress(vm);
 }
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
