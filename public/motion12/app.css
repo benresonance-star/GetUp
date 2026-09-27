@@ -3950,3 +3950,26 @@ html.standalone .strength-set-columns{
   margin:0 -2px 4px;
   padding:7px 8px 6px;
 }
+
+
+/* ---- canonical-r29: timed strength work controls ---- */
+.strength-set-flow.working .strength-flow-status{
+  border-color:rgba(var(--accent-rgb),.48);
+  background:rgba(var(--accent-rgb),.10);
+}
+.strength-set-flow.working .strength-flow-status span{
+  color:var(--volt);
+}
+.strength-work-timer{
+  border-color:rgba(var(--accent-rgb),.48)!important;
+  color:var(--volt)!important;
+  background:rgba(var(--accent-rgb),.08)!important;
+}
+@media(max-width:390px){
+  .strength-flow-actions{
+    flex-wrap:wrap;
+  }
+  .strength-flow-actions .strength-work-timer{
+    flex:1 1 100%;
+  }
+}
