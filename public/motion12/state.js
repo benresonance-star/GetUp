@@ -2,13 +2,14 @@ const previousDefaultPortionsV1={yogurt:250,berries:200,nuts:25,latteMilk:200,me
 const previousDefaultPortionsV2={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:94,lunchRice:180,dinnerRice:180,veg:225,oil:10,powder:30,shakeMilk:250};
 const defaultPortions={yogurt:250,berries:200,nuts:20,seeds:10,latteMilk:200,meat:66,lunchRice:90,dinnerRice:90,legumes:120,veg:225,oil:11.5,powder:30,shakeMilk:250};
 const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
-const storedSettings=JSON.parse(localStorage.getItem('motion12.settings')||'null')||{};
+const motion12PersistedView=Motion12Persistence.view();
+const storedSettings=motion12PersistedView.settings||{};
 const storedPortions=storedSettings.portions||{};
 function matchesPortionPreset(preset){return Object.keys(preset).every(k=>Number(storedPortions[k])===preset[k])}
 const shouldUpgradePortions=matchesPortionPreset(previousDefaultPortionsV1)||matchesPortionPreset(previousDefaultPortionsV2);
 let settings={...defaultSettings,...storedSettings,portionPresetVersion:4,lunchProtein:storedSettings.lunchProtein||'chicken',dinnerProtein:storedSettings.dinnerProtein||'chicken',portions:shouldUpgradePortions?{...defaultPortions}:{...defaultPortions,...storedPortions}};
-let logs=JSON.parse(localStorage.getItem('motion12.logs')||'{}');
-let measurements=JSON.parse(localStorage.getItem('motion12.measurements')||'{}');
+let logs=motion12PersistedView.logs||{};
+let measurements=motion12PersistedView.measurements||{};
 let timerInt=null;
 const defaultSmartTimer={
   mode:'session',
@@ -29,7 +30,7 @@ const defaultSmartTimer={
   target:'',
   dayKey:''
 };
-let smartTimer={...defaultSmartTimer,...(JSON.parse(localStorage.getItem('motion12.timer')||'null')||{})};
+let smartTimer={...defaultSmartTimer,...(motion12PersistedView.smartTimer||{})};
 let inlineTimerInt=null;
 const defaultInlineTimer={
   activeId:'',
@@ -46,7 +47,7 @@ const defaultInlineTimer={
   setIndex:0,
   target:''
 };
-let inlineTimer={...defaultInlineTimer,...(JSON.parse(localStorage.getItem('motion12.inlineTimer')||'null')||{})};
+let inlineTimer={...defaultInlineTimer,...(motion12PersistedView.inlineTimer||{})};
 
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function getMondayISO(d){const x=new Date(d);const day=x.getDay()||7;x.setDate(x.getDate()-day+1);return iso(x)}
