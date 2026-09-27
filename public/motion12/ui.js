@@ -2231,6 +2231,38 @@ document.getElementById('exportDataBtn').onclick=async()=>{
     if(el){el.className='data-store-status error';el.textContent='Backup failed: '+String(e.message||e)}
   }
 };
+const settingsImportFile=document.getElementById('settingsImportFile');
+document.getElementById('importDataBtn').onclick=()=>{
+  settingsImportFile.value='';
+  settingsImportFile.click();
+};
+settingsImportFile.onchange=async()=>{
+  const file=settingsImportFile.files&&settingsImportFile.files[0];
+  if(!file)return;
+  const el=document.getElementById('dataStoreStatus');
+  if(el){el.className='data-store-status';el.textContent='Validating backup…'}
+  try{
+    const json=await file.text();
+    const result=await window.Motion12Persistence.recoverFromBackup(json);
+    if(!result.valid){
+      const errors=(result.issues||[]).filter(x=>x.severity==='error').slice(0,3).map(x=>x.message).join(' · ');
+      throw new Error(errors||'Backup validation failed');
+    }
+    if(window.motion12ReloadStateFromPersistence)window.motion12ReloadStateFromPersistence();
+    updateDataStoreStatus();
+    updateAppDiagnostics();
+    if(el){
+      el.className='data-store-status '+(result.readOnly?'readonly':'ok');
+      el.textContent=result.readOnly
+        ?'Backup validated and opened read-only because IndexedDB is unavailable.'
+        :'Backup imported successfully · IndexedDB and recovery shadow updated.';
+    }
+  }catch(e){
+    if(el){el.className='data-store-status error';el.textContent='Import failed: '+String(e.message||e)}
+  }finally{
+    settingsImportFile.value='';
+  }
+};
 document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('startDateInput').value=settings.startDate;
   document.getElementById('bodyweightInput').value=settings.bodyweight;
