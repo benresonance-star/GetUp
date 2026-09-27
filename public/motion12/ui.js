@@ -675,6 +675,55 @@ function strengthCompletionSummary(id,name,target,entries){
     previous:previous?.id||''
   };
 }
+function strengthSessionProgressState(day,date){
+  const work=program[day]?.work||[];
+  const completed=work.map((_,i)=>!!logs[exId(day,i,date)]?.done);
+  let currentIndex=-1;
+  const currentEl=document.querySelector('.exercise.session-current');
+  if(currentEl?.dataset?.timerId){
+    const pos=strengthSessionPosition(currentEl.dataset.timerId);
+    if(pos&&pos.day===day&&pos.date===date&&!completed[pos.index])currentIndex=pos.index;
+  }
+  if(currentIndex<0)currentIndex=completed.findIndex(done=>!done);
+  const completedCount=completed.filter(Boolean).length;
+  const remainingCount=Math.max(0,work.length-completedCount-(currentIndex>=0?1:0));
+  return {work,completed,currentIndex,completedCount,remainingCount,total:work.length};
+}
+function strengthSessionProgressMarkup(day,date){
+  if(![1,3,5].includes(day))return '';
+  const s=strengthSessionProgressState(day,date);
+  const segments=s.work.map((x,i)=>{
+    const state=s.completed[i]?'complete':i===s.currentIndex?'current':'remaining';
+    return '<span class="strength-progress-segment '+state+'" title="'+x[0]+'" aria-label="'+x[0]+' · '+state+'"></span>';
+  }).join('');
+  const currentName=s.currentIndex>=0?s.work[s.currentIndex][0]:'Strength work complete';
+  const currentTarget=s.currentIndex>=0?s.work[s.currentIndex][1]:'All '+s.total+' exercises completed';
+  return '<div class="strength-session-progress" id="strengthSessionProgress">'+
+    '<div class="strength-progress-head"><div><span>Session progress</span><strong>'+currentName+'</strong></div><b>'+s.completedCount+' / '+s.total+'</b></div>'+
+    '<div class="strength-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+s.completedCount+' of '+s.total+' strength exercises complete">'+segments+'</div>'+
+    '<div class="strength-progress-foot"><span class="done">'+s.completedCount+' complete</span><span class="current">'+(s.currentIndex>=0?'Current · '+currentTarget:'Complete')+'</span><span class="remain">'+s.remainingCount+' remaining</span></div>'+
+  '</div>';
+}
+function refreshStrengthSessionProgress(day=null,date=null){
+  const existing=document.getElementById('strengthSessionProgress');
+  if(!existing)return;
+  if(day===null||date===null){
+    const current=document.querySelector('.exercise.session-current');
+    if(current?.dataset?.timerId){
+      const pos=strengthSessionPosition(current.dataset.timerId);
+      if(pos){day=pos.day;date=pos.date}
+    }
+  }
+  if(day===null||date===null){
+    const any=document.querySelector('.strength-session-slice[data-timer-id]');
+    if(any?.dataset?.timerId){
+      const pos=strengthSessionPosition(any.dataset.timerId);
+      if(pos){day=pos.day;date=pos.date}
+    }
+  }
+  if(day===null||date===null)return;
+  existing.outerHTML=strengthSessionProgressMarkup(day,date);
+}
 function strengthSessionPosition(id){
   const m=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)$/);
   if(!m)return null;
@@ -716,6 +765,8 @@ function strengthContinueToNext(currentId,nextId){
   const next=document.getElementById('ex-'+nextId);
   if(!next)return;
   next.classList.add('session-current');
+  const pos=strengthSessionPosition(nextId);
+  if(pos)refreshStrengthSessionProgress(pos.day,pos.date);
   next.scrollIntoView({behavior:'smooth',block:'start'});
   setTimeout(()=>{
     const flow=next.querySelector('.strength-set-flow');
@@ -828,6 +879,8 @@ function strengthSetComplete(id,encodedName,encodedTarget){
     const next=strengthNextExercise(id);
     document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
     if(next)document.getElementById('ex-'+next.id)?.classList.add('session-current');
+    const pos=strengthSessionPosition(id);
+    if(pos)refreshStrengthSessionProgress(pos.day,pos.date);
   }
   refreshStrengthFlow();
 }
@@ -864,7 +917,8 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
  const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ const strengthProgressHtml=strengthSessionProgressMarkup(day,date);
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>${strengthProgressHtml}
  <button class="session-timer-link" type="button" onclick="showPage('timerPage')"><div><span class="tag">Smart timer</span><h3>Use today’s prescribed timing</h3><p>Rest, sets or aerobic intervals are configured automatically.</p></div><span class="session-timer-arrow">→</span></button>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
  <div>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
@@ -874,11 +928,25 @@ function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo
    const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
    if(firstIncomplete>=0)document.getElementById('ex-'+exId(day,firstIncomplete,date))?.classList.add('session-current');
+   refreshStrengthSessionProgress(day,date);
  }
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
-function toggleExercise(id){logs[id]=logs[id]||{};logs[id].done=!logs[id].done;localStorage.setItem('motion12.logs',JSON.stringify(logs));document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done)}
+function toggleExercise(id){
+  logs[id]=logs[id]||{};
+  logs[id].done=!logs[id].done;
+  localStorage.setItem('motion12.logs',JSON.stringify(logs));
+  document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done);
+  const pos=strengthSessionPosition(id);
+  if(pos&&[1,3,5].includes(pos.day)){
+    const work=program[pos.day]?.work||[];
+    const firstIncomplete=work.findIndex((_,i)=>!logs[exId(pos.day,i,pos.date)]?.done);
+    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
+    if(firstIncomplete>=0)document.getElementById('ex-'+exId(pos.day,firstIncomplete,pos.date))?.classList.add('session-current');
+    refreshStrengthSessionProgress(pos.day,pos.date);
+  }
+}
 function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;localStorage.setItem('motion12.logs',JSON.stringify(logs))}
 function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;localStorage.setItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
 function renderProgress(){
