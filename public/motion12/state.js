@@ -1,13 +1,38 @@
 const previousDefaultPortionsV1={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:90,lunchRice:275,dinnerRice:275,veg:225,oil:10,powder:30,shakeMilk:250};
 const previousDefaultPortionsV2={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:94,lunchRice:180,dinnerRice:180,veg:225,oil:10,powder:30,shakeMilk:250};
 const defaultPortions={yogurt:250,berries:200,nuts:20,seeds:10,latteMilk:200,meat:66,lunchRice:90,dinnerRice:90,legumes:120,veg:225,oil:11.5,powder:30,shakeMilk:250};
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
+const APP_PALETTES=Object.freeze({
+  ember:{volt:'#ff4d2e',orange:'#ff7a1a',cyan:'#3be7e1',pink:'#ff4fa3',accentRgb:'255,77,46',accent2Rgb:'255,122,26'},
+  ocean:{volt:'#38a6ff',orange:'#20d6c7',cyan:'#69e7ff',pink:'#8f7cff',accentRgb:'56,166,255',accent2Rgb:'32,214,199'},
+  forest:{volt:'#4fd270',orange:'#b4df45',cyan:'#42d9b7',pink:'#efb451',accentRgb:'79,210,112',accent2Rgb:'180,223,69'},
+  violet:{volt:'#8c72ff',orange:'#d45cff',cyan:'#63dcff',pink:'#ff71b3',accentRgb:'140,114,255',accent2Rgb:'212,92,255'},
+  gold:{volt:'#ffb62e',orange:'#ff7a1a',cyan:'#54d9c7',pink:'#ff786e',accentRgb:'255,182,46',accent2Rgb:'255,122,26'},
+  rose:{volt:'#ff5f8f',orange:'#ff8c51',cyan:'#62dce7',pink:'#bc79ff',accentRgb:'255,95,143',accent2Rgb:'255,140,81'}
+});
+const APP_PALETTE_IDS=Object.freeze(Object.keys(APP_PALETTES));
+function normalizeAppPalette(value){return APP_PALETTE_IDS.includes(value)?value:'ember'}
+function applyAppPalette(value){
+  const palette=normalizeAppPalette(value),tokens=APP_PALETTES[palette];
+  const root=document.documentElement;
+  root.dataset.appPalette=palette;
+  root.style.setProperty('--volt',tokens.volt);
+  root.style.setProperty('--orange',tokens.orange);
+  root.style.setProperty('--cyan',tokens.cyan);
+  root.style.setProperty('--pink',tokens.pink);
+  root.style.setProperty('--accent-rgb',tokens.accentRgb);
+  root.style.setProperty('--accent2-rgb',tokens.accent2Rgb);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',tokens.volt);
+  return palette;
+}
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',appPalette:'ember',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
 const motion12PersistedView=window.Motion12Persistence.view();
 const storedSettings=motion12PersistedView.settings||{};
 const storedPortions=storedSettings.portions||{};
 function matchesPortionPreset(preset){return Object.keys(preset).every(k=>Number(storedPortions[k])===preset[k])}
 const shouldUpgradePortions=matchesPortionPreset(previousDefaultPortionsV1)||matchesPortionPreset(previousDefaultPortionsV2);
-let settings={...defaultSettings,...storedSettings,portionPresetVersion:4,lunchProtein:storedSettings.lunchProtein||'chicken',dinnerProtein:storedSettings.dinnerProtein||'chicken',portions:shouldUpgradePortions?{...defaultPortions}:{...defaultPortions,...storedPortions}};
+let settings={...defaultSettings,...storedSettings,appPalette:normalizeAppPalette(storedSettings.appPalette),portionPresetVersion:4,lunchProtein:storedSettings.lunchProtein||'chicken',dinnerProtein:storedSettings.dinnerProtein||'chicken',portions:shouldUpgradePortions?{...defaultPortions}:{...defaultPortions,...storedPortions}};
+applyAppPalette(settings.appPalette);
 let logs=motion12PersistedView.logs||{};
 let measurements=motion12PersistedView.measurements||{};
 let timerInt=null;
@@ -55,6 +80,7 @@ function motion12ReloadStateFromPersistence(){
   settings={
     ...defaultSettings,
     ...nextSettings,
+    appPalette:normalizeAppPalette(nextSettings.appPalette),
     portionPresetVersion:4,
     lunchProtein:nextSettings.lunchProtein||'chicken',
     dinnerProtein:nextSettings.dinnerProtein||'chicken',
@@ -64,6 +90,7 @@ function motion12ReloadStateFromPersistence(){
   measurements=v.measurements||{};
   smartTimer={...defaultSmartTimer,...(v.smartTimer||{})};
   inlineTimer={...defaultInlineTimer,...(v.inlineTimer||{})};
+  applyAppPalette(settings.appPalette);
   try{if(timerInt)clearInterval(timerInt)}catch(_){}
   try{if(inlineTimerInt)clearInterval(inlineTimerInt)}catch(_){}
   timerInt=null;inlineTimerInt=null;
@@ -135,6 +162,158 @@ function proteinPortionGuide(grams){
 }
 function proteinEquivalentsText(){
   return 'Chicken ~'+proteinPortion('chicken')+' g · lean mince ~'+proteinPortion('leanMince')+' g · oily fish ~'+proteinPortion('oilyFish')+' g cooked ≈ 20 g protein each';
+}
+
+/* Five-component lunch/dinner stack.
+   Saved meal swaps live in misc logs so they follow the existing backup/recovery path. */
+const MEAL_STACK_COMPONENTS=Object.freeze(['carb','greens','colour','legumes','protein']);
+function mealStackLibrary(){
+  return {
+    carb:[
+      {id:'brownRice',label:'Brown rice',kcal:123,protein:2.7,carbs:25.6,fat:1.0},
+      {id:'quinoa',label:'Quinoa',kcal:120,protein:4.4,carbs:21.3,fat:1.9},
+      {id:'barley',label:'Pearl barley',kcal:123,protein:2.3,carbs:28.2,fat:.4},
+      {id:'farro',label:'Farro',kcal:125,protein:4.4,carbs:26,fat:1},
+      {id:'wholegrainCouscous',label:'Wholegrain couscous',kcal:112,protein:3.8,carbs:23.2,fat:.2},
+      {id:'sweetPotato',label:'Sweet potato',kcal:90,protein:2,carbs:20.7,fat:.2},
+      {id:'potato',label:'Potato',kcal:87,protein:1.9,carbs:20.1,fat:.1}
+    ],
+    greens:[
+      {id:'spinach',label:'Spinach',kcal:23,protein:2.9,carbs:3.6,fat:.4},
+      {id:'kale',label:'Kale',kcal:35,protein:2.9,carbs:4.4,fat:1.5},
+      {id:'rocket',label:'Rocket',kcal:25,protein:2.6,carbs:3.7,fat:.7},
+      {id:'broccoli',label:'Broccoli',kcal:35,protein:2.4,carbs:7.2,fat:.4},
+      {id:'greenBeans',label:'Green beans',kcal:35,protein:1.9,carbs:7.9,fat:.3},
+      {id:'silverbeet',label:'Silverbeet',kcal:19,protein:1.8,carbs:3.7,fat:.2}
+    ],
+    colour:[
+      {id:'capsicum',label:'Capsicum',kcal:31,protein:1,carbs:6,fat:.3},
+      {id:'tomato',label:'Tomato',kcal:18,protein:.9,carbs:3.9,fat:.2},
+      {id:'carrot',label:'Carrot',kcal:35,protein:.8,carbs:8.2,fat:.2},
+      {id:'pumpkin',label:'Pumpkin',kcal:26,protein:1,carbs:6.5,fat:.1},
+      {id:'beetroot',label:'Beetroot',kcal:44,protein:1.7,carbs:10,fat:.2},
+      {id:'eggplant',label:'Eggplant',kcal:35,protein:.8,carbs:8.7,fat:.2}
+    ],
+    legumes:[
+      {id:'lentils',label:'Lentils',kcal:116,protein:9,carbs:20.1,fat:.4},
+      {id:'chickpeas',label:'Chickpeas',kcal:164,protein:8.9,carbs:27.4,fat:2.6},
+      {id:'cannellini',label:'Cannellini beans',kcal:114,protein:7.6,carbs:20.2,fat:.5},
+      {id:'blackBeans',label:'Black beans',kcal:132,protein:8.9,carbs:23.7,fat:.5},
+      {id:'edamame',label:'Edamame',kcal:121,protein:11.9,carbs:8.9,fat:5.2}
+    ],
+    protein:[
+      {id:'chicken',label:'Chicken breast',kcal:165,protein:31,carbs:0,fat:3.6},
+      {id:'turkey',label:'Turkey breast',kcal:135,protein:29,carbs:0,fat:1.6},
+      {id:'leanBeef',label:'Lean beef / mince',kcal:180,protein:26,carbs:0,fat:8},
+      {id:'leanPork',label:'Lean pork',kcal:170,protein:29,carbs:0,fat:5},
+      {id:'whiteFish',label:'White fish',kcal:105,protein:23,carbs:0,fat:1},
+      {id:'tuna',label:'Tuna',kcal:132,protein:29,carbs:0,fat:1},
+      {id:'salmon',label:'Salmon / oily fish',kcal:206,protein:23,carbs:0,fat:12},
+      {id:'tofu',label:'Firm tofu',kcal:144,protein:17.3,carbs:2.8,fat:8.7},
+      {id:'tempeh',label:'Tempeh',kcal:195,protein:19.9,carbs:7.6,fat:11.4}
+    ]
+  };
+}
+function mealStackFood(component,id){
+  const list=mealStackLibrary()[component]||[];
+  return list.find(x=>x.id===id)||list[0];
+}
+function mealStackConfigKey(date,mealId){return 'mealConfig:'+date+':'+mealId}
+function mealStackDefaultProtein(mealId){
+  const current=mealId==='dinner'?settings.dinnerProtein:settings.lunchProtein;
+  return current==='leanMince'?'leanBeef':current==='oilyFish'?'salmon':'chicken';
+}
+function mealStackDefaultSelection(mealId){
+  return {carb:'brownRice',greens:'spinach',colour:'capsicum',legumes:'lentils',protein:mealStackDefaultProtein(mealId)};
+}
+function mealStackStoredConfig(date,mealId){
+  const raw=logs[mealStackConfigKey(date,mealId)]||{};
+  const defaults=mealStackDefaultSelection(mealId);
+  const selection={...defaults,...(raw.selection||{})};
+  MEAL_STACK_COMPONENTS.forEach(component=>{
+    const list=mealStackLibrary()[component]||[];
+    if(!list.some(x=>x.id===selection[component]))selection[component]=defaults[component];
+  });
+  return {selection,matchTargets:raw.matchTargets!==false};
+}
+function mealStackTarget(mealId){
+  const p=settings.portions;
+  const type=mealId==='dinner'?settings.dinnerProtein:settings.lunchProtein;
+  const proteinChoice=proteinChoiceMacros(type);
+  const riceAmount=mealId==='dinner'?p.dinnerRice:p.lunchRice;
+  return roundMacros(sumMacros(
+    proteinChoice.macros,
+    itemMacros('rice',riceAmount),
+    itemMacros('legumes',p.legumes),
+    itemMacros('veg',p.veg),
+    itemMacros('oil',p.oil)
+  ));
+}
+function mealStackDefaultGrams(mealId,selection){
+  const p=settings.portions;
+  const vegTotal=Math.max(160,Number(p.veg)||225);
+  const greens=round5(vegTotal*.45);
+  const colour=Math.max(40,round5(vegTotal-greens));
+  const proteinFood=mealStackFood('protein',selection.protein);
+  const proteinGrams=round5(Math.max(40,Math.min(280,(20/Math.max(1,proteinFood.protein))*100)));
+  return {
+    carb:Number(mealId==='dinner'?p.dinnerRice:p.lunchRice)||90,
+    greens,
+    colour,
+    legumes:Number(p.legumes)||120,
+    protein:proteinGrams
+  };
+}
+function mealStackMacros(selection,grams){
+  const total={kcal:0,protein:0,carbs:0,fat:0};
+  MEAL_STACK_COMPONENTS.forEach(component=>{
+    const food=mealStackFood(component,selection[component]);
+    const amount=Math.max(0,Number(grams[component])||0)/100;
+    total.kcal+=food.kcal*amount;
+    total.protein+=food.protein*amount;
+    total.carbs+=food.carbs*amount;
+    total.fat+=food.fat*amount;
+  });
+  const oil=itemMacros('oil',settings.portions.oil);
+  return roundMacros(sumMacros(total,oil));
+}
+function mealStackMatchedGrams(mealId,selection,target){
+  const base=mealStackDefaultGrams(mealId,selection);
+  let best={...base},bestScore=Infinity;
+  for(let carb=40;carb<=360;carb+=5){
+    for(let protein=40;protein<=300;protein+=5){
+      const grams={...base,carb,protein};
+      const macros=mealStackMacros(selection,grams);
+      const kcalError=(macros.kcal-target.kcal)/12;
+      const proteinError=(macros.protein-target.protein)/1.5;
+      const portionPenalty=(Math.abs(carb-base.carb)/160+Math.abs(protein-base.protein)/140)*.12;
+      const score=kcalError*kcalError+proteinError*proteinError*1.6+portionPenalty;
+      if(score<bestScore){bestScore=score;best=grams}
+    }
+  }
+  return best;
+}
+function mealStackPreview(mealId,selection,matchTargets=true){
+  const target=mealStackTarget(mealId);
+  const grams=matchTargets?mealStackMatchedGrams(mealId,selection,target):mealStackDefaultGrams(mealId,selection);
+  const macros=mealStackMacros(selection,grams);
+  return {target,selection:{...selection},matchTargets:!!matchTargets,grams,macros};
+}
+function mealStackFor(mealId,date=todayISO()){
+  const cfg=mealStackStoredConfig(date,mealId);
+  return mealStackPreview(mealId,cfg.selection,cfg.matchTargets);
+}
+function mealStackItems(stack){
+  const labels={carb:'Carb',greens:'Greens',colour:'Coloured vegetables',legumes:'Legumes',protein:'Lean protein'};
+  return MEAL_STACK_COMPONENTS.map(component=>{
+    const food=mealStackFood(component,stack.selection[component]);
+    const grams=stack.grams[component];
+    let guide='';
+    if(component==='protein')guide=proteinPortionGuide(grams);
+    else if(component==='legumes')guide=cupMeasure(grams/160);
+    else guide=cupMeasure(grams/(component==='carb'?180:100));
+    return {main:labels[component]+' · ~'+grams+' g '+food.label,guide};
+  });
 }
 function handCount(n){
   const v=Math.round(n*2)/2;
@@ -236,7 +415,7 @@ function calorieTargets(){
     constrained:rawEatingDay<1200
   };
 }
-function mealPlan(day){
+function mealPlan(day,date=todayISO()){
   const c=calorieTargets(),p=settings.portions,g=portionGuide();
   if(!c)return null;
   if(day===1)return {total:0,target:c.eatingDay,gap:0,macroTotals:{protein:0,carbs:0,fat:0},meals:[],note:'Fast after the morning workout. Water, plain tea/coffee; resume meals Tuesday.'};
@@ -244,9 +423,8 @@ function mealPlan(day){
   const breakfast=roundMacros(sumMacros(itemMacros('yogurt',p.yogurt),itemMacros('berries',p.berries),itemMacros('nuts',p.nuts),itemMacros('seeds',p.seeds)));
   const latte=roundMacros(itemMacros('milk',p.latteMilk));
   const fruit=roundMacros(itemMacros('fruit',1));
-  const lp=proteinChoiceMacros(settings.lunchProtein),dp=proteinChoiceMacros(settings.dinnerProtein);
-  const lunch=roundMacros(sumMacros(lp.macros,itemMacros('rice',p.lunchRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
-  const dinner=roundMacros(sumMacros(dp.macros,itemMacros('rice',p.dinnerRice),itemMacros('legumes',p.legumes),itemMacros('veg',p.veg),itemMacros('oil',p.oil)));
+  const lunchStack=mealStackFor('lunch',date),dinnerStack=mealStackFor('dinner',date);
+  const lunch=lunchStack.macros,dinner=dinnerStack.macros;
   const shake=roundMacros(sumMacros(itemMacros('powder',p.powder),itemMacros('milk',p.shakeMilk)));
 
   const meals=[
@@ -268,14 +446,9 @@ function mealPlan(day){
         {main:'1 medium piece fruit',guide:'~1 cup chopped'},
         {main:'Vary colours across the week'}
       ]},
-    {id:'lunch',name:'Lunch',...lunch,
-      items:[
-        {main:'~'+lp.grams+' g cooked '+lp.food.label,guide:proteinPortionGuide(lp.grams)},
-        {main:'~'+p.lunchRice+' g cooked whole grain',guide:g.lunchRice},
-        {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
-        {main:'~'+p.veg+' g vegetables',guide:g.veg},
-        {main:'~'+p.oil+' g extra-virgin olive oil',guide:g.oil}
-      ]},
+    {id:'lunch',name:'Lunch',...lunch,configurable:true,stack:lunchStack,
+      items:mealStackItems(lunchStack),
+      stackNote:'Five-component stack · includes ~'+p.oil+' g extra-virgin olive oil in the meal macros.'},
     {id:'latte2',name:'Latte 2',...latte,
       items:[
         {main:'1 espresso'},
@@ -287,14 +460,9 @@ function mealPlan(day){
         {main:'1 medium piece fruit',guide:'~1 cup chopped'},
         {main:'Vary colours across the week'}
       ]},
-    {id:'dinner',name:'Dinner',...dinner,
-      items:[
-        {main:'~'+dp.grams+' g cooked '+dp.food.label,guide:proteinPortionGuide(dp.grams)},
-        {main:'~'+p.dinnerRice+' g cooked whole grain',guide:g.dinnerRice},
-        {main:'~'+p.legumes+' g cooked lentils / chickpeas / beans',guide:g.legumes},
-        {main:'~'+p.veg+' g vegetables',guide:g.veg},
-        {main:'~'+p.oil+' g extra-virgin olive oil',guide:g.oil}
-      ]},
+    {id:'dinner',name:'Dinner',...dinner,configurable:true,stack:dinnerStack,
+      items:mealStackItems(dinnerStack),
+      stackNote:'Five-component stack · includes ~'+p.oil+' g extra-virgin olive oil in the meal macros.'},
     {id:'fruit3',name:'Fruit 3',...fruit,
       items:[
         {main:'1 medium piece fruit',guide:'~1 cup chopped'},
@@ -311,7 +479,7 @@ function mealPlan(day){
   const total=Math.round(totals.kcal);
   const macroTotals={protein:Math.round(totals.protein),carbs:Math.round(totals.carbs),fat:Math.round(totals.fat)};
   const gap=c.eatingDay-total;
-  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Portion macros use representative foods. Whole-grain and legume grams are cooked weight. Protein portions are cooked weights chosen to provide about 20 g protein: '+proteinEquivalentsText()+'. Extra-virgin olive oil is the default added fat. Household measures are approximate; cups use a 250 ml metric cup. Reference values are approximate and vary by cut, species and brand. Oily fish is more energy-dense, so selecting it raises the meal and day calories unless another component is adjusted.'};
+  return {total,target:c.eatingDay,gap,macroTotals,meals,note:'Lunch and dinner use a five-component stack: carb, greens, coloured vegetables, legumes and protein. When Match current meal targets is on, carb and protein portions are adjusted to stay close to the existing meal energy and protein targets while greens, coloured vegetables and legumes remain at their baseline portions. Extra-virgin olive oil remains the default added fat. Macro values are representative estimates and vary by food, cut, brand and preparation.'};
 }
 function nutritionSummary(day=programDay()){
   const p=protein(),f=fatLossTargets(),c=calorieTargets(),m=mealPlan(day);
