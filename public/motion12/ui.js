@@ -2195,6 +2195,7 @@ async function updateAppDiagnostics(){
     }catch(_){}
   }
   setDiagnosticValue('diagPersistent',persistenceLabel,persistenceState);
+  setDiagnosticValue('diagShadow',status.shadowAvailable?'Ready':'Unavailable',status.shadowAvailable?'ok':'warn');
 }
 function updateDataStoreStatus(){
   const el=document.getElementById('dataStoreStatus');
