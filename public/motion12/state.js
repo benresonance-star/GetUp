@@ -2,7 +2,7 @@ const previousDefaultPortionsV1={yogurt:250,berries:200,nuts:25,latteMilk:200,me
 const previousDefaultPortionsV2={yogurt:250,berries:200,nuts:25,latteMilk:200,meat:94,lunchRice:180,dinnerRice:180,veg:225,oil:10,powder:30,shakeMilk:250};
 const defaultPortions={yogurt:250,berries:200,nuts:20,seeds:10,latteMilk:200,meat:66,lunchRice:90,dinnerRice:90,legumes:120,veg:225,oil:11.5,powder:30,shakeMilk:250};
 const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
-const motion12PersistedView=Motion12Persistence.view();
+const motion12PersistedView=window.Motion12Persistence.view();
 const storedSettings=motion12PersistedView.settings||{};
 const storedPortions=storedSettings.portions||{};
 function matchesPortionPreset(preset){return Object.keys(preset).every(k=>Number(storedPortions[k])===preset[k])}
@@ -50,7 +50,7 @@ const defaultInlineTimer={
 let inlineTimer={...defaultInlineTimer,...(motion12PersistedView.inlineTimer||{})};
 
 function motion12ReloadStateFromPersistence(){
-  const v=Motion12Persistence.view();
+  const v=window.Motion12Persistence.view();
   const nextSettings=v.settings||{};
   settings={
     ...defaultSettings,
