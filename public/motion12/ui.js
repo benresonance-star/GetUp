@@ -777,7 +777,7 @@ function strengthFlowState(id,name,target){
   const rest=exerciseRestPreset(name,day,weekNo()).seconds||90;
   const completed=strengthSetCompletedCount(id,cfg.sets);
   if(inlineTimer.activeId===id&&inlineTimer.kind==='strengthsets'){
-    return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds(),finalRest:!!inlineTimer.finalRest};
+    return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds(),duration:inlineTimer.duration||0,finalRest:!!inlineTimer.finalRest};
   }
   return {...cfg,rest,setIndex:completed,phase:(logs[id]?.done||completed>=cfg.sets)?'complete':'ready',running:false,sec:0,finalRest:false};
 }
@@ -1118,10 +1118,11 @@ function strengthSetFlowMarkup(id,name,target){
   const nextExercise=finalRest?strengthNextExercise(id):null;
   const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isWork?'TIMED SET':isRest?(finalRest?'FINAL RECOVERY':'RECOVERY'):'SET '+(readyIndex+1)+' READY';
   const statusMain=isComplete?'✓':(isRest||isWork)?timerFormat(state.sec):state.targetText;
-  const statusSub=isComplete?'All '+state.sets+' sets logged':isWork?('Set '+(readyIndex+1)+(state.workPerSide?' · time each side':'')):isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
+  const statusSub=isComplete?'All '+state.sets+' sets logged':isWork?('Set '+(readyIndex+1)+(state.workPerSide?' · repeat timer for each side':'')):isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
   const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
   const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
+  const valueColumnLabel=state.timedWork?'Time':'Reps';
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
     const active=!isComplete&&!isRest&&i===readyIndex;
@@ -1150,7 +1151,7 @@ function strengthSetFlowMarkup(id,name,target){
   }
   return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isWork?'working ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
-    '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>Reps</span><span>Reps in reserve</span></div>'+
+    '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>'+valueColumnLabel+'</span><span>Reps in reserve</span></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
     completionSummary+
     sessionCue+
