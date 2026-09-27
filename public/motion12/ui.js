@@ -10,6 +10,9 @@ function applySessionCompactMode(){
   if(!page)return;
   const compact=settings.homeMode==='compact';
   page.classList.toggle('compact-active',compact);
+  page.dataset.sessionMode=compact?'compact':'full';
+  const badge=page.querySelector('.session-mode-badge');
+  if(badge)badge.textContent=compact?'COMPACT SESSION':'';
   if(compact&&typeof timerViewModel==='function')syncCompactSessionFocus(timerViewModel());
 }
 function toggleHomeMode(){
@@ -930,7 +933,7 @@ function openDay(day,date=null){
  const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
  <div>${prepHtml}<div class="workout-progress-block" id="sessionProgressMount"></div><div class="workout-timer-block" id="sessionTimerMount"></div><section class="section workout-exercises-section"><div class="section-head"><h2>Exercises</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  ${supportHtml}
