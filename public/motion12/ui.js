@@ -442,7 +442,7 @@ function activateExerciseTimerFromCard(event,card){
 function inlineTimerStartPause(){
   timerPrimeAudio();
   if(inlineTimer.kind==='session')return;
-  if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase!=='rest')return;
+  if(inlineTimer.kind==='strengthsets'&&!['rest','work'].includes(inlineTimer.phase))return;
   if(inlineTimer.phase==='complete'){
     inlineTimer.phase=inlineTimer.kind==='workrest'?'work':'rest';
     inlineTimer.duration=inlineTimer.kind==='workrest'?inlineTimer.work:inlineTimer.rest;
@@ -509,6 +509,16 @@ function inlineTimerTick(){
   const now=Date.now();
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
+    if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase==='work'){
+      inlineTimer.running=false;
+      inlineTimer.phase='ready';
+      inlineTimer.remaining=0;
+      inlineTimer.endAt=0;
+      timerBeep();
+      saveInlineTimer();
+      refreshStrengthFlowById(inlineTimer.activeId);
+      return;
+    }
     if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase==='rest'){
       const currentId=inlineTimer.activeId,finalRest=!!inlineTimer.finalRest||inlineTimer.setIndex>=inlineTimer.sets;
       inlineTimer.running=false;
@@ -644,9 +654,18 @@ function strengthFlowDayFromId(id){
 function strengthFlowDayLabel(id){
   return DAYS[strengthFlowDayFromId(id)]||'Next session';
 }
+function strengthTimedWorkConfig(target){
+  const text=String(target||'');
+  let m=text.match(/(\d+)\s*[–-]\s*(\d+)\s*sec(?:\s*\/\s*side)?/i);
+  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[2]),perSide:/\/\s*side/i.test(text)};
+  m=text.match(/(\d+)\s*sec(?:\s*\/\s*side)?/i);
+  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:/\/\s*side/i.test(text)};
+  return {enabled:false,min:0,max:0,perSide:false};
+}
 function strengthFlowConfig(name,target){
   const parsed=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
   const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
+  const timedWork=strengthTimedWorkConfig(target);
   const base={
     sets:parsed?Number(parsed[1]):3,
     targetText:parsed?parsed[2]:'6–10',
@@ -656,6 +675,10 @@ function strengthFlowConfig(name,target){
     loadInputMode:'decimal',
     repsPlaceholder:range?(range[1]+'–'+range[2]):'reps',
     noun:'load',
+    timedWork:timedWork.enabled,
+    workSeconds:timedWork.min,
+    workMaxSeconds:timedWork.max,
+    workPerSide:timedWork.perSide,
     advanceTitle:'Increase load',
     advanceText:'Increase the working load one step and return toward the lower end of the prescribed range.'
   };
@@ -764,9 +787,15 @@ function strengthEnsureTimer(id,name,target){
     inlineTimer={...defaultInlineTimer,
       activeId:id,exerciseName:name,kind:'strengthsets',
       rest:state.rest,sets:state.sets,setIndex:state.setIndex,target:state.targetText,
-      phase:state.phase,duration:state.rest,remaining:0,running:false,endAt:0
+      phase:state.phase,duration:state.rest,remaining:0,running:false,endAt:0,
+      timedWork:!!state.timedWork,workSeconds:state.workSeconds||0,workMaxSeconds:state.workMaxSeconds||0,workPerSide:!!state.workPerSide
     };
     saveInlineTimer();
+  }
+  if(smartTimer.kind!=='strengthsets'||smartTimer.exerciseName!==name){
+    smartTimer.exerciseName=name;
+    smartTimer.exerciseCategory='Strength';
+    timerConfigure('session',true);
   }
   return inlineTimer;
 }
@@ -932,6 +961,32 @@ function refreshStrengthFlowById(id){
   if(!name||!target)return;
   flow.outerHTML=strengthSetFlowMarkup(id,name,target);
 }
+function currentStrengthExerciseContext(day=timerContextDay(),date=timerContextDate()){
+  if(![1,3,5].includes(day))return null;
+  const work=program[day]?.work||[];
+  const currentEl=document.querySelector('.exercise.session-current[data-timer-id]');
+  if(currentEl?.dataset?.timerId){
+    const pos=strengthSessionPosition(currentEl.dataset.timerId);
+    if(pos&&pos.day===day&&pos.date===date&&!logs[currentEl.dataset.timerId]?.done){
+      const target=decodeURIComponent(currentEl.dataset.timerTarget||'');
+      const name=decodeURIComponent(currentEl.dataset.timerName||'');
+      return {id:currentEl.dataset.timerId,index:pos.index,name,target,day,date};
+    }
+  }
+  const index=work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
+  if(index<0)return null;
+  return {id:exId(day,index,date),index,name:work[index][0],target:work[index][1],day,date};
+}
+function syncSmartStrengthToCurrent({force=false}={}){
+  const ctx=currentStrengthExerciseContext();
+  if(!ctx)return null;
+  if(force||smartTimer.kind!=='strengthsets'||smartTimer.exerciseName!==ctx.name){
+    smartTimer.exerciseName=ctx.name;
+    smartTimer.exerciseCategory='Strength';
+    timerConfigure('session',true);
+  }
+  return ctx;
+}
 function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true,scroll=true}={}){
   const pos=strengthSessionPosition(currentId);
   if(!pos)return null;
@@ -1012,7 +1067,20 @@ function strengthContinueToNext(currentId,nextId){
   if(!next)return;
   next.classList.add('session-current');
   const pos=strengthSessionPosition(nextId);
-  if(pos)refreshStrengthSessionProgress(pos.day,pos.date);
+  if(pos){
+    refreshStrengthSessionProgress(pos.day,pos.date);
+    const work=program[pos.day]?.work||[];
+    const item=work[pos.index];
+    if(item){
+      inlineTimer={...defaultInlineTimer};
+      saveInlineTimer();
+      strengthEnsureTimer(nextId,item[0],item[1]);
+      smartTimer.exerciseName=item[0];
+      smartTimer.exerciseCategory='Strength';
+      timerConfigure('session',true);
+      if(document.getElementById('sessionTimerMount'))renderTimerPage();
+    }
+  }
   next.scrollIntoView({behavior:'smooth',block:'start'});
   setTimeout(()=>{
     const flow=next.querySelector('.strength-set-flow');
@@ -1045,12 +1113,12 @@ function strengthCompletionSummaryMarkup(id,name,target,entries){
 function strengthSetFlowMarkup(id,name,target){
   const state=strengthFlowState(id,name,target),entries=strengthSetLogEntries(id,state.sets);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
-  const isRest=state.phase==='rest',isComplete=state.phase==='complete';
+  const isRest=state.phase==='rest',isWork=state.phase==='work',isComplete=state.phase==='complete';
   const finalRest=isRest&&(state.finalRest||state.setIndex>=state.sets);
   const nextExercise=finalRest?strengthNextExercise(id):null;
-  const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isRest?(finalRest?'FINAL RECOVERY':'RECOVERY'):'SET '+(readyIndex+1)+' READY';
-  const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText;
-  const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
+  const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isWork?'TIMED SET':isRest?(finalRest?'FINAL RECOVERY':'RECOVERY'):'SET '+(readyIndex+1)+' READY';
+  const statusMain=isComplete?'✓':(isRest||isWork)?timerFormat(state.sec):state.targetText;
+  const statusSub=isComplete?'All '+state.sets+' sets logged':isWork?('Set '+(readyIndex+1)+(state.workPerSide?' · time each side':'')):isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
   const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
   const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
@@ -1068,13 +1136,19 @@ function strengthSetFlowMarkup(id,name,target){
   let actions='';
   if(isComplete){
     actions='<button class="strength-flow-primary done" type="button" onclick="event.stopPropagation()">✓ Exercise complete</button>';
+  }else if(isWork){
+    const canExtend=(state.workMaxSeconds||0)>(state.workSeconds||0)&&(state.duration||0)<(state.workMaxSeconds||0);
+    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthPauseResume(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">'+(state.running?'Pause':'Resume')+'</button>'+
+      (canExtend?'<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();strengthExtendTimedWork(\''+id+'\',15)">+15 sec</button>':'')+
+      '<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();strengthCancelTimedWork(\''+id+'\')">End timer</button>';
   }else if(isRest){
     actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthPauseResume(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">'+(state.running?'Pause rest':'Resume rest')+'</button>'+
       '<button class="strength-flow-secondary" type="button" onclick="event.stopPropagation();strengthSkipRest(\''+id+'\')">Skip rest</button>';
   }else{
-    actions='<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthSetComplete(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">Set '+(readyIndex+1)+' complete <span>→ rest '+timerFormat(state.rest)+'</span></button>';
+    actions=(state.timedWork?'<button class="strength-flow-secondary strength-work-timer" type="button" onclick="event.stopPropagation();strengthStartTimedWork(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">Start '+timerFormat(state.workSeconds||45)+(state.workPerSide?' / side':'')+'</button>':'')+
+      '<button class="strength-flow-primary" type="button" onclick="event.stopPropagation();strengthSetComplete(\''+id+'\',\''+encName+'\',\''+encTarget+'\')">Set '+(readyIndex+1)+' complete <span>→ rest '+timerFormat(state.rest)+'</span></button>';
   }
-  return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
+  return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isWork?'working ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
     '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>Reps</span><span>Reps in reserve</span></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
@@ -1095,9 +1169,44 @@ function refreshStrengthFlow(){
   flow.outerHTML=strengthSetFlowMarkup(inlineTimer.activeId,name,target);
 }
 function updateStrengthFlowLive(){
-  if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest'||!inlineTimer.activeId)return;
+  if(inlineTimer.kind!=='strengthsets'||!['rest','work'].includes(inlineTimer.phase)||!inlineTimer.activeId)return;
   const clock=document.getElementById('strength-flow-clock-'+inlineTimer.activeId);
   if(clock)clock.textContent=timerFormat(inlineTimerSeconds());
+}
+function strengthStartTimedWork(id,encodedName,encodedTarget){
+  const name=decodeURIComponent(encodedName),target=decodeURIComponent(encodedTarget);
+  const timer=strengthEnsureTimer(id,name,target);
+  if(timer.phase!=='ready'||!timer.timedWork)return;
+  timer.phase='work';
+  timer.duration=timer.workSeconds||45;
+  timer.remaining=timer.duration;
+  timer.endAt=Date.now()+timer.duration*1000;
+  timer.running=true;
+  saveInlineTimer();
+  inlineTimerEnsureTick();
+  refreshStrengthFlowById(id);
+}
+function strengthExtendTimedWork(id,delta=15){
+  if(inlineTimer.activeId!==id||inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='work')return;
+  const cap=Math.max(inlineTimer.workSeconds||0,inlineTimer.workMaxSeconds||0);
+  if(cap<=0)return;
+  const current=inlineTimerSeconds();
+  const extra=Math.max(0,Math.min(delta,cap-(inlineTimer.duration||0)));
+  if(extra<=0)return;
+  inlineTimer.duration=(inlineTimer.duration||0)+extra;
+  inlineTimer.remaining=current+extra;
+  if(inlineTimer.running)inlineTimer.endAt+=extra*1000;
+  saveInlineTimer();
+  refreshStrengthFlowById(id);
+}
+function strengthCancelTimedWork(id){
+  if(inlineTimer.activeId!==id||inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='work')return;
+  inlineTimer.running=false;
+  inlineTimer.remaining=0;
+  inlineTimer.endAt=0;
+  inlineTimer.phase='ready';
+  saveInlineTimer();
+  refreshStrengthFlowById(id);
 }
 function strengthSetComplete(id,encodedName,encodedTarget){
   const name=decodeURIComponent(encodedName),target=decodeURIComponent(encodedTarget);
@@ -1947,6 +2056,7 @@ function renderTimerPage(){
   const progressMount=document.getElementById('sessionProgressMount');
   const timerMount=document.getElementById('sessionTimerMount');
   if(!progressMount||!timerMount)return;
+  if([1,3,5].includes(timerContextDay()))syncSmartStrengthToCurrent();
   timerConfigure(smartTimer.mode||'session',false);
   const vm=timerViewModel(),day=timerContextDay(),date=timerContextDate();
   const presets=vm.kind==='rest'
