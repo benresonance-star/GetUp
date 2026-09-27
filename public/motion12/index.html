@@ -137,6 +137,8 @@
       <p class="settings-note">MOTION12 stores live app and training data in IndexedDB and mirrors the latest validated state to a separate local shadow for recovery. Existing legacy localStorage migration keys are not modified.</p>
       <div class="data-settings-actions">
         <button type="button" id="exportDataBtn">Export backup</button>
+        <button type="button" id="importDataBtn">Import backup</button>
+        <input type="file" id="settingsImportFile" accept="application/json,.json" hidden>
       </div>
       <div class="data-store-status" id="dataStoreStatus"></div>
     </details>
