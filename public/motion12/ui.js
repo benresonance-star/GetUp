@@ -8,6 +8,7 @@ function updateHomeModeToggle(){
 function applySessionCompactMode(){
   const page=document.getElementById('dayPage');
   if(!page)return;
+  // Presentation-only: do not add/remove/reorder session stages here.
   const compact=settings.homeMode==='compact';
   page.classList.toggle('compact-active',compact);
   page.dataset.sessionMode=compact?'compact':'full';
@@ -32,7 +33,7 @@ function mealDone(date,meal){
   return legacy===undefined?false:!!logs['meal:'+date+':'+legacy]?.done;
 }
 function intakeTotals(day,date){
-  const plan=mealPlan(day);
+  const plan=mealPlan(day,date);
   if(!plan||!plan.meals.length)return null;
   const consumed=plan.meals.reduce((acc,m)=>{
     if(mealDone(date,m)){
@@ -63,19 +64,21 @@ function mealItemsMarkup(meal){
   if(!meal.items?.length)return meal.portion?'<p>'+meal.portion+'</p>':'';
   return '<ul class="meal-items">'+meal.items.map(item=>
     '<li><strong>'+item.main+'</strong>'+(item.guide?'<span>('+item.guide+')</span>':'')+'</li>'
-  ).join('')+'</ul>';
+  ).join('')+'</ul>'+(meal.stackNote?'<div class="meal-stack-note">'+meal.stackNote+'</div>':'');
 }
 function mealRows(day,date=todayISO()){
-  const plan=mealPlan(day);
+  const plan=mealPlan(day,date);
   if(!plan)return '<div class="card"><p>Add bodyweight to create the meal plan.</p></div>';
   if(!plan.meals.length)return '<div class="card fast-card"><h3>Fast after training</h3><p>'+plan.note+'</p></div>';
   return '<div class="intake-strip" data-intake-date="'+date+'">'+intakeStripInner(day,date)+(plan.gap?'<div class="plan-gap '+(plan.gap<0?'over':'')+'">Plan '+plan.total+' kcal · target '+plan.target+' kcal · '+(plan.gap>0?plan.gap+' kcal unallocated':Math.abs(plan.gap)+' kcal over target')+'</div>':'')+'</div><div class="meal-list">'+plan.meals.map(m=>{
     const key=mealKey(date,m.id),done=mealDone(date,m);
-    return '<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span>'+mealItemsMarkup(m)+'<div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
+    const row='<button class="meal-row meal-toggle '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check" aria-hidden="true">'+(done?'✓':'')+'</span><div class="meal-copy"><span class="meal-name">'+m.name+'</span>'+mealItemsMarkup(m)+'<div class="meal-macros"><span><b>P</b> '+m.protein+'g</span><span><b>C</b> '+m.carbs+'g</span><span><b>F</b> '+m.fat+'g</span></div></div><div class="meal-kcal"><b>'+m.kcal+'</b><span>kcal</span></div></button>';
+    if(!m.configurable)return row;
+    return '<div class="meal-configurable-wrap">'+row+'<button class="meal-swap-button" type="button" onclick="openMealConfigurator(\''+date+'\',\''+m.id+'\')"><span>↻</span> Swap meal</button></div>';
   }).join('')+'<div class="macro-total"><b>Daily macros</b><span>P '+plan.macroTotals.protein+'g</span><span>C '+plan.macroTotals.carbs+'g</span><span>F '+plan.macroTotals.fat+'g</span></div><div class="meal-note">'+plan.note+' Use labels or a food scale once to calibrate your usual portions.</div></div>';
 }
 function toggleMeal(date,id){
-  const plan=mealPlan(new Date(date+'T00:00:00').getDay());
+  const plan=mealPlan(new Date(date+'T00:00:00').getDay(),date);
   const meal=plan?.meals.find(m=>m.id===id);
   if(!meal)return;
   const key=mealKey(date,id),current=mealDone(date,meal);
@@ -91,21 +94,138 @@ function toggleMeal(date,id){
   if(settings.homeMode==='compact' && document.getElementById('homePage')?.classList.contains('active'))renderHome();
 }
 function compactMealChips(day,date){
-  const plan=mealPlan(day);
+  const plan=mealPlan(day,date);
   if(!plan)return '<div class="compact-empty">Set bodyweight to build meals</div>';
   if(!plan.meals.length)return '<div class="compact-fast">FAST DAY · water / plain coffee / tea</div>';
   return '<div class="compact-meal-grid">'+plan.meals.map(m=>{
     const key=mealKey(date,m.id),done=mealDone(date,m);
     const label=m.name.replace('Protein shake','Shake');
-    return '<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span class="compact-meal-name">'+label+'</span><span class="compact-meal-kcal">'+m.kcal+'</span></button>';
+    const chip='<button class="compact-meal '+(done?'done':'')+'" type="button" data-meal-key="'+key+'" onclick="toggleMeal(\''+date+'\',\''+m.id+'\')"><span class="meal-check">'+(done?'✓':'')+'</span><span class="compact-meal-name">'+label+'</span><span class="compact-meal-kcal">'+m.kcal+'</span></button>';
+    return m.configurable?'<div class="compact-meal-wrap">'+chip+'<button class="compact-meal-swap" type="button" aria-label="Swap '+label+'" onclick="openMealConfigurator(\''+date+'\',\''+m.id+'\')">↻</button></div>':chip;
   }).join('')+'</div>';
 }
 function compactMealCount(day,date){
-  const plan=mealPlan(day);
+  const plan=mealPlan(day,date);
   if(!plan||!plan.meals.length)return '';
   const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
   return done+' / '+plan.meals.length+' ✓';
 }
+
+let mealConfiguratorDraft=null;
+function mealConfiguratorLabels(){
+  return {carb:'Carb',greens:'Greens',colour:'Coloured vegetables',legumes:'Legumes',protein:'Lean protein'};
+}
+function ensureMealConfigurator(){
+  if(document.getElementById('mealConfiguratorOverlay'))return;
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="meal-config-overlay" id="mealConfiguratorOverlay" hidden onclick="if(event.target===this)closeMealConfigurator()">'+
+      '<div class="meal-config-sheet" role="dialog" aria-modal="true" aria-labelledby="mealConfiguratorTitle">'+
+        '<div id="mealConfiguratorContent"></div>'+
+      '</div>'+
+    '</div>'
+  );
+}
+function openMealConfigurator(date,mealId){
+  if(mealId!=='lunch'&&mealId!=='dinner')return;
+  ensureMealConfigurator();
+  const current=mealStackStoredConfig(date,mealId);
+  mealConfiguratorDraft={date,mealId,selection:{...current.selection},matchTargets:current.matchTargets};
+  renderMealConfigurator();
+  const overlay=document.getElementById('mealConfiguratorOverlay');
+  overlay.hidden=false;
+  requestAnimationFrame(()=>overlay.classList.add('show'));
+}
+function closeMealConfigurator(){
+  const overlay=document.getElementById('mealConfiguratorOverlay');
+  if(!overlay)return;
+  overlay.classList.remove('show');
+  setTimeout(()=>{overlay.hidden=true},160);
+  mealConfiguratorDraft=null;
+}
+function mealConfiguratorOptionMarkup(component,selected){
+  return (mealStackLibrary()[component]||[]).map(food=>
+    '<option value="'+food.id+'" '+(food.id===selected?'selected':'')+'>'+food.label+'</option>'
+  ).join('');
+}
+function renderMealConfigurator(){
+  if(!mealConfiguratorDraft)return;
+  const d=mealConfiguratorDraft;
+  const preview=mealStackPreview(d.mealId,d.selection,d.matchTargets);
+  const labels=mealConfiguratorLabels();
+  const content=document.getElementById('mealConfiguratorContent');
+  if(!content)return;
+  const title=d.mealId==='lunch'?'Lunch':'Dinner';
+  const targetText=preview.target.kcal+' kcal · '+preview.target.protein+' g protein';
+  const actualText=preview.macros.kcal+' kcal · P '+preview.macros.protein+' g · C '+preview.macros.carbs+' g · F '+preview.macros.fat+' g';
+  content.innerHTML=
+    '<div class="meal-config-head"><div><span class="meal-config-kicker">FIVE-COMPONENT MEAL</span><h2 id="mealConfiguratorTitle">'+title+' configurator</h2><p>'+d.date+'</p></div><button type="button" class="meal-config-close" onclick="closeMealConfigurator()" aria-label="Close">×</button></div>'+
+    '<label class="meal-match-toggle"><span><b>Match current meal targets</b><small>Adjust carb and protein portions to stay close to '+targetText+'.</small></span><input type="checkbox" '+(d.matchTargets?'checked':'')+' onchange="mealConfiguratorSetMatch(this.checked)"><i></i></label>'+
+    '<div class="meal-config-components">'+
+      MEAL_STACK_COMPONENTS.map((component,index)=>{
+        const food=mealStackFood(component,d.selection[component]);
+        return '<div class="meal-config-component">'+
+          '<div class="meal-config-number">'+(index+1)+'</div>'+
+          '<div class="meal-config-choice"><label>'+labels[component]+'</label><select onchange="mealConfiguratorSetChoice(\''+component+'\',this.value)">'+mealConfiguratorOptionMarkup(component,d.selection[component])+'</select><small>~'+preview.grams[component]+' g · '+food.label+'</small></div>'+
+          '<button type="button" class="meal-component-swap" onclick="mealConfiguratorSwap(\''+component+'\')">↻<span>Swap</span></button>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+    '<div class="meal-config-summary"><div><span>Configured meal</span><b>'+actualText+'</b></div><div><span>Target</span><b>'+targetText+'</b></div></div>'+
+    '<button type="button" class="meal-swap-all" onclick="mealConfiguratorSwapAll()">↻ Swap all five</button>'+
+    '<div class="meal-config-actions"><button type="button" onclick="mealConfiguratorReset()">Use defaults</button><button type="button" class="primary" onclick="mealConfiguratorSave()">Use for today</button></div>'+
+    '<p class="meal-config-note">Portions and macros are representative cooked-food estimates. Eggs are intentionally not included in the protein choices.</p>';
+}
+function mealConfiguratorSetChoice(component,value){
+  if(!mealConfiguratorDraft||!MEAL_STACK_COMPONENTS.includes(component))return;
+  mealConfiguratorDraft.selection[component]=value;
+  renderMealConfigurator();
+}
+function mealConfiguratorSetMatch(checked){
+  if(!mealConfiguratorDraft)return;
+  mealConfiguratorDraft.matchTargets=!!checked;
+  renderMealConfigurator();
+}
+function mealConfiguratorSwap(component){
+  if(!mealConfiguratorDraft)return;
+  const list=mealStackLibrary()[component]||[];
+  const current=mealConfiguratorDraft.selection[component];
+  const index=Math.max(0,list.findIndex(x=>x.id===current));
+  if(list.length)mealConfiguratorDraft.selection[component]=list[(index+1)%list.length].id;
+  renderMealConfigurator();
+}
+function mealConfiguratorSwapAll(){
+  if(!mealConfiguratorDraft)return;
+  MEAL_STACK_COMPONENTS.forEach(component=>{
+    const list=mealStackLibrary()[component]||[];
+    const current=mealConfiguratorDraft.selection[component];
+    const index=Math.max(0,list.findIndex(x=>x.id===current));
+    if(list.length)mealConfiguratorDraft.selection[component]=list[(index+1)%list.length].id;
+  });
+  renderMealConfigurator();
+}
+function mealConfiguratorSave(){
+  if(!mealConfiguratorDraft)return;
+  const d=mealConfiguratorDraft;
+  logs[mealStackConfigKey(d.date,d.mealId)]={
+    selection:{...d.selection},
+    matchTargets:!!d.matchTargets,
+    updatedAt:new Date().toISOString()
+  };
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  closeMealConfigurator();
+  if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
+function mealConfiguratorReset(){
+  if(!mealConfiguratorDraft)return;
+  const d=mealConfiguratorDraft;
+  delete logs[mealStackConfigKey(d.date,d.mealId)];
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  const reset=mealStackStoredConfig(d.date,d.mealId);
+  mealConfiguratorDraft={date:d.date,mealId:d.mealId,selection:{...reset.selection},matchTargets:reset.matchTargets};
+  renderMealConfigurator();
+  if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
+
 const MOTIVATION_QUOTES=[
   {text:"Don't count the days; make the days count.",by:"Muhammad Ali"},
   {text:"It's hard to beat a person who never gives up.",by:"Babe Ruth"},
@@ -458,6 +578,36 @@ function supportBlockMarkup(day,date,w,p){
     </div>`;
   }).join('');
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
+}
+
+/* Canonical workout-session content order.
+   View modes may change presentation only; they must not reorder or remove stages. */
+const WORKOUT_SESSION_STAGE_ORDER=Object.freeze([
+  'mobility',
+  'prep',
+  'progress',
+  'timer',
+  'main',
+  'support',
+  'complete'
+]);
+function workoutSessionStageMarkup(stage,content){
+  if(!content)return '';
+  return `<div class="session-stage session-stage-${stage}" data-session-stage="${stage}">${content}</div>`;
+}
+function workoutSessionMarkup({mobilityHtml,prepHtml,mainHtml,supportHtml,completeHtml}){
+  const stages={
+    mobility:mobilityHtml,
+    prep:prepHtml,
+    progress:'<div class="workout-progress-block" id="sessionProgressMount"></div>',
+    timer:'<div class="workout-timer-block" id="sessionTimerMount"></div>',
+    main:mainHtml,
+    support:supportHtml,
+    complete:completeHtml
+  };
+  return '<div class="workout-session" data-session-order="'+WORKOUT_SESSION_STAGE_ORDER.join(' ')+'">'+
+    WORKOUT_SESSION_STAGE_ORDER.map(stage=>workoutSessionStageMarkup(stage,stages[stage])).join('')+
+  '</div>';
 }
 
 const strengthSetFlowNames=new Set([
@@ -933,11 +1083,13 @@ function openDay(day,date=null){
  const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
+ const mobilityHtml=`<section class="section mobility-warmup-section" id="mobilitySection"><div class="section-head"><h2>Mobility warm-up</h2><small>first · 6–8 min</small></div><div class="cards">${mob}</div></section>`;
+ const mainHtml=`<section class="section workout-exercises-section"><div class="section-head"><h2>Exercises</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
+ const completeHtml=`<button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button>`;
+ const sessionHtml=workoutSessionMarkup({mobilityHtml,prepHtml,mainHtml,supportHtml,completeHtml});
  document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
- <div>${prepHtml}<div class="workout-progress-block" id="sessionProgressMount"></div><div class="workout-timer-block" id="sessionTimerMount"></div><section class="section workout-exercises-section"><div class="section-head"><h2>Exercises</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
- ${supportHtml}
- <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
+ <div>${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
    const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
@@ -971,7 +1123,8 @@ function renderProgress(){
   let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
   document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed days, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${ps.currentStreak}</b><span>current streak</span></div><div><b>${ps.bestStreak}</b><span>best streak</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>days complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
 }
-function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;motion12SetItem('motion12.settings',JSON.stringify(settings))}motion12SetItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
+function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;motion12SetItem('motion12.settings',JSON.stringify(settings))}motion12SetItem('motion12.measurements',JSON.stringify(measurements));
+renderHome();renderDays();renderProgress();
 if(inlineTimer.activeId)inlineTimerEnsureTick();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
 let activeSessionTimerContext={day:programDay(),date:todayISO(),week:weekNo()};
@@ -1408,20 +1561,21 @@ function timerPrimaryLabel(vm){
   return 'Start';
 }
 function timerControls(vm){
-  const primary='<button class="timer-primary" onclick="timerStartPause()">'+timerPrimaryLabel(vm)+'</button>';
+  const primary='<button type="button" class="timer-primary" onclick="timerStartPause()">'+timerPrimaryLabel(vm)+'</button>';
+  const reset='<button type="button" class="timer-reset" onclick="timerReset()">Reset</button>';
   if(vm.kind==='strengthsets'){
-    if(smartTimer.strengthPhase==='complete')return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
-    if(smartTimer.strengthPhase==='ready')return '<button class="timer-primary" onclick="timerStrengthSetComplete()">Set complete</button><button onclick="timerReset()">Reset</button>';
-    return primary+'<button onclick="timerSkipStrengthRest()">Skip rest</button><button onclick="timerReset()">Reset</button>';
+    if(smartTimer.strengthPhase==='complete')return '<button type="button" class="timer-primary" onclick="timerReset()">Start again</button>';
+    if(smartTimer.strengthPhase==='ready')return '<button type="button" class="timer-primary" onclick="timerStrengthSetComplete()">Set complete</button>'+reset;
+    return primary+'<button type="button" onclick="timerSkipStrengthRest()">Skip rest</button>'+reset;
   }
-  if(vm.kind==='intervals')return primary+'<button onclick="timerSkipPhase()">Skip phase</button><button onclick="timerReset()">Reset</button>';
+  if(vm.kind==='intervals')return primary+'<button type="button" onclick="timerSkipPhase()">Skip phase</button>'+reset;
   if(vm.kind==='sets'){
-    if(smartTimer.setIndex>=vm.plan.sets)return '<button class="timer-primary" onclick="timerReset()">Start again</button>';
-    if(smartTimer.running)return primary+'<button onclick="timerAdjust(15)">+15 sec</button><button onclick="timerReset()">Reset</button>';
-    return '<button class="timer-primary" onclick="timerCompleteSet()">Set complete → rest</button><button onclick="timerReset()">Reset</button>';
+    if(smartTimer.setIndex>=vm.plan.sets)return '<button type="button" class="timer-primary" onclick="timerReset()">Start again</button>';
+    if(smartTimer.running)return primary+'<button type="button" onclick="timerAdjust(15)">+15 sec</button>'+reset;
+    return '<button type="button" class="timer-primary" onclick="timerCompleteSet()">Set complete → rest</button>'+reset;
   }
-  if(vm.kind==='stopwatch')return primary+'<button onclick="timerReset()">Reset</button>';
-  return primary+'<button onclick="timerAdjust(-15)">−15 sec</button><button onclick="timerAdjust(15)">+15 sec</button><button onclick="timerReset()">Reset</button>';
+  if(vm.kind==='stopwatch')return primary+reset;
+  return primary+'<button type="button" onclick="timerAdjust(-15)">−15 sec</button><button type="button" onclick="timerAdjust(15)">+15 sec</button>'+reset;
 }
 function timerIsRecoveryPhase(label){
   const x=String(label||'').toUpperCase();
@@ -1548,6 +1702,52 @@ function updateTimerSessionProgress(vm){
 function timerTopRightMeta(vm){
   return vm.kind==='intervals'?'':vm.meta;
 }
+function timerRingSegmentCount(vm){
+  const duration=Math.max(1,Math.round(Number(vm?.duration)||1));
+  return Math.min(180,duration);
+}
+function timerRingActiveCount(vm,count=timerRingSegmentCount(vm)){
+  if(vm?.transitioning)return 0;
+  return Math.max(0,Math.min(count,Math.ceil((Number(vm?.ringProgress)||0)*count-1e-7)));
+}
+function timerRingPoint(cx,cy,r,deg){
+  const rad=deg*Math.PI/180;
+  return [cx+r*Math.cos(rad),cy+r*Math.sin(rad)];
+}
+function timerRingSegmentPath(index,count){
+  const cx=50,cy=50,r=47.5;
+  const step=360/count;
+  const gap=Math.min(step*.24,Math.max(.8,step*.12));
+  const start=-90+index*step+gap/2;
+  const end=-90+(index+1)*step-gap/2;
+  const a=timerRingPoint(cx,cy,r,start);
+  const b=timerRingPoint(cx,cy,r,end);
+  return 'M '+a[0].toFixed(3)+' '+a[1].toFixed(3)+' A '+r+' '+r+' 0 0 1 '+b[0].toFixed(3)+' '+b[1].toFixed(3);
+}
+function timerRingSvgMarkup(vm){
+  const count=timerRingSegmentCount(vm);
+  const active=timerRingActiveCount(vm,count);
+  const paths=Array.from({length:count},(_,i)=>
+    '<path class="timer-ring-segment '+(i<active?'remaining':'elapsed')+'" data-ring-index="'+i+'" d="'+timerRingSegmentPath(i,count)+'"></path>'
+  ).join('');
+  return '<svg class="timer-ring-svg" id="timerRingSvg" data-segment-count="'+count+'" data-active-count="'+active+'" viewBox="0 0 100 100" aria-hidden="true" focusable="false">'+paths+'</svg>';
+}
+function updateTimerRingSegments(vm){
+  const svg=document.getElementById('timerRingSvg');
+  if(!svg)return;
+  const count=timerRingSegmentCount(vm);
+  const active=timerRingActiveCount(vm,count);
+  if(Number(svg.dataset.segmentCount)!==count){
+    svg.outerHTML=timerRingSvgMarkup(vm);
+    return;
+  }
+  if(Number(svg.dataset.activeCount)===active)return;
+  svg.dataset.activeCount=String(active);
+  svg.querySelectorAll('.timer-ring-segment').forEach((segment,i)=>{
+    segment.classList.toggle('remaining',i<active);
+    segment.classList.toggle('elapsed',i>=active);
+  });
+}
 function syncCompactSessionFocus(vm){
   const page=document.getElementById('dayPage');
   if(!page?.classList.contains('compact-active'))return;
@@ -1580,9 +1780,8 @@ function renderTimerPage(){
   timerMount.innerHTML=
     '<section class="smart-timer-card session-smart-timer workout-primary-timer">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
-      '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
-      presets+
+      '<div class="timer-ring" id="timerRing">'+timerRingSvgMarkup(vm)+'<div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      '<div class="workout-timer-footer" id="workoutTimerFooter"><div class="smart-timer-controls" id="smartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+presets+'</div>'+
     '</section>';
   syncCompactSessionFocus(vm);
   timerEnsureTick();
@@ -1601,15 +1800,7 @@ function updateSmartTimerDisplay(){
   const topRightMeta=document.getElementById('timerTopRightMeta');if(topRightMeta)topRightMeta.textContent=timerTopRightMeta(vm);
   const next=document.getElementById('timerNext');
   if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
-  const ring=document.getElementById('timerRing');
-  if(ring){
-    ring.style.setProperty('--timer-progress',(vm.ringProgress*360)+'deg');
-    ring.style.setProperty('--timer-step-angle',vm.stepAngle+'deg');
-    ring.style.setProperty('--timer-gap-angle',vm.gapAngle+'deg');
-    ring.style.setProperty('--timer-fill-angle',vm.fillAngle+'deg');
-    ring.style.setProperty('--timer-major-step-angle',vm.majorStepAngle+'deg');
-    ring.style.setProperty('--timer-major-gap-angle',vm.majorGapAngle+'deg');
-  }
+  updateTimerRingSegments(vm);
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
   updateTimerSessionProgress(vm);
   syncCompactSessionFocus(vm);
@@ -1627,6 +1818,78 @@ document.getElementById('todayDate').textContent=formatDate();
 document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.getElementById('homeModeToggle').onclick=toggleHomeMode;
 updateHomeModeToggle();
+const APP_PALETTE_LABELS=Object.freeze({
+  ember:'Ember',
+  ocean:'Ocean',
+  forest:'Forest',
+  violet:'Violet',
+  gold:'Gold',
+  rose:'Rose'
+});
+function setAppPalettePicker(value,preview=true){
+  const palette=normalizeAppPalette(value);
+  const input=document.getElementById('appPaletteInput');
+  if(input)input.value=palette;
+  document.querySelectorAll('.palette-swatch[data-palette]').forEach(button=>{
+    const selected=button.dataset.palette===palette;
+    button.classList.toggle('selected',selected);
+    button.setAttribute('aria-checked',selected?'true':'false');
+    button.tabIndex=selected?0:-1;
+  });
+  const label=document.getElementById('appPaletteName');
+  if(label)label.textContent=APP_PALETTE_LABELS[palette]||'Ember';
+  if(preview)applyAppPalette(palette);
+}
+function initAppPalettePicker(){
+  document.querySelectorAll('.palette-swatch[data-palette]').forEach(button=>{
+    button.onclick=()=>setAppPalettePicker(button.dataset.palette,true);
+  });
+  setAppPalettePicker(settings.appPalette||'ember',true);
+}
+const MOTION12_BUILD_META='motion12-build';
+function shortInstallationId(value){
+  const s=String(value||'');
+  return s?s.slice(0,8)+'…'+s.slice(-4):'—';
+}
+function setDiagnosticValue(id,value,state){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=value==null||value===''?'—':String(value);
+  el.classList.remove('ok','warn');
+  if(state)el.classList.add(state);
+}
+async function updateAppDiagnostics(){
+  if(!window.Motion12Persistence)return;
+  const status=window.Motion12Persistence.status();
+  const build=document.querySelector('meta[name="'+MOTION12_BUILD_META+'"]')?.content||'unknown';
+  setDiagnosticValue('diagBuild',build,'ok');
+  setDiagnosticValue('diagSchema','v'+(status.schemaVersion??'?'),'ok');
+  setDiagnosticValue('diagDatabase',(status.databaseName||'motion12')+' · v'+(status.databaseVersion??'?'),status.valid?'ok':'warn');
+  setDiagnosticValue('diagInstall',shortInstallationId(status.installationId),'ok');
+  setDiagnosticValue('diagSaved',status.updatedAt?new Date(status.updatedAt).toLocaleString():'No save yet',status.lastError?'warn':'ok');
+
+  let worker='Unavailable',workerState='warn';
+  if('serviceWorker' in navigator){
+    try{
+      const reg=await navigator.serviceWorker.getRegistration('./');
+      if(reg?.active){worker='Active';workerState='ok'}
+      else if(reg?.waiting){worker='Waiting';workerState='warn'}
+      else if(reg?.installing){worker='Installing';workerState='warn'}
+      else{worker='Registered';workerState='ok'}
+    }catch(_){worker='Unavailable'}
+  }
+  setDiagnosticValue('diagWorker',worker,workerState);
+
+  let persistenceLabel='Browser managed',persistenceState='';
+  if(navigator.storage&&typeof navigator.storage.persisted==='function'){
+    try{
+      const persisted=await navigator.storage.persisted();
+      persistenceLabel=persisted?'Granted':'Browser managed';
+      persistenceState=persisted?'ok':'';
+    }catch(_){}
+  }
+  setDiagnosticValue('diagPersistent',persistenceLabel,persistenceState);
+}
 function updateDataStoreStatus(){
   const el=document.getElementById('dataStoreStatus');
   if(!el||!window.Motion12Persistence)return;
@@ -1655,6 +1918,7 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('sexInput').value=settings.sex||'';
   document.getElementById('stepsInput').value=settings.steps;
   document.getElementById('maintenanceInput').value=settings.maintenanceOverride||'';
+  setAppPalettePicker(settings.appPalette||'ember',true);
   const p=settings.portions||defaultPortions;
   document.getElementById('yogurtInput').value=p.yogurt;
   document.getElementById('berriesInput').value=p.berries;
@@ -1671,9 +1935,14 @@ document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('powderInput').value=p.powder;
   document.getElementById('shakeMilkInput').value=p.shakeMilk;
   updateDataStoreStatus();
+  updateAppDiagnostics();
   document.getElementById('settingsOverlay').classList.add('show');
 };
-document.getElementById('cancelSettings').onclick=()=>document.getElementById('settingsOverlay').classList.remove('show');
+document.getElementById('cancelSettings').onclick=()=>{
+  applyAppPalette(settings.appPalette||'ember');
+  setAppPalettePicker(settings.appPalette||'ember',false);
+  document.getElementById('settingsOverlay').classList.remove('show');
+};
 document.getElementById('saveSettings').onclick=()=>{
   const old=settings.portions||defaultPortions;
   const portionValue=(id,fallback)=>{const raw=document.getElementById(id).value;return raw===''?fallback:Math.max(0,Number(raw)||0)};
@@ -1685,6 +1954,7 @@ document.getElementById('saveSettings').onclick=()=>{
     sex:document.getElementById('sexInput').value||'',
     steps:Number(document.getElementById('stepsInput').value)||settings.steps,
     maintenanceOverride:Number(document.getElementById('maintenanceInput').value)||0,
+    appPalette:normalizeAppPalette(document.getElementById('appPaletteInput')?.value||settings.appPalette||'ember'),
     lunchProtein:document.getElementById('lunchProteinInput').value||'chicken',
     dinnerProtein:document.getElementById('dinnerProteinInput').value||'chicken',
     portions:{
@@ -1704,9 +1974,13 @@ document.getElementById('saveSettings').onclick=()=>{
   };
   if(settings.bodyweight>0){measurements.weight=String(settings.bodyweight);motion12SetItem('motion12.measurements',JSON.stringify(measurements))}
   motion12SetItem('motion12.settings',JSON.stringify(settings));
+  applyAppPalette(settings.appPalette);
+  setAppPalettePicker(settings.appPalette,false);
   document.getElementById('settingsOverlay').classList.remove('show');
   renderHome();renderDays();renderProgress();
+  updateAppDiagnostics();
 };
+initAppPalettePicker();
 renderHome();renderDays();renderProgress();
 if(inlineTimer.activeId)inlineTimerEnsureTick();
 timerEnsureTick();
