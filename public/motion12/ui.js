@@ -465,26 +465,26 @@ function inlineStrengthSetComplete(){
   timerPrimeAudio();
   if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='ready')return;
   inlineTimer.setIndex++;
-  if(inlineTimer.setIndex>=inlineTimer.sets){
-    inlineTimer.running=false;
-    inlineTimer.remaining=0;
-    inlineTimer.endAt=0;
-    inlineTimer.phase='complete';
-    timerBeep();
-  }else{
-    inlineTimer.phase='rest';
-    inlineTimer.duration=inlineTimer.rest||90;
-    inlineTimer.remaining=inlineTimer.duration;
-    inlineTimer.endAt=Date.now()+inlineTimer.duration*1000;
-    inlineTimer.running=true;
-  }
+  inlineTimer.finalRest=inlineTimer.setIndex>=inlineTimer.sets;
+  inlineTimer.phase='rest';
+  inlineTimer.duration=inlineTimer.rest||90;
+  inlineTimer.remaining=inlineTimer.duration;
+  inlineTimer.endAt=Date.now()+inlineTimer.duration*1000;
+  inlineTimer.running=true;
   saveInlineTimer();inlineTimerEnsureTick();
   const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
 }
 function inlineSkipStrengthRest(){
   if(inlineTimer.kind!=='strengthsets'||inlineTimer.phase!=='rest')return;
-  inlineTimer.running=false;inlineTimer.remaining=0;inlineTimer.endAt=0;inlineTimer.phase='ready';
+  const currentId=inlineTimer.activeId,finalRest=!!inlineTimer.finalRest||inlineTimer.setIndex>=inlineTimer.sets;
+  inlineTimer.running=false;inlineTimer.remaining=0;inlineTimer.endAt=0;
+  inlineTimer.phase=finalRest?'complete':'ready';
+  inlineTimer.finalRest=false;
   saveInlineTimer();timerBeep();
+  if(finalRest){
+    strengthAdvanceAfterFinalRest(currentId,{syncInline:true,syncSmart:true,scroll:true});
+    return;
+  }
   const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
 }
 function inlineTimerReset(){
@@ -510,8 +510,18 @@ function inlineTimerTick(){
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
     if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase==='rest'){
-      inlineTimer.running=false;inlineTimer.phase=inlineTimer.setIndex>=inlineTimer.sets?'complete':'ready';inlineTimer.remaining=0;inlineTimer.endAt=0;timerBeep();
+      const currentId=inlineTimer.activeId,finalRest=!!inlineTimer.finalRest||inlineTimer.setIndex>=inlineTimer.sets;
+      inlineTimer.running=false;
+      inlineTimer.phase=finalRest?'complete':'ready';
+      inlineTimer.remaining=0;
+      inlineTimer.endAt=0;
+      inlineTimer.finalRest=false;
+      timerBeep();
       saveInlineTimer();
+      if(finalRest){
+        strengthAdvanceAfterFinalRest(currentId,{syncInline:true,syncSmart:true,scroll:true});
+        return;
+      }
       const box=document.getElementById('inlineExerciseTimer');if(box)box.outerHTML=inlineTimerMarkup(inlineTimer.activeId);
       refreshStrengthFlow();
       return;
@@ -744,9 +754,9 @@ function strengthFlowState(id,name,target){
   const rest=exerciseRestPreset(name,day,weekNo()).seconds||90;
   const completed=strengthSetCompletedCount(id,cfg.sets);
   if(inlineTimer.activeId===id&&inlineTimer.kind==='strengthsets'){
-    return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds()};
+    return {...cfg,rest,setIndex:inlineTimer.setIndex,phase:inlineTimer.phase,running:inlineTimer.running,sec:inlineTimerSeconds(),finalRest:!!inlineTimer.finalRest};
   }
-  return {...cfg,rest,setIndex:completed,phase:completed>=cfg.sets?'complete':'ready',running:false,sec:0};
+  return {...cfg,rest,setIndex:completed,phase:(logs[id]?.done||completed>=cfg.sets)?'complete':'ready',running:false,sec:0,finalRest:false};
 }
 function strengthEnsureTimer(id,name,target){
   const state=strengthFlowState(id,name,target);
@@ -908,6 +918,81 @@ function strengthNextExercise(id){
   }
   return null;
 }
+function strengthExerciseIdFromName(name,day=timerContextDay(),date=timerContextDate()){
+  const work=program[day]?.work||[];
+  const index=work.findIndex(x=>x[0]===name);
+  return index>=0?exId(day,index,date):null;
+}
+function refreshStrengthFlowById(id){
+  const flow=document.getElementById('strength-flow-'+id);
+  if(!flow)return;
+  const card=flow.closest('.exercise');
+  const name=decodeURIComponent(card?.dataset.timerName||'');
+  const target=decodeURIComponent(card?.dataset.timerTarget||'');
+  if(!name||!target)return;
+  flow.outerHTML=strengthSetFlowMarkup(id,name,target);
+}
+function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true,scroll=true}={}){
+  const pos=strengthSessionPosition(currentId);
+  if(!pos)return null;
+
+  logs[currentId]=logs[currentId]||{};
+  logs[currentId].done=true;
+  logs[currentId].completedAt=logs[currentId].completedAt||new Date().toISOString();
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+
+  const currentCard=document.getElementById('ex-'+currentId);
+  currentCard?.classList.add('complete');
+  document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>{
+    el.classList.remove('session-current','compact-current');
+  });
+
+  const next=strengthNextExercise(currentId);
+  if(next){
+    const nextCard=document.getElementById('ex-'+next.id);
+    nextCard?.classList.add('session-current');
+    if(document.getElementById('dayPage')?.classList.contains('compact-active'))nextCard?.classList.add('compact-current');
+
+    if(syncInline){
+      inlineTimer={...defaultInlineTimer};
+      saveInlineTimer();
+      strengthEnsureTimer(next.id,next.name,next.target);
+    }
+
+    if(syncSmart){
+      smartTimer.exerciseName=next.name;
+      smartTimer.exerciseCategory='Strength';
+      timerConfigure('session',true);
+    }
+
+    refreshStrengthFlowById(currentId);
+    refreshStrengthFlowById(next.id);
+    refreshStrengthSessionProgress(next.day,next.date);
+    if(document.getElementById('sessionTimerMount'))renderTimerPage();
+
+    if(scroll&&nextCard){
+      nextCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+    return next;
+  }
+
+  refreshStrengthFlowById(currentId);
+  refreshStrengthSessionProgress(pos.day,pos.date);
+  if(syncInline){
+    inlineTimer={...inlineTimer,running:false,remaining:0,endAt:0,phase:'complete',finalRest:false};
+    saveInlineTimer();
+  }
+  if(syncSmart){
+    smartTimer.running=false;
+    smartTimer.remaining=0;
+    smartTimer.endAt=0;
+    smartTimer.strengthPhase='complete';
+    smartTimer.finalRest=false;
+    saveSmartTimer();
+  }
+  if(document.getElementById('sessionTimerMount'))renderTimerPage();
+  return null;
+}
 function strengthSessionCueMarkup(id){
   const next=strengthNextExercise(id);
   if(next){
@@ -961,9 +1046,11 @@ function strengthSetFlowMarkup(id,name,target){
   const state=strengthFlowState(id,name,target),entries=strengthSetLogEntries(id,state.sets);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
   const isRest=state.phase==='rest',isComplete=state.phase==='complete';
-  const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isRest?'RECOVERY':'SET '+(readyIndex+1)+' READY';
+  const finalRest=isRest&&(state.finalRest||state.setIndex>=state.sets);
+  const nextExercise=finalRest?strengthNextExercise(id):null;
+  const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isRest?(finalRest?'FINAL RECOVERY':'RECOVERY'):'SET '+(readyIndex+1)+' READY';
   const statusMain=isComplete?'✓':isRest?timerFormat(state.sec):state.targetText;
-  const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?'Next · Set '+(state.setIndex+1)+' of '+state.sets:'Rest starts automatically after Set complete';
+  const statusSub=isComplete?'All '+state.sets+' sets logged':isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
   const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
   const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
@@ -1033,16 +1120,6 @@ function strengthSetComplete(id,encodedName,encodedTarget){
   logs[id].sets=entries;
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   inlineStrengthSetComplete();
-  if(inlineTimer.phase==='complete'){
-    logs[id].done=true;
-    motion12SetItem('motion12.logs',JSON.stringify(logs));
-    document.getElementById('ex-'+id)?.classList.add('complete');
-    const next=strengthNextExercise(id);
-    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
-    if(next)document.getElementById('ex-'+next.id)?.classList.add('session-current');
-    const pos=strengthSessionPosition(id);
-    if(pos)refreshStrengthSessionProgress(pos.day,pos.date);
-  }
   refreshStrengthFlow();
 }
 function strengthPauseResume(id,encodedName,encodedTarget){
@@ -1406,12 +1483,18 @@ function timerTick(){
   const now=Date.now();
   if(smartTimer.kind==='strengthsets'){
     if(now>=smartTimer.endAt){
+      const currentId=strengthExerciseIdFromName(smartTimer.exerciseName);
+      const finalRest=!!smartTimer.finalRest||smartTimer.setIndex>=smartTimer.totalSets;
       smartTimer.running=false;
       smartTimer.remaining=0;
       smartTimer.endAt=0;
-      smartTimer.strengthPhase=smartTimer.setIndex>=smartTimer.totalSets?'complete':'ready';
+      smartTimer.strengthPhase=finalRest?'complete':'ready';
+      smartTimer.finalRest=false;
       saveSmartTimer();
       timerBeep();
+      if(finalRest&&currentId){
+        strengthAdvanceAfterFinalRest(currentId,{syncInline:inlineTimer.activeId===currentId,syncSmart:true,scroll:true});
+      }
     }
   }else if(smartTimer.kind==='intervals'){
     const plan=timerSessionPlan();
@@ -1475,28 +1558,29 @@ function timerStrengthSetComplete(){
   timerConfigure('session',false);
   if(smartTimer.kind!=='strengthsets'||smartTimer.strengthPhase!=='ready')return;
   smartTimer.setIndex++;
-  if(smartTimer.setIndex>=smartTimer.totalSets){
-    smartTimer.running=false;
-    smartTimer.remaining=0;
-    smartTimer.endAt=0;
-    smartTimer.strengthPhase='complete';
-    timerBeep();
-  }else{
-    smartTimer.strengthPhase='rest';
-    smartTimer.duration=smartTimer.restSeconds||90;
-    smartTimer.remaining=smartTimer.duration;
-    smartTimer.endAt=Date.now()+smartTimer.duration*1000;
-    smartTimer.running=true;
-  }
+  smartTimer.finalRest=smartTimer.setIndex>=smartTimer.totalSets;
+  smartTimer.strengthPhase='rest';
+  smartTimer.duration=smartTimer.restSeconds||90;
+  smartTimer.remaining=smartTimer.duration;
+  smartTimer.endAt=Date.now()+smartTimer.duration*1000;
+  smartTimer.running=true;
   saveSmartTimer();timerEnsureTick();renderTimerPage();
 }
 function timerSkipStrengthRest(){
   if(smartTimer.kind!=='strengthsets'||smartTimer.strengthPhase!=='rest')return;
+  const currentId=strengthExerciseIdFromName(smartTimer.exerciseName);
+  const finalRest=!!smartTimer.finalRest||smartTimer.setIndex>=smartTimer.totalSets;
   smartTimer.running=false;
   smartTimer.remaining=0;
   smartTimer.endAt=0;
-  smartTimer.strengthPhase=smartTimer.setIndex>=smartTimer.totalSets?'complete':'ready';
-  saveSmartTimer();timerBeep();renderTimerPage();
+  smartTimer.strengthPhase=finalRest?'complete':'ready';
+  smartTimer.finalRest=false;
+  saveSmartTimer();timerBeep();
+  if(finalRest&&currentId){
+    strengthAdvanceAfterFinalRest(currentId,{syncInline:inlineTimer.activeId===currentId,syncSmart:true,scroll:true});
+    return;
+  }
+  renderTimerPage();
 }
 function timerReset(){timerConfigure(smartTimer.mode||'session',true);renderTimerPage()}
 function timerSetRest(sec,exerciseName='',exerciseCategory=''){
@@ -1553,12 +1637,15 @@ function timerViewModel(){
       detail=smartTimer.totalSets+' sets complete';
       nextText='';
     }else if(smartTimer.strengthPhase==='rest'){
-      label='REST';
+      const finalRest=!!smartTimer.finalRest||smartTimer.setIndex>=smartTimer.totalSets;
+      const currentId=strengthExerciseIdFromName(smartTimer.exerciseName);
+      const nextExercise=currentId?strengthNextExercise(currentId):null;
+      label=finalRest?'FINAL REST':'REST';
       meta='Set '+smartTimer.setIndex+' of '+smartTimer.totalSets+' complete';
       progress=smartTimer.duration?sec/smartTimer.duration:0;
       clockText=timerFormat(sec);
       detail=plan.note;
-      nextText='Set '+(smartTimer.setIndex+1)+' · Ready';
+      nextText=finalRest?(nextExercise?nextExercise.name:'Strength work complete'):'Set '+(smartTimer.setIndex+1)+' · Ready';
     }else{
       label='SET '+currentSet+' READY';
       meta=smartTimer.exerciseName||plan.exerciseName;
