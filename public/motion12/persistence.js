@@ -9,6 +9,8 @@
   const DATA_RECORD='data-v1';
   const APP_RECORD='app-state-v1';
   const MIGRATION_RECORD='migration-v1';
+  const SHADOW_KEY='motion12.shadow.v1';
+  const SHADOW_VERSION=1;
 
   const STABLE_ID=/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
   const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -116,6 +118,7 @@
   let lastError=null;
   let readOnlyMode=false;
   let recoverySource='';
+  let lastShadowError=null;
 
   function clone(v){
     if(v===undefined)return undefined;
@@ -124,6 +127,53 @@
   }
   function safeParse(raw,fallback){
     try{return raw==null?fallback:JSON.parse(raw)}catch(_){return fallback}
+  }
+  function shadowEnvelope(data=currentData,app=currentAppState){
+    if(!data)return null;
+    return {
+      format:'motion12-shadow',
+      shadowVersion:SHADOW_VERSION,
+      savedAt:nowIso(),
+      data:clone(data),
+      appState:clone(app||defaultAppState())
+    };
+  }
+  function writeShadow(){
+    if(!currentData||readOnlyMode)return false;
+    try{
+      const envelope=shadowEnvelope();
+      localStorage.setItem(SHADOW_KEY,JSON.stringify(envelope));
+      lastShadowError=null;
+      return true;
+    }catch(err){
+      lastShadowError=err instanceof Error?err:new Error(String(err));
+      console.warn('MOTION12 local shadow write failed',lastShadowError);
+      return false;
+    }
+  }
+  function readShadowCandidate(){
+    try{
+      const parsed=safeParse(localStorage.getItem(SHADOW_KEY),null);
+      if(!parsed||parsed.format!=='motion12-shadow'||parsed.shadowVersion!==SHADOW_VERSION)return null;
+      const checked=validate(parsed.data);
+      if(!checked.valid)return null;
+      return {
+        data:clone(parsed.data),
+        app:{...defaultAppState(),...(clone(parsed.appState)||{})},
+        savedAt:String(parsed.savedAt||parsed.data?.meta?.updatedAt||''),
+        source:'local shadow'
+      };
+    }catch(_){
+      return null;
+    }
+  }
+  function candidateTime(candidate){
+    const value=candidate&&(
+      candidate.data?.meta?.updatedAt||
+      candidate.savedAt
+    );
+    const ms=Date.parse(value||'');
+    return Number.isFinite(ms)?ms:0;
   }
   function nowIso(){return new Date().toISOString()}
   function dateIsoTime(date){return date+'T00:00:00.000Z'}
@@ -615,6 +665,9 @@
   }
   function queuePersist(){
     if(readOnlyMode)return Promise.resolve();
+    // Synchronous durability mirror first. iOS can suspend a Home Screen app
+    // before the queued IndexedDB transaction finishes.
+    writeShadow();
     const data=clone(currentData),app=clone(currentAppState);
     writeChain=writeChain
       .catch(()=>{})
@@ -673,10 +726,21 @@
     readOnlyMode=false;
     recoverySource='';
     lastError=null;
+    lastShadowError=null;
     repository.resetConnection();
     await repository.open();
+
     let data=await repository.load(),app=await repository.loadAppState();
-    if(!data){
+    const shadow=readShadowCandidate();
+
+    if(!data&&shadow){
+      // Recover the last synchronously mirrored state before creating any fresh
+      // default/migration state. This protects against an IndexedDB-only reset.
+      data=shadow.data;
+      app=shadow.app;
+      await repository.saveState(data,app);
+      recoverySource='local shadow → IndexedDB';
+    }else if(!data){
       const input=readLegacyLocalStorage();
       data=initialDataFromLegacy(input);
       app=appStateFromLegacy(input);
@@ -688,11 +752,25 @@
       const checked=validate(data);
       if(!checked.valid)throw new Error('MOTION12 IndexedDB data failed validation: '+checked.issues.filter(x=>x.severity==='error').map(x=>x.path+' '+x.message).join('; '));
       app={...defaultAppState(),...(app||{})};
+
+      // If iOS suspended the app while a queued IndexedDB write was still
+      // pending, the synchronous shadow can be newer than the database.
+      if(shadow&&candidateTime(shadow)>candidateTime({data})){
+        data=shadow.data;
+        app=shadow.app;
+        await repository.saveState(data,app);
+        recoverySource='newer local shadow → IndexedDB';
+      }
     }
+
     currentData=data;
     currentAppState=app;
     projectView();
-    return {valid:true,value:clone(currentData),issues:[],readOnly:false,source:'IndexedDB'};
+    writeShadow();
+    return {
+      valid:true,value:clone(currentData),issues:[],readOnly:false,
+      source:recoverySource||'IndexedDB'
+    };
   }
   async function readIndexedDbCandidate(){
     try{
@@ -746,6 +824,7 @@
     await repository.open();
     await repository.saveState(currentData,currentAppState||defaultAppState());
     readOnlyMode=false;
+    writeShadow();
     recoverySource='';
     lastError=null;
     return {valid:true,value:clone(currentData),issues:[],readOnly:false,source:'IndexedDB'};
@@ -773,6 +852,7 @@
       await repository.open();
       await repository.saveState(currentData,currentAppState);
       readOnlyMode=false;
+      writeShadow();
       recoverySource='';
       lastError=null;
       return {valid:true,value:clone(currentData),issues:[],persisted:true,readOnly:false,source:'IndexedDB'};
@@ -809,6 +889,8 @@
       installationId:currentData.meta&&currentData.meta.installationId||null,
       updatedAt:currentData.meta&&currentData.meta.updatedAt||null,
       programVersion:PROGRAM_VERSION,
+      shadowAvailable:!!readShadowCandidate(),
+      shadowError:lastShadowError?String(lastShadowError.message||lastShadowError):null,
       sessions:Object.keys(currentData.sessions||{}).length,
       measurements:(currentData.measurements||[]).length,
       storage:readOnlyMode?'Read-only memory':'IndexedDB',
@@ -853,12 +935,12 @@
   }
 
   const api={
-    SCHEMA_VERSION,PROGRAM_VERSION,DB_NAME,DB_VERSION,
+    SCHEMA_VERSION,PROGRAM_VERSION,DB_NAME,DB_VERSION,SHADOW_KEY,SHADOW_VERSION,
     repository,
     catalogue:Object.freeze(Object.fromEntries(Object.entries(CATALOG).map(([id,v])=>[id,Object.freeze({id,name:v[0],category:v[1],measurementType:v[2],laterality:v[3]})]))),
     legacyProgram:Object.freeze(LEGACY_PROGRAM_2026_09_27),
     bootstrap,retryBootstrap,retryPersistence,enterReadOnly,recoverFromBackup,
-    view,status,validate,flush,exportBackup,downloadBackup,importBackup,
+    view,status,validate,flush,exportBackup,downloadBackup,importBackup,writeShadow,readShadowCandidate,
     isReadOnly:()=>readOnlyMode,
     stableUuid
   };
