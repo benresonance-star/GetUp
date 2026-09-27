@@ -3778,3 +3778,71 @@ body.motion12-readonly .palette-swatch{
   .nav-icon{width:20px;height:20px;min-width:20px;min-height:20px;flex-basis:20px}
   .navbtn.active .nav-icon{width:20px;height:20px;min-width:20px;min-height:20px}
 }
+
+
+/* ---- canonical-r26: exercise notes ---- */
+.exercise-note-card{
+  margin-top:10px;
+  padding:10px;
+  border:1px solid var(--theme-line,var(--line));
+  border-radius:13px;
+  background:#101215;
+}
+.exercise-note-card.has-note{
+  border-color:rgba(var(--accent-rgb),.34);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.045),#101215 42%);
+}
+.exercise-note-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+}
+.exercise-note-head span{
+  color:var(--ink);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.exercise-note-head small{
+  color:var(--muted);
+  font-size:8px;
+  font-weight:800;
+}
+.exercise-note-input{
+  width:100%;
+  min-height:58px;
+  max-height:160px;
+  resize:vertical;
+  border:1px solid rgba(var(--accent-rgb),.18);
+  border-radius:10px;
+  outline:0;
+  background:#0d0f11;
+  color:var(--ink);
+  padding:9px 10px;
+  font:inherit;
+  font-size:11px;
+  line-height:1.4;
+}
+.exercise-note-input::placeholder{
+  color:#6f747c;
+}
+.exercise-note-input:focus{
+  border-color:rgba(var(--accent-rgb),.58);
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb),.08);
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .exercise-note-card{
+  margin-top:8px;
+  padding:8px;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current .exercise-note-input{
+  min-height:48px;
+  padding:7px 8px;
+  font-size:10px;
+}
+body.motion12-readonly .exercise-note-input{
+  pointer-events:none;
+  opacity:.55;
+}
