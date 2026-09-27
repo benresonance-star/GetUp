@@ -1,0 +1,50 @@
+/* MOTION12 r20 — true equal-length timer arcs.
+   The timer ring is rendered as SVG arc segments instead of conic-gradient wedges.
+   Every segment uses the same angular span, gap, radius and stroke width. */
+
+.timer-ring{
+  background:none!important;
+}
+
+.timer-ring:after{
+  content:none!important;
+  display:none!important;
+}
+
+.timer-ring:before{
+  z-index:1;
+}
+
+.timer-ring-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+  z-index:0;
+}
+
+.timer-ring-segment{
+  fill:none;
+  stroke:var(--timer-track,#292c31);
+  stroke-width:4;
+  stroke-linecap:butt;
+  vector-effect:non-scaling-stroke;
+  transition:stroke .14s linear,opacity .14s linear;
+}
+
+.timer-ring-segment.remaining{
+  stroke:var(--volt,#ff4d2e);
+  opacity:1;
+}
+
+.timer-ring-segment.elapsed{
+  stroke:var(--timer-track,#292c31);
+  opacity:1;
+}
+
+.timer-ring > div{
+  position:relative;
+  z-index:2;
+}
