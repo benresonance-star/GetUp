@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r30-20260928" />
+  <meta name="motion12-build" content="canonical-r31-20260928" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -134,7 +134,7 @@
     </details>
     <details class="data-settings">
       <summary>Training data</summary>
-      <p class="settings-note">MOTION12 now stores live app and training data in IndexedDB. Existing localStorage data is read only once as migration input and is never modified by the new app.</p>
+      <p class="settings-note">MOTION12 stores live app and training data in IndexedDB and mirrors the latest validated state to a separate local shadow for recovery. Existing legacy localStorage migration keys are not modified.</p>
       <div class="data-settings-actions">
         <button type="button" id="exportDataBtn">Export backup</button>
       </div>
@@ -149,6 +149,7 @@
         <div class="diagnostic-cell"><span>Installation</span><b id="diagInstall">—</b></div>
         <div class="diagnostic-cell"><span>Service worker</span><b id="diagWorker">—</b></div>
         <div class="diagnostic-cell"><span>Persistent storage</span><b id="diagPersistent">—</b></div>
+        <div class="diagnostic-cell"><span>Shadow recovery</span><b id="diagShadow">—</b></div>
         <div class="diagnostic-cell" style="grid-column:1/-1"><span>Last data change</span><b id="diagSaved">—</b></div>
       </div>
       <p class="diagnostics-note">The installation ID belongs to this local MOTION12 data store. App-code updates should leave it unchanged.</p>
@@ -175,7 +176,7 @@
       <button type="button" id="recoveryImportBtn">Import backup</button>
     </div>
     <input type="file" id="recoveryImportFile" accept="application/json,.json" hidden>
-    <small>Read-only mode never writes to IndexedDB or localStorage. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
+    <small>Read-only mode never writes to IndexedDB or the local shadow. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
   </div>
 </div>
 <div class="app-update-banner" id="appUpdateBanner" hidden>
@@ -301,6 +302,17 @@
     window.Motion12Persistence.bootstrap()
       .then(startApp)
       .catch(function(err){showRecovery(err,'Startup')});
+
+    function flushLocalState(){
+      try{
+        window.Motion12Persistence.writeShadow();
+        window.Motion12Persistence.flush().catch(function(){});
+      }catch(_){}
+    }
+    window.addEventListener('pagehide',flushLocalState);
+    document.addEventListener('visibilitychange',function(){
+      if(document.visibilityState==='hidden')flushLocalState();
+    });
   })();
 </script>
 <script>
