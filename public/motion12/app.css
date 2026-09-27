@@ -1032,6 +1032,98 @@ html.standalone main{
   color:var(--ink);
   box-shadow:0 0 0 1px var(--line) inset;
 }
+.timer-session-progress{
+  position:sticky;
+  top:76px;
+  z-index:15;
+  margin:0 0 12px;
+  padding:11px 12px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:rgba(16,18,20,.94);
+  backdrop-filter:blur(16px);
+  box-shadow:0 8px 24px rgba(0,0,0,.20);
+}
+.timer-progress-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.timer-progress-head>div{min-width:0}
+.timer-progress-head span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.timer-progress-head strong{
+  display:block;
+  margin-top:5px;
+  color:#f3f4f5;
+  font-size:13px;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.timer-progress-head>b{
+  flex:0 0 auto;
+  color:#d8dade;
+  font-size:11px;
+  font-weight:950;
+  font-variant-numeric:tabular-nums;
+}
+.timer-progress-track{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  gap:3px;
+  height:8px;
+}
+.timer-progress-segment{
+  display:block;
+  min-width:0;
+  border-radius:999px;
+  background:#34383e;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
+  transition:background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.timer-progress-segment.complete{background:var(--cyan)}
+.timer-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(255,77,46,.16),0 0 10px rgba(255,77,46,.14);
+  transform:scaleY(1.25);
+}
+.timer-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px;
+  align-items:center;
+  margin-top:7px;
+  font-size:8.5px;
+  line-height:1.2;
+  font-weight:850;
+}
+.timer-progress-foot .done{color:var(--cyan)}
+.timer-progress-foot .current{
+  min-width:0;
+  color:#e6e8ea;
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.timer-progress-foot .remain{color:var(--muted);text-align:right}
+.timer-progress-foot.continuous{
+  display:block;
+  text-align:center;
+}
+
 .smart-timer-card{
   border:1px solid var(--line);
   border-radius:28px;
@@ -1233,6 +1325,11 @@ html.standalone main{
 .timer-guidance h3{margin:10px 0 5px}
 .timer-guidance p{font-size:12px}
 @media(max-width:390px){
+  .timer-session-progress{top:72px;padding:10px 10px 9px;margin-bottom:10px}
+  .timer-progress-head strong{font-size:12px}
+  .timer-progress-head>b{font-size:10px}
+  .timer-progress-foot{font-size:8px;gap:5px}
+  .timer-progress-track{gap:2px;height:7px}
   .timer-ring{width:min(225px,70vw)}
   .timer-ring strong{font-size:45px}
   .timer-ring span#timerPhase{font-size:12px;max-width:175px}
