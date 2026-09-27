@@ -3973,3 +3973,89 @@ html.standalone .strength-set-columns{
     flex:1 1 100%;
   }
 }
+
+
+/* ---- canonical-r30: completed-session trophy and compact state ---- */
+.hero-session-trophy{
+  position:absolute;
+  top:20px;
+  right:20px;
+  z-index:2;
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:rgba(0,0,0,.10);
+  color:#0b0c0e;
+  border:1px solid rgba(0,0,0,.10);
+}
+.hero-session-trophy .session-trophy-icon{
+  width:31px;
+  height:31px;
+  display:block;
+}
+.hero.completed{
+  box-shadow:var(--shadow),inset 0 0 0 2px rgba(0,0,0,.10);
+}
+
+.compact-session{
+  position:relative;
+}
+.compact-session.completed{
+  box-shadow:
+    0 10px 30px rgba(var(--accent-rgb),.12),
+    inset 0 0 0 2px rgba(0,0,0,.10);
+}
+.compact-session.completed .compact-session-right{
+  grid-template-columns:auto auto;
+  align-items:center;
+  column-gap:7px;
+  row-gap:8px;
+}
+.compact-session-trophy{
+  grid-column:1;
+  grid-row:1;
+  width:30px;
+  height:30px;
+  display:grid!important;
+  place-items:center;
+  padding:0!important;
+  border-radius:10px!important;
+  background:rgba(0,0,0,.10)!important;
+  color:#0b0c0e!important;
+  border:1px solid rgba(0,0,0,.10);
+}
+.compact-session-trophy .session-trophy-icon{
+  width:20px;
+  height:20px;
+  display:block;
+}
+.compact-session.completed .compact-session-right>b{
+  grid-column:2;
+  grid-row:1;
+}
+.compact-session-right .compact-session-cta{
+  background:#0b0c0e;
+  color:white;
+  border-radius:999px;
+  padding:8px 10px;
+  font-size:10px;
+  font-weight:950;
+}
+.compact-session.completed .compact-session-cta{
+  grid-column:1 / -1;
+  grid-row:2;
+}
+@media(max-width:520px){
+  .hero-session-trophy{
+    top:18px;
+    right:18px;
+    width:48px;
+    height:48px;
+  }
+  .hero-session-trophy .session-trophy-icon{
+    width:28px;
+    height:28px;
+  }
+}
