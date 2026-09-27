@@ -90,10 +90,40 @@
     <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
   </div>
 </div>
+<div class="readonly-banner" id="readonlyBanner" hidden>
+  <div><b>READ ONLY</b><span id="readonlyBannerText">Storage is unavailable. Changes are disabled.</span></div>
+  <div class="readonly-banner-actions">
+    <button type="button" id="readonlyRetryBtn">Retry</button>
+    <button type="button" id="readonlyImportBtn">Import backup</button>
+  </div>
+</div>
+<div class="recovery-overlay" id="recoveryOverlay" hidden>
+  <div class="recovery-card">
+    <span class="recovery-kicker">DATA RECOVERY</span>
+    <h2>Training data storage needs attention</h2>
+    <p id="recoveryMessage">MOTION12 could not open its IndexedDB store. Your original localStorage migration source has not been changed.</p>
+    <div class="recovery-status" id="recoveryStatus"></div>
+    <div class="recovery-actions">
+      <button type="button" class="primary" id="recoveryRetryBtn">Retry IndexedDB</button>
+      <button type="button" id="recoveryReadonlyBtn">Open read-only</button>
+      <button type="button" id="recoveryImportBtn">Import backup</button>
+    </div>
+    <input type="file" id="recoveryImportFile" accept="application/json,.json" hidden>
+    <small>Read-only mode never writes to IndexedDB or localStorage. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
+  </div>
+</div>
 <script src="program.js"></script>
 <script src="persistence-v1.js"></script>
 <script>
   (function(){
+    var scriptsLoaded=false;
+    var recovery=document.getElementById('recoveryOverlay');
+    var recoveryMessage=document.getElementById('recoveryMessage');
+    var recoveryStatus=document.getElementById('recoveryStatus');
+    var importFile=document.getElementById('recoveryImportFile');
+    var readonlyBanner=document.getElementById('readonlyBanner');
+    var readonlyText=document.getElementById('readonlyBannerText');
+
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
@@ -103,14 +133,99 @@
         document.body.appendChild(s);
       });
     }
+    async function startApp(){
+      if(scriptsLoaded){
+        if(window.motion12ReloadStateFromPersistence)window.motion12ReloadStateFromPersistence();
+        applyReadOnlyShell();
+        return;
+      }
+      await loadScript('state.js');
+      await loadScript('ui.js');
+      scriptsLoaded=true;
+      applyReadOnlyShell();
+    }
+    function setRecoveryStatus(text,type){
+      recoveryStatus.textContent=text||'';
+      recoveryStatus.className='recovery-status '+(type||'');
+    }
+    function showRecovery(err,phase){
+      var message=err&&err.message?err.message:String(err||'IndexedDB is unavailable');
+      recoveryMessage.textContent='MOTION12 could not safely persist training data. Your original localStorage migration source has not been changed.';
+      setRecoveryStatus((phase?phase+': ':'')+message,'error');
+      recovery.hidden=false;
+    }
+    function hideRecovery(){recovery.hidden=true;setRecoveryStatus('','')}
+    function applyReadOnlyShell(){
+      var ro=Motion12Persistence.isReadOnly();
+      document.body.classList.toggle('motion12-readonly',ro);
+      readonlyBanner.hidden=!ro;
+      if(ro){
+        var s=Motion12Persistence.status();
+        readonlyText.textContent='Using '+(s.recoverySource||'recovery data')+'. Changes are disabled until storage recovers.';
+      }
+    }
+    async function retryStorage(){
+      setRecoveryStatus('Retrying IndexedDB…','working');
+      try{
+        await Motion12Persistence.retryBootstrap();
+        hideRecovery();
+        await startApp();
+        document.body.classList.remove('motion12-readonly');
+        readonlyBanner.hidden=true;
+      }catch(err){
+        showRecovery(err,'Retry failed');
+      }
+    }
+    async function openReadOnly(){
+      setRecoveryStatus('Preparing read-only recovery data…','working');
+      try{
+        await Motion12Persistence.enterReadOnly();
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+      }catch(err){
+        showRecovery(err,'Read-only recovery failed');
+      }
+    }
+    function chooseImport(){importFile.value='';importFile.click()}
+    async function importBackupFile(file){
+      if(!file)return;
+      setRecoveryStatus('Validating backup…','working');
+      try{
+        var json=await file.text();
+        var result=await Motion12Persistence.recoverFromBackup(json);
+        if(!result.valid){
+          var errors=(result.issues||[]).filter(function(x){return x.severity==='error'}).slice(0,3).map(function(x){return x.message}).join(' · ');
+          throw new Error(errors||'Backup validation failed');
+        }
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+        if(result.readOnly){
+          readonlyText.textContent='Imported backup is open read-only because IndexedDB is still unavailable.';
+        }
+      }catch(err){
+        showRecovery(err,'Backup import failed');
+      }
+    }
+
+    document.getElementById('recoveryRetryBtn').onclick=retryStorage;
+    document.getElementById('recoveryReadonlyBtn').onclick=openReadOnly;
+    document.getElementById('recoveryImportBtn').onclick=chooseImport;
+    document.getElementById('readonlyRetryBtn').onclick=retryStorage;
+    document.getElementById('readonlyImportBtn').onclick=chooseImport;
+    importFile.onchange=function(){importBackupFile(importFile.files&&importFile.files[0])};
+
+    window.addEventListener('motion12:persistence-failure',function(e){
+      showRecovery(e.detail&&e.detail.error,e.detail&&e.detail.phase||'Storage failure');
+    });
+    window.addEventListener('motion12:readonly-write-blocked',function(){
+      applyReadOnlyShell();
+    });
+
     Motion12Persistence.bootstrap()
-      .then(function(){return loadScript('state.js')})
-      .then(function(){return loadScript('ui.js')})
-      .catch(function(err){
-        console.error(err);
-        var main=document.querySelector('main');
-        if(main)main.innerHTML='<section class="card"><h3>Training data could not be opened</h3><p>MOTION12 left the existing data untouched. Reload the app; if the problem persists, use the last exported backup.</p></section>';
-      });
+      .then(startApp)
+      .catch(function(err){showRecovery(err,'Startup')});
   })();
 </script>
 </body>
