@@ -11,7 +11,7 @@
   
   
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="persistence-v1-dual-write-20260927" />
+  <meta name="motion12-build" content="persistence-v1-dual-write-final-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -2455,7 +2455,19 @@ function videosFor(name){return videoLinks[name]||[]}
 
     Object.keys(sessionsByKey).forEach(groupKey=>{
       const s=sessionsByKey[groupKey],done=!!sessionCompletion[groupKey];
-      s.exercises.sort((a,b)=>a.order-b.order);
+      const day=Number(groupKey.split(':')[1]),week=weekForDate(s.scheduledDate,startDate);
+      const work=LEGACY_PROGRAM_2026_09_27[day]?.work||[];
+      work.forEach((_,index)=>{
+        const parsedSlot=slotFor(day,'work',index,week);
+        if(!parsedSlot||s.exercises.some(x=>x.slotId===parsedSlot.slotId))return;
+        const sourceKey=s.scheduledDate+'-'+day+'-'+index;
+        s.exercises.push(legacyExerciseRecord(sourceKey,{date:s.scheduledDate,day,index,week,...parsedSlot},logsRaw[sourceKey]||{},done));
+      });
+      s.exercises.sort((a,b)=>{
+        const ak=String(a.legacy?.sourceKey||'').includes('-prep-')?-2:String(a.legacy?.sourceKey||'').includes('-support-')?2:0;
+        const bk=String(b.legacy?.sourceKey||'').includes('-prep-')?-2:String(b.legacy?.sourceKey||'').includes('-support-')?2:0;
+        return ak-bk||a.order-b.order;
+      });
       const anyStarted=s.exercises.some(x=>x.status==='in-progress'||x.status==='completed');
       s.status=done?'completed':anyStarted?'in-progress':'planned';
       if(done)s.completedAt=s.scheduledDate+'T23:59:59.000Z';
