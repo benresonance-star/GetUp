@@ -403,6 +403,42 @@ html.standalone main{
   }
 }
 
+.data-settings{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+.data-settings summary{
+  cursor:pointer;
+  color:#e8e9eb;
+  font-size:12px;
+  font-weight:900;
+}
+.data-settings-actions{display:flex;gap:8px;margin-top:10px}
+.data-settings-actions button{
+  min-height:40px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface2);
+  color:#f0f1f2;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+.data-store-status{
+  margin-top:9px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#101215;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+.data-store-status.ok{border-color:rgba(59,231,225,.22);color:#b9dcdb}
+.data-store-status.error{border-color:rgba(255,77,46,.35);color:#ff9b89}
+
 .portion-settings{
   margin-top:14px;
   border:1px solid var(--line);
