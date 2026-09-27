@@ -450,14 +450,38 @@
     open(){
       if(this.db)return Promise.resolve(this.db);
       return new Promise((resolve,reject)=>{
-        const req=indexedDB.open(DB_NAME,DB_VERSION);
+        let settled=false;
+        const finish=(fn,value)=>{
+          if(settled)return;
+          settled=true;
+          clearTimeout(timeout);
+          fn(value);
+        };
+        const timeout=setTimeout(()=>{
+          finish(reject,new Error('MOTION12 IndexedDB did not respond within 5 seconds'));
+        },5000);
+        let req;
+        try{
+          if(!global.indexedDB)throw new Error('IndexedDB is not available in this browser context');
+          req=global.indexedDB.open(DB_NAME,DB_VERSION);
+        }catch(err){
+          finish(reject,err);
+          return;
+        }
         req.onupgradeneeded=()=>{
           const d=req.result;
           if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'key'});
         };
-        req.onsuccess=()=>{this.db=req.result;resolve(this.db)};
-        req.onerror=()=>reject(req.error||new Error('Unable to open MOTION12 IndexedDB'));
-        req.onblocked=()=>reject(new Error('MOTION12 IndexedDB upgrade is blocked by another tab'));
+        req.onsuccess=()=>{
+          if(settled){
+            try{req.result?.close?.()}catch(_){}
+            return;
+          }
+          this.db=req.result;
+          finish(resolve,this.db);
+        };
+        req.onerror=()=>finish(reject,req.error||new Error('Unable to open MOTION12 IndexedDB'));
+        req.onblocked=()=>finish(reject,new Error('MOTION12 IndexedDB is blocked by another tab or browser context'));
       });
     }
     resetConnection(){
@@ -702,12 +726,15 @@
         source:recoverySource||'in-memory recovery state'
       };
     }
-    if(!candidate)candidate=await readIndexedDbCandidate();
+    // Critical recovery invariant: read-only must never depend on IndexedDB.
+    // If no valid in-memory state exists, recover directly from the untouched
+    // localStorage migration source.
     if(!candidate)candidate=legacyReadOnlyCandidate();
     currentData=candidate.data;
     currentAppState=candidate.app;
     readOnlyMode=true;
     recoverySource=candidate.source;
+    lastError=null;
     projectView();
     return {valid:true,value:clone(currentData),issues:[],readOnly:true,source:recoverySource};
   }
