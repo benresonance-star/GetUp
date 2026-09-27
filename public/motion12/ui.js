@@ -1587,13 +1587,12 @@ function updateDataStoreStatus(){
   const s=Motion12Persistence.status();
   el.className='data-store-status '+(s.valid?'ok':'error');
   el.textContent=s.valid
-    ?'Schema v'+s.schemaVersion+' · '+s.sessions+' sessions · validated · rollback backup retained'
-    :'Data store needs attention · '+(s.issues?.filter(x=>x.severity==='error').length||0)+' validation errors';
+    ?'IndexedDB · schema v'+s.schemaVersion+' · '+s.sessions+' sessions · validated · localStorage is migration input only'
+    :'IndexedDB data needs attention · '+(s.issues?.filter(x=>x.severity==='error').length||0)+' validation errors';
 }
-document.getElementById('exportDataBtn').onclick=()=>{
+document.getElementById('exportDataBtn').onclick=async()=>{
   try{
-    Motion12Persistence.syncFromLegacy();
-    Motion12Persistence.downloadBackup();
+    await Motion12Persistence.downloadBackup();
     updateDataStoreStatus();
   }catch(e){
     const el=document.getElementById('dataStoreStatus');
