@@ -5,11 +5,19 @@ function updateHomeModeToggle(){
   b.setAttribute('aria-checked',compact?'true':'false');
   b.classList.toggle('active',compact);
 }
+function applySessionCompactMode(){
+  const page=document.getElementById('dayPage');
+  if(!page)return;
+  const compact=settings.homeMode==='compact';
+  page.classList.toggle('compact-active',compact);
+  if(compact&&typeof timerViewModel==='function')syncCompactSessionFocus(timerViewModel());
+}
 function toggleHomeMode(){
   settings.homeMode=settings.homeMode==='compact'?'full':'compact';
   motion12SetItem('motion12.settings',JSON.stringify(settings));
   updateHomeModeToggle();
   if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+  if(document.getElementById('dayPage')?.classList.contains('active'))applySessionCompactMode();
 }
 function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
 function mealKey(date,id){return 'meal:'+date+':'+id}
@@ -932,6 +940,7 @@ function openDay(day,date=null){
    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
    if(firstIncomplete>=0)document.getElementById('ex-'+exId(day,firstIncomplete,date))?.classList.add('session-current');
  }
+ applySessionCompactMode();
  renderTimerPage();
  window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -948,6 +957,7 @@ function toggleExercise(id){
     document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
     if(firstIncomplete>=0)document.getElementById('ex-'+exId(pos.day,firstIncomplete,pos.date))?.classList.add('session-current');
     refreshStrengthSessionProgress(pos.day,pos.date);
+    if(settings.homeMode==='compact')syncCompactSessionFocus(timerViewModel());
   }
 }
 function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;motion12SetItem('motion12.logs',JSON.stringify(logs))}
@@ -1535,6 +1545,21 @@ function updateTimerSessionProgress(vm){
 function timerTopRightMeta(vm){
   return vm.kind==='intervals'?'':vm.meta;
 }
+function syncCompactSessionFocus(vm){
+  const page=document.getElementById('dayPage');
+  if(!page?.classList.contains('compact-active'))return;
+  const cards=[...page.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
+  cards.forEach(card=>card.classList.remove('compact-current'));
+  if(!cards.length)return;
+  const progress=timerSessionProgressData(vm||timerViewModel());
+  let index=progress?.currentIndex??-1;
+  if(index<0){
+    index=cards.findIndex(card=>!card.classList.contains('complete'));
+    if(index<0)index=cards.length-1;
+  }
+  if(progress&&(progress.type==='circuit'||progress.type==='intervals'))index=index%cards.length;
+  cards[Math.max(0,Math.min(cards.length-1,index))]?.classList.add('compact-current');
+}
 function renderTimerPage(){
   const progressMount=document.getElementById('sessionProgressMount');
   const timerMount=document.getElementById('sessionTimerMount');
@@ -1556,6 +1581,7 @@ function renderTimerPage(){
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
     '</section>';
+  syncCompactSessionFocus(vm);
   timerEnsureTick();
 }
 function updateSmartTimerDisplay(){
@@ -1583,6 +1609,7 @@ function updateSmartTimerDisplay(){
   }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
   updateTimerSessionProgress(vm);
+  syncCompactSessionFocus(vm);
   if([1,3,5].includes(timerContextDay()))refreshStrengthSessionProgress(timerContextDay(),timerContextDate());
 }
 function showPage(id){
