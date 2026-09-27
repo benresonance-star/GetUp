@@ -3914,3 +3914,39 @@ body.motion12-readonly .exercise-note-input{
   height:34px;
   padding:5px 6px;
 }
+
+
+/* ---- canonical-r28: sticky strength column header ---- */
+.strength-set-columns{
+  position:sticky;
+  top:76px;
+  z-index:18;
+  margin:0 -2px 5px;
+  padding:8px 11px 7px;
+  border-bottom:1px solid rgba(var(--accent-rgb),.22);
+  background:rgba(14,16,18,.97);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 16px rgba(0,0,0,.16);
+}
+
+@media(max-width:520px){
+  .strength-set-columns{
+    top:calc(env(safe-area-inset-top,0px) + 92px);
+  }
+}
+
+@media(display-mode:standalone){
+  .strength-set-columns{
+    top:calc(env(safe-area-inset-top,0px) + 96px);
+  }
+}
+
+html.standalone .strength-set-columns{
+  top:calc(env(safe-area-inset-top,0px) + 96px);
+}
+
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-columns{
+  margin:0 -2px 4px;
+  padding:7px 8px 6px;
+}
