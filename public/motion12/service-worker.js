@@ -25,20 +25,25 @@ const APP_SHELL = [
   './ui-r14.js'
 ];
 
+function shellUrl(url) {
+  return new URL(url, self.registration.scope).href;
+}
+
 async function fetchFresh(url) {
-  const response = await fetch(new Request(url, { cache: 'no-store' }));
+  const absolute = shellUrl(url);
+  const response = await fetch(new Request(absolute, { cache: 'no-store' }));
   if (!response || !response.ok) {
     throw new Error('MOTION12 shell fetch failed: ' + url);
   }
-  return response;
+  return { absolute, response };
 }
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
     for (const url of APP_SHELL) {
-      const response = await fetchFresh(url);
-      await cache.put(url, response.clone());
+      const fresh = await fetchFresh(url);
+      await cache.put(fresh.absolute, fresh.response.clone());
     }
   })());
   // Deliberately do not call skipWaiting() here.
@@ -73,7 +78,7 @@ async function networkFirst(request, fallbackUrl) {
     return response;
   } catch (error) {
     return (await cache.match(request)) ||
-      (fallbackUrl ? await cache.match(fallbackUrl) : undefined) ||
+      (fallbackUrl ? await cache.match(shellUrl(fallbackUrl)) : undefined) ||
       Response.error();
   }
 }
