@@ -1585,9 +1585,11 @@ function updateDataStoreStatus(){
   const el=document.getElementById('dataStoreStatus');
   if(!el||!window.Motion12Persistence)return;
   const s=Motion12Persistence.status();
-  el.className='data-store-status '+(s.valid?'ok':'error');
+  el.className='data-store-status '+(s.valid?(s.readOnly?'readonly':'ok'):'error');
   el.textContent=s.valid
-    ?'IndexedDB · schema v'+s.schemaVersion+' · '+s.sessions+' sessions · validated · localStorage is migration input only'
+    ?(s.readOnly
+      ?'READ ONLY · '+(s.recoverySource||'recovery data')+' · schema v'+s.schemaVersion+' · '+s.sessions+' sessions'
+      :'IndexedDB · schema v'+s.schemaVersion+' · '+s.sessions+' sessions · validated · localStorage is migration input only')
     :'IndexedDB data needs attention · '+(s.issues?.filter(x=>x.severity==='error').length||0)+' validation errors';
 }
 document.getElementById('exportDataBtn').onclick=async()=>{
