@@ -79,10 +79,20 @@
         <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
       </div>
     </details>
+    <details class="data-settings">
+      <summary>Training data</summary>
+      <p class="settings-note">MOTION12 now keeps a versioned v1 training store alongside the current app data. The pre-v1 source is retained as a rollback backup.</p>
+      <div class="data-settings-actions">
+        <button type="button" id="exportDataBtn">Export backup</button>
+      </div>
+      <div class="data-store-status" id="dataStoreStatus"></div>
+    </details>
     <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
   </div>
 </div>
 <script src="program.js"></script>
+<script src="persistence-v1.js"></script>
+<script>Motion12Persistence.bootstrap();</script>
 <script src="state.js"></script>
 <script src="ui.js"></script>
 </body>
