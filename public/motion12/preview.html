@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="MOTION 12" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="flat-workout-timer-r5-20260927" />
+  <meta name="motion12-build" content="compact-workout-r6-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -17,8 +17,8 @@
       if (standalone) document.documentElement.classList.add('standalone');
     })();
   </script>
-  <link rel="stylesheet" href="theme.css?v=20260927r5" />
-  <link rel="stylesheet" href="app.css?v=20260927r5" />
+  <link rel="stylesheet" href="theme.css?v=20260927r6" />
+  <link rel="stylesheet" href="app.css?v=20260927r6" />
 </head>
 <body>
 <div class="app">
@@ -111,8 +111,8 @@
     <small>Read-only mode never writes to IndexedDB or localStorage. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
   </div>
 </div>
-<script src="program.js?v=20260927r5"></script>
-<script src="persistence-v1.js?v=20260927r5"></script>
+<script src="program.js?v=20260927r6"></script>
+<script src="persistence-v1.js?v=20260927r6"></script>
 <script>
   (function(){
     var scriptsLoaded=false;
@@ -126,7 +126,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src=src+'?v=20260927r5';
+        s.src=src+'?v=20260927r6';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);
