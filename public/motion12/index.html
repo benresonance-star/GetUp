@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="permanent-shell-r20-20260927" />
+  <meta name="motion12-build" content="canonical-r21-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -21,17 +21,8 @@
       if (standalone) document.documentElement.classList.add('standalone');
     })();
   </script>
-  <link rel="stylesheet" href="theme-r7.css" />
-  <link rel="stylesheet" href="app-r7.css" />
-  <link rel="stylesheet" href="compact-workout-r8.css" />
-  <link rel="stylesheet" href="compact-workout-r9.css" />
-  <link rel="stylesheet" href="compact-workout-r10.css" />
-  <link rel="stylesheet" href="compact-workout-r11.css" />
-  <link rel="stylesheet" href="meal-configurator-r12.css" />
-  <link rel="stylesheet" href="palette-r13.css" />
-  <link rel="stylesheet" href="workout-theme-r16.css" />
-  <link rel="stylesheet" href="theme-outlines-r17.css" />
-  <link rel="stylesheet" href="timer-ring-r20.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="app.css" />
   <style>
     .app-update-banner[hidden]{display:none!important}
     .app-update-banner{
@@ -79,7 +70,7 @@
         <button class="home-mode-toggle" id="homeModeToggle" type="button" role="switch" aria-checked="false" aria-label="Use compact Home">
           <span class="home-mode-label">Compact</span><span class="switch-track"><span class="switch-knob"></span></span>
         </button>
-        <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon">⚙</span><span class="gear-label">Settings</span></button>
+        <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="gear-label">Settings</span></button>
       </div>
     </div>
   </header>
@@ -89,10 +80,10 @@
     <section id="dayPage" class="page"></section>
     <section id="progressPage" class="page"></section>
   </main>
-  <nav class="bottomnav">
-    <button class="navbtn active" data-page="homePage"><strong>⌂</strong>Home</button>
-    <button class="navbtn" data-page="daysPage"><strong>▦</strong>Days</button>
-    <button class="navbtn" data-page="progressPage"><strong>↗</strong>Progress</button>
+  <nav class="bottomnav" aria-label="Primary">
+    <button class="navbtn active" data-page="homePage"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="navbtn" data-page="daysPage"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span>Days</span></button>
+    <button class="navbtn" data-page="progressPage"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>Progress</span></button>
   </nav>
 </div>
 <div class="settings-overlay" id="settingsOverlay">
@@ -149,6 +140,19 @@
       </div>
       <div class="data-store-status" id="dataStoreStatus"></div>
     </details>
+    <details class="data-settings app-diagnostics">
+      <summary>App diagnostics</summary>
+      <div class="diagnostics-grid">
+        <div class="diagnostic-cell"><span>Build</span><b id="diagBuild">—</b></div>
+        <div class="diagnostic-cell"><span>Data schema</span><b id="diagSchema">—</b></div>
+        <div class="diagnostic-cell"><span>Database</span><b id="diagDatabase">—</b></div>
+        <div class="diagnostic-cell"><span>Installation</span><b id="diagInstall">—</b></div>
+        <div class="diagnostic-cell"><span>Service worker</span><b id="diagWorker">—</b></div>
+        <div class="diagnostic-cell"><span>Persistent storage</span><b id="diagPersistent">—</b></div>
+        <div class="diagnostic-cell" style="grid-column:1/-1"><span>Last data change</span><b id="diagSaved">—</b></div>
+      </div>
+      <p class="diagnostics-note">The installation ID belongs to this local MOTION12 data store. App-code updates should leave it unchanged.</p>
+    </details>
     <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
   </div>
 </div>
@@ -178,8 +182,8 @@
   <span><b>Update available</b><small>Refresh the app code. Your MOTION12 data stays in IndexedDB.</small></span>
   <button type="button" id="appUpdateButton">Refresh</button>
 </div>
-<script src="program-r7.js"></script>
-<script src="persistence-v1-r7.js"></script>
+<script src="program.js"></script>
+<script src="persistence.js"></script>
 <script>
   (function(){
     var scriptsLoaded=false;
@@ -205,8 +209,8 @@
         applyReadOnlyShell();
         return;
       }
-      await loadScript('state-r14.js');
-      await loadScript('ui-r20.js');
+      await loadScript('state.js');
+      await loadScript('ui.js');
       scriptsLoaded=true;
       applyReadOnlyShell();
     }
