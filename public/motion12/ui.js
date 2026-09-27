@@ -270,7 +270,7 @@ function inlineTimerPreset(name,day,target,isSupport=false){
 function inlineTimerMarkup(id){
   if(inlineTimer.activeId!==id)return '';
   if(inlineTimer.kind==='session'){
-    return '<div class="inline-ex-timer" id="inlineExerciseTimer"><div class="inline-timer-main"><span>SESSION TIMER</span><b>Use full sequence</b></div><div class="inline-timer-actions"><button type="button" onclick="event.stopPropagation();showPage(\'timerPage\')">Open timer</button><button type="button" class="inline-close" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div></div>';
+    return '<div class="inline-ex-timer" id="inlineExerciseTimer"><div class="inline-timer-main"><span>SESSION TIMER</span><b>Use full sequence</b></div><div class="inline-timer-actions"><button type="button" onclick="event.stopPropagation();scrollToSessionRuntime()">Session timer</button><button type="button" class="inline-close" onclick="event.stopPropagation();closeInlineExerciseTimer()">×</button></div></div>';
   }
   if(inlineTimer.kind==='strengthsets'){
     const sec=inlineTimerSeconds(),readySet=Math.min(inlineTimer.sets,inlineTimer.setIndex+1);
@@ -912,24 +912,27 @@ function exerciseCardMarkup(day,date,w,x,i){
     '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
   '</div>';
 }
-function openDay(day,date=null){date=date||dateForProgramDay(day);const w=weekNo(),p=program[day];showPage('dayPage');let exHtml='';p.work.forEach((x,i)=>{exHtml+=exerciseCardMarkup(day,date,w,x,i)});
+function openDay(day,date=null){
+ date=date||dateForProgramDay(day);
+ const w=weekNo(),p=program[day];
+ setActiveSessionTimerContext(day,date,w);
+ showPage('dayPage');
+ let exHtml='';p.work.forEach((x,i)=>{exHtml+=exerciseCardMarkup(day,date,w,x,i)});
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const prepHtml=prepBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
- const strengthProgressHtml=strengthSessionProgressMarkup(day,date);
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>${strengthProgressHtml}
- <button class="session-timer-link" type="button" onclick="showPage('timerPage')"><div><span class="tag">Smart timer</span><h3>Use today’s prescribed timing</h3><p>Rest, sets or aerobic intervals are configured automatically.</p></div><span class="session-timer-arrow">→</span></button>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
- <div>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
+ <div><section class="section session-runtime-section" id="sessionRuntimeSection"><div class="section-head"><h2>Session</h2><small>progress + timer</small></div><div id="sessionTimerMount"></div></section>${prepHtml}<section class="section"><div class="section-head"><h2>Workout</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility reset below.</p></div>'}</section>
  ${supportHtml}
  <section class="section" id="mobilitySection"><div class="section-head"><h2>Mobility reset</h2><small>daily</small></div><div class="cards">${mob}</div></section><button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button></div></div>`;
  if([1,3,5].includes(day)){
    const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
    if(firstIncomplete>=0)document.getElementById('ex-'+exId(day,firstIncomplete,date))?.classList.add('session-current');
-   refreshStrengthSessionProgress(day,date);
  }
+ renderTimerPage();
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
@@ -958,6 +961,16 @@ function renderProgress(){
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;motion12SetItem('motion12.settings',JSON.stringify(settings))}motion12SetItem('motion12.measurements',JSON.stringify(measurements));renderHome();renderDays();renderProgress();
 if(inlineTimer.activeId)inlineTimerEnsureTick();timerEnsureTick();const b=document.querySelector('#progressPage .complete-session');if(b){b.textContent='✓ Saved';setTimeout(()=>{if(b.isConnected)b.textContent='Save measures'},1200)}}
 
+let activeSessionTimerContext={day:programDay(),date:todayISO(),week:weekNo()};
+function setActiveSessionTimerContext(day,date,w){
+  activeSessionTimerContext={day:Number(day),date:date||todayISO(),week:Number(w)||weekNo()};
+}
+function timerContextDay(){return Number.isInteger(activeSessionTimerContext?.day)?activeSessionTimerContext.day:programDay()}
+function timerContextDate(){return activeSessionTimerContext?.date||todayISO()}
+function timerContextWeek(){return Number(activeSessionTimerContext?.week)||weekNo()}
+function scrollToSessionRuntime(){
+  document.getElementById('sessionRuntimeSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function conditioningCircuitPlan(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
   let stations=[],roundRest=0,title='',note='';
@@ -1000,7 +1013,7 @@ function conditioningCircuitPlan(day,w){
   }
   return {kind:'intervals',title,note,rounds,phases,circuit:true};
 }
-function strengthExercisePlan(day=programDay(),w=weekNo(),preferredName=''){
+function strengthExercisePlan(day=timerContextDay(),w=timerContextWeek(),preferredName=''){
   const p=program[day];
   if(!p?.work?.length)return null;
   const exercise=(preferredName&&p.work.find(x=>x[0]===preferredName))||p.work[0];
@@ -1019,7 +1032,7 @@ function strengthExercisePlan(day=programDay(),w=weekNo(),preferredName=''){
     note:'Complete the lifting set, tap Set complete, then recovery starts automatically. The next set becomes ready when recovery ends.'
   };
 }
-function timerSessionPlan(day=programDay(),w=weekNo()){
+function timerSessionPlan(day=timerContextDay(),w=timerContextWeek()){
   if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w);
   if(day===6){
     const target=aerobicTargets[w-1]||'Aerobic session';
@@ -1037,7 +1050,7 @@ function timerSessionPlan(day=programDay(),w=weekNo()){
   if(day===1||day===3||day===5)return strengthExercisePlan(day,w,smartTimer.exerciseName)||{kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
   return {kind:'stopwatch',title:'Easy movement',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
 }
-function exerciseRestPreset(name,day=programDay(),w=weekNo()){
+function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
   if(day===2)return {category:'Recovery circuit',seconds:30,action:'session',label:'30s / 30s',note:'Use the complete Restore circuit timer.'};
   if(day===4){
     const complex=name==='Kettlebell squat → jerk → strict press';
@@ -1071,7 +1084,7 @@ function timerUseExercisePreset(name){
     renderTimerPage();
     return;
   }
-  if([1,3,5].includes(programDay())){
+  if([1,3,5].includes(timerContextDay())){
     smartTimer.exerciseName=name;
     smartTimer.exerciseCategory=rec.category;
     timerConfigure('session',true);
@@ -1081,9 +1094,9 @@ function timerUseExercisePreset(name){
   timerSetRest(rec.seconds,name,rec.category);
 }
 function exercisePresetMarkup(){
-  const p=program[programDay()];
+  const p=program[timerContextDay()];
   if(!p?.work?.length)return '';
-  const circuitDay=programDay()===0||programDay()===2||programDay()===4;
+  const circuitDay=timerContextDay()===0||timerContextDay()===2||timerContextDay()===4;
   return '<section class="section timer-exercise-section"><div class="section-head"><h2>'+(circuitDay?'Circuit timing':'Exercise recovery')+'</h2><small>'+(circuitDay?'session sequence':'tap to load')+'</small></div><div class="exercise-rest-list">'+
     p.work.map(x=>{
       const name=x[0],rec=exerciseRestPreset(name),active=smartTimer.exerciseName===name?' active':'';
@@ -1109,7 +1122,7 @@ function timerPhaseReadable(label){
     .replace(/\b\w/g,m=>m.toUpperCase());
 }
 function timerConfigure(mode=smartTimer.mode||'session',force=false){
-  const dayKey=todayISO()+':'+weekNo();
+  const dayKey=timerContextDate()+':'+timerContextWeek();
   if(!force&&smartTimer.dayKey===dayKey&&smartTimer.mode===mode&&smartTimer.kind)return;
   const plan=timerSessionPlan();
   smartTimer={...defaultSmartTimer,mode,dayKey};
@@ -1168,7 +1181,7 @@ function timerBeep(){
 }
 function timerTick(){
   if(!smartTimer.running){
-    if(document.getElementById('timerPage')?.classList.contains('active'))updateSmartTimerDisplay();
+    if(document.getElementById('sessionTimerMount'))updateSmartTimerDisplay();
     return;
   }
   const now=Date.now();
@@ -1204,7 +1217,7 @@ function timerTick(){
   }else if(smartTimer.kind!=='stopwatch'&&now>=smartTimer.endAt){
     smartTimer.running=false;smartTimer.remaining=0;smartTimer.endAt=0;saveSmartTimer();timerBeep();
   }
-  if(document.getElementById('timerPage')?.classList.contains('active'))updateSmartTimerDisplay();
+  if(document.getElementById('sessionTimerMount'))updateSmartTimerDisplay();
 }
 function timerEnsureTick(){
   if(timerInt)return;
@@ -1266,7 +1279,7 @@ function timerSkipStrengthRest(){
 }
 function timerReset(){timerConfigure(smartTimer.mode||'session',true);renderTimerPage()}
 function timerSetRest(sec,exerciseName='',exerciseCategory=''){
-  smartTimer={...defaultSmartTimer,mode:'rest',kind:'rest',duration:sec,remaining:sec,exerciseName,exerciseCategory,dayKey:todayISO()+':'+weekNo()};
+  smartTimer={...defaultSmartTimer,mode:'rest',kind:'rest',duration:sec,remaining:sec,exerciseName,exerciseCategory,dayKey:timerContextDate()+':'+timerContextWeek()};
   saveSmartTimer();renderTimerPage();
 }
 function timerAdjust(delta){
@@ -1403,11 +1416,11 @@ function timerIsRecoveryPhase(label){
   return x==='RECOVER'||x==='ROUND REST';
 }
 function timerSessionProgressData(vm){
-  const day=programDay(),w=weekNo(),p=program[day];
+  const day=timerContextDay(),w=timerContextWeek(),p=program[day];
   if(!p)return null;
 
   if([1,3,5].includes(day)){
-    const date=dateForProgramDay(day),work=p.work||[];
+    const date=timerContextDate(),work=p.work||[];
     const completed=work.map((_,i)=>!!logs[exId(day,i,date)]?.done);
     let currentIndex=-1;
     if(smartTimer.exerciseName){
@@ -1521,25 +1534,35 @@ function timerTopRightMeta(vm){
   return vm.kind==='intervals'?'':vm.meta;
 }
 function renderTimerPage(){
+  const mount=document.getElementById('sessionTimerMount');
+  if(!mount)return;
   timerConfigure(smartTimer.mode||'session',false);
-  const vm=timerViewModel(),p=program[programDay()];
-  const presets=vm.kind==='rest'?'<div class="timer-presets"><button onclick="timerSetRest(60)">1:00</button><button onclick="timerSetRest(90)">1:30</button><button onclick="timerSetRest(120)">2:00</button></div>':'';
-  document.getElementById('timerPage').innerHTML=
-    '<div class="page-title timer-title"><div class="eyebrow">Today · '+p.name+'</div><h1>Timer</h1><p>'+vm.plan.title+'</p></div>'+
-    '<div class="timer-mode-tabs">'+
-      '<button class="'+(smartTimer.mode==='session'?'active':'')+'" onclick="timerSetMode(\'session\')">Session</button>'+
-      '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
-      '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
-    '</div>'+
-    timerSessionProgressMarkup(vm)+
-    '<section class="smart-timer-card">'+
-      '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
-      '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
-      presets+
-    '</section>'+
-    exercisePresetMarkup()+
-    '<section class="section"><div class="card timer-guidance"><span class="tag">Why this timer</span><h3>'+vm.plan.title+'</h3><p>'+vm.detail+'</p></div></section>';
+  const vm=timerViewModel(),day=timerContextDay(),date=timerContextDate();
+  const presets=vm.kind==='rest'
+    ?'<div class="timer-presets"><button onclick="timerSetRest(60)">1:00</button><button onclick="timerSetRest(90)">1:30</button><button onclick="timerSetRest(120)">2:00</button></div>'
+    :'';
+  const progress=[1,3,5].includes(day)
+    ?strengthSessionProgressMarkup(day,date)
+    :timerSessionProgressMarkup(vm);
+  mount.innerHTML=
+    '<div class="session-runtime">'+
+      progress+
+      '<section class="smart-timer-card session-smart-timer">'+
+        '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
+        '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+        '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
+        presets+
+      '</section>'+
+      '<details class="session-timer-tools">'+
+        '<summary>Timer options</summary>'+
+        '<div class="timer-mode-tabs">'+
+          '<button class="'+(smartTimer.mode==='session'?'active':'')+'" onclick="timerSetMode(\'session\')">Session</button>'+
+          '<button class="'+(smartTimer.mode==='rest'?'active':'')+'" onclick="timerSetMode(\'rest\')">Rest</button>'+
+          '<button class="'+(smartTimer.mode==='stopwatch'?'active':'')+'" onclick="timerSetMode(\'stopwatch\')">Stopwatch</button>'+
+        '</div>'+
+        exercisePresetMarkup()+
+      '</details>'+
+    '</div>';
   timerEnsureTick();
 }
 function updateSmartTimerDisplay(){
@@ -1567,6 +1590,7 @@ function updateSmartTimerDisplay(){
   }
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
   updateTimerSessionProgress(vm);
+  if([1,3,5].includes(timerContextDay()))refreshStrengthSessionProgress(timerContextDay(),timerContextDate());
 }
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
@@ -1574,7 +1598,6 @@ function showPage(id){
   if(id==='homePage')renderHome();
   if(id==='daysPage')renderDays();
   if(id==='progressPage')renderProgress();
-  if(id==='timerPage')renderTimerPage();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.getElementById('todayDate').textContent=formatDate();
