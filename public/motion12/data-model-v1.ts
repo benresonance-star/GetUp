@@ -243,6 +243,21 @@ export interface Motion12BackupV1 {
   appState: Motion12AppStateV1;
 }
 
+export interface Motion12RecoveryResultV1 extends ValidationResult<Motion12DataV1> {
+  readOnly: boolean;
+  source: string;
+  persisted?: boolean;
+  error?: string;
+}
+
+export interface Motion12PersistenceRecoveryV1 {
+  retryBootstrap(): Promise<Motion12RecoveryResultV1>;
+  retryPersistence(): Promise<Motion12RecoveryResultV1>;
+  enterReadOnly(): Promise<Motion12RecoveryResultV1>;
+  recoverFromBackup(json: string): Promise<Motion12RecoveryResultV1>;
+  isReadOnly(): boolean;
+}
+
 export interface Motion12Repository {
   load(): Promise<Motion12DataV1>;
   save(data: Motion12DataV1): Promise<void>;
