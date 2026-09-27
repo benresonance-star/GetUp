@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r22-20260927" />
+  <meta name="motion12-build" content="canonical-r23-20260927" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -312,14 +312,55 @@
     var reloading=false;
     var banner=document.getElementById('appUpdateBanner');
     var refreshButton=document.getElementById('appUpdateButton');
+    var currentBuild=document.querySelector('meta[name="motion12-build"]')?.content||'unknown';
+    var UPDATE_CHECK_KEY='m12.shell.lastUpdateCheck';
+    var UPDATE_CHECK_INTERVAL=6*60*60*1000;
 
     function hideUpdate(){
       if(banner)banner.hidden=true;
     }
-    function showUpdate(reg){
-      registration=reg;
-      if(reg && reg.waiting && banner)banner.hidden=false;
+
+    function workerBuild(worker){
+      return new Promise(function(resolve){
+        if(!worker)return resolve(null);
+        var channel=new MessageChannel();
+        var settled=false;
+        var timeout=setTimeout(function(){
+          if(settled)return;
+          settled=true;
+          resolve(null);
+        },1500);
+        channel.port1.onmessage=function(event){
+          if(settled)return;
+          settled=true;
+          clearTimeout(timeout);
+          resolve(event.data&&event.data.build||null);
+        };
+        try{
+          worker.postMessage({type:'GET_BUILD'},[channel.port2]);
+        }catch(_){
+          clearTimeout(timeout);
+          resolve(null);
+        }
+      });
     }
+
+    async function showUpdateIfNew(reg){
+      registration=reg;
+      var waiting=reg&&reg.waiting;
+      if(!waiting){
+        hideUpdate();
+        return false;
+      }
+      var build=await workerBuild(waiting);
+      if(!build || build===currentBuild){
+        hideUpdate();
+        return false;
+      }
+      if(banner)banner.hidden=false;
+      return true;
+    }
+
     function waitForInstalled(worker){
       return new Promise(function(resolve,reject){
         if(!worker)return reject(new Error('No service worker is installing'));
@@ -338,6 +379,7 @@
         });
       });
     }
+
     async function activateUpdate(){
       if(!registration || refreshRequested)return;
       refreshRequested=true;
@@ -345,28 +387,36 @@
         refreshButton.disabled=true;
         refreshButton.textContent='Refreshing…';
       }
+
       try{
         var worker=registration.waiting;
         if(!worker && registration.installing)worker=await waitForInstalled(registration.installing);
         if(!worker){
-          await registration.update();
-          worker=registration.waiting;
-          if(!worker && registration.installing)worker=await waitForInstalled(registration.installing);
-        }
-        if(worker){
-          hideUpdate();
-          worker.postMessage({type:'SKIP_WAITING'});
-          setTimeout(function(){
-            if(!reloading){reloading=true;window.location.reload()}
-          },3500);
-        }else{
           refreshRequested=false;
+          hideUpdate();
           if(refreshButton){
             refreshButton.disabled=false;
             refreshButton.textContent='Refresh';
           }
-          hideUpdate();
+          return;
         }
+
+        var build=await workerBuild(worker);
+        if(!build || build===currentBuild){
+          refreshRequested=false;
+          hideUpdate();
+          if(refreshButton){
+            refreshButton.disabled=false;
+            refreshButton.textContent='Refresh';
+          }
+          return;
+        }
+
+        hideUpdate();
+        worker.postMessage({type:'SKIP_WAITING'});
+        setTimeout(function(){
+          if(!reloading){reloading=true;window.location.reload()}
+        },3500);
       }catch(err){
         console.warn('MOTION12 update activation failed',err);
         refreshRequested=false;
@@ -376,15 +426,35 @@
         }
       }
     }
+
+    function shouldCheckForUpdate(){
+      try{
+        var last=Number(localStorage.getItem(UPDATE_CHECK_KEY)||0);
+        return !last || Date.now()-last>=UPDATE_CHECK_INTERVAL;
+      }catch(_){
+        return true;
+      }
+    }
+
+    function markUpdateCheck(){
+      try{localStorage.setItem(UPDATE_CHECK_KEY,String(Date.now()))}catch(_){}
+    }
+
+    function checkForUpdate(reg){
+      if(!reg || refreshRequested || !shouldCheckForUpdate())return;
+      markUpdateCheck();
+      reg.update().catch(function(){});
+    }
+
     function watchRegistration(reg){
       registration=reg;
-      showUpdate(reg);
+      showUpdateIfNew(reg);
       reg.addEventListener('updatefound',function(){
         var worker=reg.installing;
         if(!worker)return;
         worker.addEventListener('statechange',function(){
           if(worker.state==='installed' && navigator.serviceWorker.controller){
-            showUpdate(reg);
+            showUpdateIfNew(reg);
           }
         });
       });
@@ -404,7 +474,7 @@
         updateViaCache:'none'
       }).then(function(reg){
         watchRegistration(reg);
-        reg.update().catch(function(){});
+        checkForUpdate(reg);
       }).catch(function(err){
         console.warn('MOTION12 service worker registration failed',err);
       });
@@ -416,7 +486,8 @@
 
     document.addEventListener('visibilitychange',function(){
       if(document.visibilityState==='visible' && registration && !refreshRequested){
-        registration.update().catch(function(){});
+        showUpdateIfNew(registration);
+        checkForUpdate(registration);
       }
     });
   })();
