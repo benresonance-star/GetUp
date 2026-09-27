@@ -1466,7 +1466,7 @@ function timerSessionProgressData(vm){
         currentDetail=nextWork?'Next · '+timerPhaseReadable(nextWork.label):'Final recovery';
       }else{
         currentName=timerPhaseReadable(currentPhase.label);
-        currentDetail='Round '+currentPhase.round+' of '+plan.rounds;
+        currentDetail='Current station';
       }
     }
     return {
@@ -1479,9 +1479,7 @@ function timerSessionProgressData(vm){
       eyebrow:plan.circuit?'Circuit progress':'Interval progress',
       currentName,
       currentDetail,
-      countText:plan.circuit
-        ?(currentPhase?'Round '+currentPhase.round+' / '+plan.rounds:plan.rounds+' / '+plan.rounds)
-        :completedCount+' / '+workIndices.length
+      countText:completedCount+' / '+workIndices.length
     };
   }
 
@@ -1519,6 +1517,9 @@ function updateTimerSessionProgress(vm){
   const html=timerSessionProgressMarkup(vm);
   if(html)current.outerHTML=html;
 }
+function timerTopRightMeta(vm){
+  return vm.kind==='intervals'?'':vm.meta;
+}
 function renderTimerPage(){
   timerConfigure(smartTimer.mode||'session',false);
   const vm=timerViewModel(),p=program[programDay()];
@@ -1532,7 +1533,7 @@ function renderTimerPage(){
     '</div>'+
     timerSessionProgressMarkup(vm)+
     '<section class="smart-timer-card">'+
-      '<div class="timer-context"><span>'+vm.label+'</span><b>'+vm.meta+'</b></div>'+
+      '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
       '<div class="timer-ring" id="timerRing" style="--timer-progress:'+(vm.ringProgress*360)+'deg;--timer-step-angle:'+vm.stepAngle+'deg;--timer-gap-angle:'+vm.gapAngle+'deg;--timer-fill-angle:'+vm.fillAngle+'deg;--timer-major-step-angle:'+vm.majorStepAngle+'deg;--timer-major-gap-angle:'+vm.majorGapAngle+'deg"><div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="smart-timer-controls" id="smartTimerControls">'+timerControls(vm)+'</div>'+
       presets+
@@ -1552,6 +1553,7 @@ function updateSmartTimerDisplay(){
     phase.classList.toggle('long',String(vm.label).length>26);
   }
   const meta=document.getElementById('timerMeta');if(meta)meta.textContent=vm.meta;
+  const topRightMeta=document.getElementById('timerTopRightMeta');if(topRightMeta)topRightMeta.textContent=timerTopRightMeta(vm);
   const next=document.getElementById('timerNext');
   if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
   const ring=document.getElementById('timerRing');
