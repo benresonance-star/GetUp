@@ -1235,6 +1235,20 @@ body.motion12-readonly .settings-overlay select{
 #dayPage.compact-active .sticky-col .page-title .eyebrow{
   font-size:8px;
 }
+.session-mode-badge{display:none}
+#dayPage.compact-active .session-mode-badge{
+  display:inline-block;
+  margin-top:3px;
+  padding:3px 6px;
+  border:1px solid rgba(255,77,46,.35);
+  border-radius:999px;
+  color:var(--volt);
+  background:rgba(255,77,46,.07);
+  font-size:7px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.09em;
+}
 #dayPage.compact-active .sticky-col .page-title h1{
   margin:3px 0 0;
   font-size:24px;
@@ -1282,14 +1296,14 @@ body.motion12-readonly .settings-overlay select{
   font-size:9px;
 }
 #dayPage.compact-active .workout-primary-timer .timer-ring{
-  width:min(158px,43vw);
-  margin:8px auto 9px;
+  width:min(132px,38vw);
+  margin:6px auto 7px;
 }
 #dayPage.compact-active .workout-primary-timer .timer-ring:before{
   inset:8px;
 }
 #dayPage.compact-active .workout-primary-timer .timer-ring strong{
-  font-size:37px;
+  font-size:31px;
 }
 #dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
   max-width:118px;
@@ -1349,13 +1363,23 @@ body.motion12-readonly .settings-overlay select{
   width:28px;
   height:28px;
 }
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current){
+  min-height:42px;
+  display:flex;
+  align-items:center;
+}
+#dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .ex-top{
+  width:100%;
+  align-items:center;
+}
 #dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .ex-name h3{
-  margin:0 0 1px;
-  font-size:13px;
+  margin:0;
+  font-size:12px;
 }
 #dayPage.compact-active .workout-exercises-section>.exercise:not(.compact-current) .ex-name p{
-  font-size:9px;
-  line-height:1.2;
+  margin-top:1px;
+  font-size:8px;
+  line-height:1.15;
 }
 #dayPage.compact-active .workout-exercises-section>.exercise .video-link{
   display:none;
@@ -1431,9 +1455,9 @@ body.motion12-readonly .settings-overlay select{
   #dayPage.compact-active .sticky-col{margin-bottom:6px}
   #dayPage.compact-active .sticky-col .page-title h1{font-size:21px}
   #dayPage.compact-active .workout-primary-timer .timer-ring{
-    width:min(146px,42vw);
+    width:min(124px,37vw);
   }
-  #dayPage.compact-active .workout-primary-timer .timer-ring strong{font-size:34px}
+  #dayPage.compact-active .workout-primary-timer .timer-ring strong{font-size:29px}
 }
 
 /* Smart training timer */
