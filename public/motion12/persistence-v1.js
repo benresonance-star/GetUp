@@ -577,9 +577,14 @@
   }
   function queuePersist(){
     const data=clone(currentData),app=clone(currentAppState);
-    writeChain=writeChain.then(()=>repository.saveState(data,app)).catch(err=>{
-      lastError=err;console.error('MOTION12 IndexedDB write failed',err);throw err;
-    });
+    writeChain=writeChain
+      .catch(()=>{})
+      .then(()=>repository.saveState(data,app))
+      .then(()=>{lastError=null})
+      .catch(err=>{
+        lastError=err;
+        console.error('MOTION12 IndexedDB write failed',err);
+      });
     return writeChain;
   }
   function appendMeasurementFromCompat(raw){
@@ -648,7 +653,10 @@
       pendingWrites:lastError?1:0,issues:checked.issues
     };
   }
-  async function flush(){await writeChain}
+  async function flush(){
+    await writeChain;
+    if(lastError)throw lastError;
+  }
   async function exportBackup(){
     await flush();return repository.exportBackup();
   }
