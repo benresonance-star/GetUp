@@ -3846,3 +3846,71 @@ body.motion12-readonly .exercise-note-input{
   pointer-events:none;
   opacity:.55;
 }
+
+
+/* ---- canonical-r27: compact strength set rows with shared column labels ---- */
+.strength-set-columns{
+  display:grid;
+  grid-template-columns:42px repeat(3,minmax(0,1fr));
+  gap:7px;
+  align-items:end;
+  padding:0 9px 5px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.strength-set-columns span{
+  min-width:0;
+}
+.strength-set-columns span:first-child{
+  text-align:center;
+}
+.strength-set-row{
+  align-items:center;
+  padding:6px 9px;
+  min-height:58px;
+}
+.strength-set-number{
+  align-self:center;
+}
+.strength-set-number span{
+  margin-bottom:1px;
+}
+.strength-set-number b{
+  font-size:16px;
+}
+.strength-set-number i{
+  margin-top:1px;
+}
+.strength-set-row label{
+  display:block;
+  min-width:0;
+}
+.strength-set-row label>span{
+  display:none!important;
+}
+.strength-set-row input{
+  height:36px;
+  padding:7px 8px;
+}
+.strength-set-grid{
+  gap:5px;
+}
+
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-columns{
+  grid-template-columns:34px repeat(3,minmax(0,1fr));
+  gap:5px;
+  padding:0 6px 4px;
+  font-size:7px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row{
+  min-height:48px;
+  padding:5px 6px;
+}
+#dayPage.compact-active .strength-session-slice.compact-current .strength-set-row input{
+  height:34px;
+  padding:5px 6px;
+}
