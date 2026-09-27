@@ -49,6 +49,34 @@ const defaultInlineTimer={
 };
 let inlineTimer={...defaultInlineTimer,...(motion12PersistedView.inlineTimer||{})};
 
+function motion12ReloadStateFromPersistence(){
+  const v=Motion12Persistence.view();
+  const nextSettings=v.settings||{};
+  settings={
+    ...defaultSettings,
+    ...nextSettings,
+    portionPresetVersion:4,
+    lunchProtein:nextSettings.lunchProtein||'chicken',
+    dinnerProtein:nextSettings.dinnerProtein||'chicken',
+    portions:{...defaultPortions,...(nextSettings.portions||{})}
+  };
+  logs=v.logs||{};
+  measurements=v.measurements||{};
+  smartTimer={...defaultSmartTimer,...(v.smartTimer||{})};
+  inlineTimer={...defaultInlineTimer,...(v.inlineTimer||{})};
+  try{if(timerInt)clearInterval(timerInt)}catch(_){}
+  try{if(inlineTimerInt)clearInterval(inlineTimerInt)}catch(_){}
+  timerInt=null;inlineTimerInt=null;
+  if(typeof renderHome==='function'){
+    renderHome();renderDays();renderProgress();
+    if(document.getElementById('timerPage')?.classList.contains('active'))renderTimerPage();
+    if(inlineTimer.activeId&&typeof inlineTimerEnsureTick==='function')inlineTimerEnsureTick();
+    if(typeof timerEnsureTick==='function')timerEnsureTick();
+  }
+  return v;
+}
+window.motion12ReloadStateFromPersistence=motion12ReloadStateFromPersistence;
+
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function getMondayISO(d){const x=new Date(d);const day=x.getDay()||7;x.setDate(x.getDate()-day+1);return iso(x)}
 function todayISO(){const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
