@@ -72,7 +72,11 @@ const defaultInlineTimer={
   sets:0,
   setIndex:0,
   target:'',
-  finalRest:false
+  finalRest:false,
+  timedWork:false,
+  workSeconds:0,
+  workMaxSeconds:0,
+  workPerSide:false
 };
 let inlineTimer={...defaultInlineTimer,...(motion12PersistedView.inlineTimer||{})};
 
