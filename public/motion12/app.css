@@ -398,6 +398,10 @@ html.standalone main{
   }
 }
 
+.recovery-overlay[hidden],
+.readonly-banner[hidden]{
+  display:none !important;
+}
 .recovery-overlay{
   position:fixed;
   inset:0;
