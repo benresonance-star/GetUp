@@ -2,7 +2,7 @@
    User data is NOT stored here. Training/settings data remains in IndexedDB "motion12". */
 
 const CACHE_PREFIX = 'motion12-shell-';
-const CACHE_VERSION = '2026-09-27-r21';
+const CACHE_VERSION = '2026-09-27-r22';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
 const APP_SHELL = [
@@ -60,18 +60,20 @@ self.addEventListener('message', event => {
   }
 });
 
-async function networkFirst(request, fallbackUrl) {
+async function cacheFirst(request, fallbackUrl) {
   const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  if (fallbackUrl) {
+    const fallback = await cache.match(shellUrl(fallbackUrl));
+    if (fallback) return fallback;
+  }
+
   try {
-    const response = await fetch(new Request(request, { cache: 'no-store' }));
-    if (response && response.ok) {
-      await cache.put(request, response.clone());
-    }
-    return response;
+    return await fetch(request);
   } catch (error) {
-    return (await cache.match(request)) ||
-      (fallbackUrl ? await cache.match(shellUrl(fallbackUrl)) : undefined) ||
-      Response.error();
+    return Response.error();
   }
 }
 
@@ -82,10 +84,16 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Atomic app-shell rule:
+  // the active worker serves one complete cached build until a newly installed
+  // worker is explicitly activated. This prevents new HTML being mixed with
+  // old CSS/JS during an update.
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, './index.html'));
+    event.respondWith(cacheFirst(shellUrl('./index.html')));
     return;
   }
 
-  event.respondWith(networkFirst(request));
+  if (APP_SHELL.some(path => shellUrl(path) === url.href)) {
+    event.respondWith(cacheFirst(request));
+  }
 });
