@@ -247,12 +247,17 @@ function dailyMotivationQuote(date=todayISO()){
 function streakBand(compact=false){
   const s=programProgressStats(),q=dailyMotivationQuote();
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
-  const program=s.completed+'/'+s.programDays;
-  return '<div class="streak-band '+(compact?'compact-streak':'')+'">'+
+  const remaining=Math.max(0,s.programDays-s.completed);
+  const progress=Math.max(0,Math.min(100,Math.round((s.completed/s.programDays)*100)));
+  return '<div class="streak-band momentum-card '+(compact?'compact-streak':'')+'">'+
+    '<div class="momentum-head"><span>12-week momentum</span><b>'+remaining+' <small>to go</small></b></div>'+
+    '<div class="momentum-progress" aria-label="'+progress+'% complete"><i style="width:'+progress+'%"></i></div>'+
+    '<div class="momentum-metrics">'+
+      '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
+      '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
+      '<div class="streak-stat"><span>Completed</span><b>'+s.completed+'/'+s.programDays+'</b></div>'+
+    '</div>'+
     '<div class="streak-quote"><span class="streak-quote-text">“'+q.text+'”</span><span class="streak-quote-by">— '+q.by+'</span></div>'+
-    '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
-    '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
-    '<div class="streak-stat"><span>Program</span><b>'+program+'</b></div>'+
   '</div>';
 }
 function lucideTrophyMarkup(className='session-trophy-icon'){
@@ -287,6 +292,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
   document.getElementById('homePage').classList.add('compact-active');
   document.getElementById('homePage').innerHTML=`
     <div class="compact-home">
+      ${streakBand(true)}
       <button class="compact-session ${sessionComplete?'completed':''}" type="button" onclick="openDay(${d},'${date}')">
         <div><span class="compact-kicker">Week ${w} · Today</span>${sessionComplete?'<span class="session-complete-label">✓ Session complete</span>':''}<h1>${p.name}</h1><p>${weeklyTarget(d,w)} · ${p.why}</p></div>
         <div class="compact-session-right">
@@ -297,7 +303,6 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </button>
 
       <div class="compact-week">${strip}</div>
-      ${streakBand(true)}
 
       <div class="compact-metrics">
         <div class="compact-card">
@@ -332,8 +337,9 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
+  ${streakBand(false)}
   <section class="hero ${sessionComplete?'completed':''}">${sessionComplete?'<div class="hero-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</div>':''}<div class="eyebrow">Week ${w} · Today</div>${sessionComplete?'<div class="session-complete-label hero-complete-label">✓ Session complete</div>':''}<h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${sessionComplete?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
-  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div>${streakBand(false)}</section>
+  <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div></section>
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
   <section class="section"><div class="section-head"><h2>Food</h2><small>calories → portions</small></div>
