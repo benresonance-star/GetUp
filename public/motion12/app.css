@@ -4289,3 +4289,29 @@ html.standalone .strength-set-columns{
   white-space:normal!important;
   overflow:visible!important;
 }
+
+
+/* ---- canonical-r39: quote + attribution are one stable compact block ---- */
+#homePage.compact-active .momentum-card .streak-quote{
+  min-height:48px!important;
+  height:auto!important;
+  padding:9px 12px 10px!important;
+  display:block!important;
+  overflow:visible!important;
+}
+#homePage.compact-active .momentum-card .streak-quote-text{
+  display:block!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  -webkit-line-clamp:unset!important;
+}
+#homePage.compact-active .momentum-card .streak-quote-by{
+  display:block!important;
+  margin-top:4px!important;
+  color:#bcc1c7!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  white-space:normal!important;
+  overflow:visible!important;
+}
