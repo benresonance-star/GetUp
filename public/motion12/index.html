@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r38-20260928" />
+  <meta name="motion12-build" content="canonical-r39-20260928" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -21,8 +21,8 @@
       if (standalone) document.documentElement.classList.add('standalone');
     })();
   </script>
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="theme.css?v=canonical-r39-20260928" />
+  <link rel="stylesheet" href="app.css?v=canonical-r39-20260928" />
   <style>
     .app-update-banner[hidden]{display:none!important}
     .app-update-banner{
@@ -185,8 +185,8 @@
   <span><b>Update available</b><small>Refresh the app code. Your MOTION12 data stays in IndexedDB.</small></span>
   <button type="button" id="appUpdateButton">Refresh</button>
 </div>
-<script src="program.js"></script>
-<script src="persistence.js"></script>
+<script src="program.js?v=canonical-r39-20260928"></script>
+<script src="persistence.js?v=canonical-r39-20260928"></script>
 <script>
   (function(){
     var scriptsLoaded=false;
@@ -200,7 +200,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src=src;
+        s.src=src+'?v=canonical-r39-20260928';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);
@@ -327,6 +327,18 @@
     var banner=document.getElementById('appUpdateBanner');
     var refreshButton=document.getElementById('appUpdateButton');
     var currentBuild=document.querySelector('meta[name="motion12-build"]')?.content||'unknown';
+
+    function buildRevision(build){
+      var m=String(build||'').match(/-r(\\d+)-/);
+      return m?Number(m[1]):null;
+    }
+    function isNewerBuild(candidate,current){
+      if(!candidate || candidate===current)return false;
+      var a=buildRevision(candidate),b=buildRevision(current);
+      if(a!==null && b!==null)return a>b;
+      return true;
+    }
+
     var UPDATE_CHECK_KEY='m12.shell.lastUpdateCheck';
     var UPDATE_CHECK_INTERVAL=5*60*1000;
 
@@ -367,7 +379,7 @@
         return false;
       }
       var build=await workerBuild(waiting);
-      if(!build || build===currentBuild){
+      if(!isNewerBuild(build,currentBuild)){
         hideUpdate();
         return false;
       }
@@ -416,7 +428,7 @@
         }
 
         var build=await workerBuild(worker);
-        if(!build || build===currentBuild){
+        if(!isNewerBuild(build,currentBuild)){
           refreshRequested=false;
           hideUpdate();
           if(refreshButton){
@@ -483,7 +495,7 @@
     if(refreshButton)refreshButton.addEventListener('click',activateUpdate);
 
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./service-worker.js',{
+      navigator.serviceWorker.register('./service-worker.js?build='+encodeURIComponent(currentBuild),{
         scope:'./',
         updateViaCache:'none'
       }).then(function(reg){
