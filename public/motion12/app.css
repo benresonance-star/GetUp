@@ -4248,3 +4248,44 @@ html.standalone .strength-set-columns{
   .momentum-metrics span{font-size:6.5px}
   .momentum-metrics b{font-size:12px}
 }
+
+
+/* ---- canonical-r38: stable momentum quote layout across standalone and in-app browsers ---- */
+.momentum-card{
+  height:auto!important;
+  max-height:none!important;
+}
+.momentum-card .streak-quote,
+#homePage.compact-active .momentum-card .streak-quote{
+  box-sizing:border-box!important;
+  min-height:48px!important;
+  height:auto!important;
+  padding:9px 12px 10px!important;
+  display:block!important;
+  overflow:visible!important;
+}
+.momentum-card .streak-quote-text,
+#homePage.compact-active .momentum-card .streak-quote-text{
+  display:block!important;
+  color:#f0f2f4!important;
+  font-size:10.5px!important;
+  line-height:1.32!important;
+  font-weight:800!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  -webkit-line-clamp:unset!important;
+}
+.momentum-card .streak-quote-by,
+#homePage.compact-active .momentum-card .streak-quote-by{
+  display:block!important;
+  margin-top:4px!important;
+  color:#bcc1c7!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+  text-transform:none!important;
+  white-space:normal!important;
+  overflow:visible!important;
+}
