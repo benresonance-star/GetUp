@@ -1391,7 +1391,7 @@ function conditioningCircuitPlan(day,w){
   if(day===2){
     stations=[
       {label:'Kettlebell deadlift',work:30,rest:30},
-      {label:'1-arm kettlebell row',work:30,rest:30},
+      {label:'Two-arm kettlebell row',work:30,rest:30},
       {label:'Alternating reverse lunge',work:30,rest:30},
       {label:'Suitcase march / carry',work:30,rest:30}
     ];
