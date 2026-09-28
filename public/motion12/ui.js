@@ -257,7 +257,7 @@ function streakBand(compact=false){
       '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
       '<div class="streak-stat"><span>Completed</span><b>'+s.completed+'/'+s.programDays+'</b></div>'+
     '</div>'+
-    '<div class="streak-quote"><span class="streak-quote-text">“'+q.text+'”</span><span class="streak-quote-by">— '+q.by+'</span></div>'+
+    '<div class="streak-quote" style="display:block!important;overflow:visible!important;height:auto!important;min-height:48px!important;padding:9px 12px 10px!important"><span class="streak-quote-text" style="display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important">“'+q.text+'”</span><span class="streak-quote-by" style="display:block!important;margin-top:4px!important;white-space:normal!important;overflow:visible!important">— '+q.by+'</span></div>'+
   '</div>';
 }
 function lucideTrophyMarkup(className='session-trophy-icon'){
