@@ -4349,3 +4349,61 @@ html.standalone .strength-set-columns{
   white-space:normal!important;
   overflow:visible!important;
 }
+
+
+/* ---- canonical-r42: compact Home fits first screen without clipping ---- */
+#homePage.compact-active{
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+#homePage.compact-active .compact-home{
+  height:auto!important;
+  gap:8px!important;
+  align-content:start!important;
+}
+#homePage.compact-active .momentum-card{
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+#homePage.compact-active .momentum-card .streak-quote.compact-quote{
+  min-height:44px!important;
+  height:auto!important;
+  padding:7px 10px 8px!important;
+  display:block!important;
+  overflow:visible!important;
+}
+#homePage.compact-active .momentum-card .compact-quote .streak-quote-text{
+  display:block!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  -webkit-line-clamp:unset!important;
+}
+#homePage.compact-active .momentum-card .compact-quote-author{
+  display:block!important;
+  margin-top:2px!important;
+  color:#c5c9cf!important;
+  font-size:8.5px!important;
+  line-height:1.15!important;
+  font-weight:850!important;
+  white-space:normal!important;
+  overflow:visible!important;
+}
+@media(max-width:520px){
+  #homePage.compact-active .momentum-head{
+    padding:10px 12px 6px!important;
+  }
+  #homePage.compact-active .momentum-head>b{
+    font-size:26px!important;
+  }
+  #homePage.compact-active .momentum-progress{
+    margin:0 12px 7px!important;
+  }
+  #homePage.compact-active .momentum-metrics>div{
+    padding:8px 9px!important;
+  }
+}
