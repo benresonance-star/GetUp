@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r44-20260929" />
+  <meta name="motion12-build" content="canonical-r45-20260929" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -159,6 +159,11 @@
         <div class="diagnostic-cell" style="grid-column:1/-1"><span>Last data change</span><b id="diagSaved">—</b></div>
       </div>
       <p class="diagnostics-note">The installation ID belongs to this local MOTION12 data store. App-code updates should leave it unchanged.</p>
+      <div class="data-settings-actions" style="margin-top:12px">
+        <button type="button" id="forceAppUpdateBtn">Force app update</button>
+      </div>
+      <div class="data-store-status" id="forceAppUpdateStatus" aria-live="polite"></div>
+      <p class="settings-note">Reloads the latest static-site code and clears only old MOTION12 app-shell caches. Training data in IndexedDB is preserved.</p>
     </details>
     <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
   </div>
@@ -319,6 +324,66 @@
     document.addEventListener('visibilitychange',function(){
       if(document.visibilityState==='hidden')flushLocalState();
     });
+  })();
+</script>
+<script>
+  (function(){
+    var button=document.getElementById('forceAppUpdateBtn');
+    var status=document.getElementById('forceAppUpdateStatus');
+
+    async function flushMotion12Data(){
+      try{
+        if(window.Motion12Persistence){
+          if(typeof window.Motion12Persistence.writeShadow==='function')window.Motion12Persistence.writeShadow();
+          if(typeof window.Motion12Persistence.flush==='function')await window.Motion12Persistence.flush();
+        }
+      }catch(_){}
+    }
+
+    async function forceAppUpdate(){
+      if(!button)return;
+      button.disabled=true;
+      button.textContent='Updating…';
+      if(status)status.textContent='Saving local data and clearing old app cache…';
+
+      try{
+        await flushMotion12Data();
+
+        if('serviceWorker' in navigator){
+          var regs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs
+            .filter(function(reg){return reg.scope.indexOf('/public/motion12/')!==-1})
+            .map(function(reg){return reg.unregister()}));
+        }
+
+        if('caches' in window){
+          var keys=await caches.keys();
+          await Promise.all(keys
+            .filter(function(key){return key.indexOf('motion12-shell-')===0})
+            .map(function(key){return caches.delete(key)}));
+        }
+
+        if(status)status.textContent='Loading latest MOTION12 code…';
+
+        var current=new URL(window.location.href);
+        current.searchParams.set('force-update',Date.now().toString());
+
+        // Exact rawcdn commit URLs are immutable. Move those sessions to the live branch.
+        if(window.location.hostname==='rawcdn.githack.com'){
+          current=new URL('https://raw.githack.com/benresonance-star/GetUp/motion12-preview/public/motion12/');
+          current.searchParams.set('force-update',Date.now().toString());
+        }
+
+        window.location.replace(current.href);
+      }catch(err){
+        console.warn('MOTION12 forced update failed',err);
+        if(status)status.textContent='Update failed. Try again while online.';
+        button.disabled=false;
+        button.textContent='Force app update';
+      }
+    }
+
+    if(button)button.addEventListener('click',forceAppUpdate);
   })();
 </script>
 <script>
