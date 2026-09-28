@@ -2,8 +2,8 @@
    User data is NOT stored here. Training/settings data remains in IndexedDB "motion12". */
 
 const CACHE_PREFIX = 'motion12-shell-';
-const BUILD_ID = 'canonical-r38-20260928';
-const CACHE_VERSION = '2026-09-28-r38';
+const BUILD_ID = 'canonical-r39-20260928';
+const CACHE_VERSION = '2026-09-28-r39';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
 const APP_SHELL = [
@@ -38,6 +38,18 @@ self.addEventListener('install', event => {
     const cache = await caches.open(CACHE_NAME);
     for (const url of APP_SHELL) {
       const fresh = await fetchFresh(url);
+      if (url === './index.html') {
+        const html = await fresh.response.clone().text();
+        if (!html.includes(BUILD_ID)) {
+          throw new Error('MOTION12 refused a stale HTML shell for ' + BUILD_ID);
+        }
+      }
+      if (url === './ui.js') {
+        const ui = await fresh.response.clone().text();
+        if (!ui.includes('streak-quote-by')) {
+          throw new Error('MOTION12 refused a stale UI shell for ' + BUILD_ID);
+        }
+      }
       await cache.put(fresh.absolute, fresh.response.clone());
     }
   })());
@@ -103,7 +115,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (APP_SHELL.some(path => shellUrl(path) === url.href)) {
-    event.respondWith(cacheFirst(request));
+  const normalized = new URL(url.href);
+  normalized.searchParams.delete('v');
+  normalized.searchParams.delete('m12-build');
+
+  const shellPath = APP_SHELL.find(path => shellUrl(path) === normalized.href);
+  if (shellPath) {
+    event.respondWith(cacheFirst(shellUrl(shellPath)));
   }
 });
