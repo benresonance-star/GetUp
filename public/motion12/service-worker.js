@@ -2,7 +2,7 @@
    App shell caching is retired so static-site updates load directly.
    User data remains in IndexedDB and is not touched here. */
 
-const BUILD_ID = 'canonical-r44-20260929';
+const BUILD_ID = 'canonical-r45-20260929';
 const CACHE_PREFIX = 'motion12-shell-';
 
 self.addEventListener('install', event => {
@@ -27,6 +27,6 @@ self.addEventListener('message', event => {
     return;
   }
   if (event.data.type === 'GET_BUILD' && event.ports && event.ports[0]) {
-    event.ports[0].postMessage({ build: BUILD_ID, cacheVersion: 'retired-r44' });
+    event.ports[0].postMessage({ build: BUILD_ID, cacheVersion: 'retired-r45' });
   }
 });
