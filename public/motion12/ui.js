@@ -1624,8 +1624,8 @@ function timerConfigure(mode=smartTimer.mode||'session',force=false){
   saveSmartTimer();
 }
 function timerCurrentSeconds(){
-  if(smartTimer.kind==='stopwatch'){
-    return smartTimer.stopwatchElapsed+(smartTimer.running?Math.floor((Date.now()-smartTimer.stopwatchStartedAt)/1000):0);
+  if(smartTimer.kind==='stopwatch'||(smartTimer.kind==='strengthsets'&&smartTimer.strengthPhase==='work')){
+    return (smartTimer.stopwatchElapsed||0)+(smartTimer.running&&smartTimer.stopwatchStartedAt?Math.floor((Date.now()-smartTimer.stopwatchStartedAt)/1000):0);
   }
   return smartTimer.running?Math.max(0,Math.ceil((smartTimer.endAt-Date.now())/1000)):Math.max(0,smartTimer.remaining||0);
 }
@@ -1654,12 +1654,14 @@ function timerTick(){
   }
   const now=Date.now();
   if(smartTimer.kind==='strengthsets'){
-    if(now>=smartTimer.endAt){
+    if(smartTimer.strengthPhase==='rest'&&smartTimer.endAt&&now>=smartTimer.endAt){
       const currentId=strengthExerciseIdFromName(smartTimer.exerciseName);
       const finalRest=!!smartTimer.finalRest||smartTimer.setIndex>=smartTimer.totalSets;
       smartTimer.running=false;
       smartTimer.remaining=0;
       smartTimer.endAt=0;
+      smartTimer.stopwatchElapsed=0;
+      smartTimer.stopwatchStartedAt=0;
       smartTimer.strengthPhase=finalRest?'complete':'ready';
       smartTimer.finalRest=false;
       saveSmartTimer();
@@ -1702,7 +1704,49 @@ function timerSetMode(mode){timerConfigure(mode,true);renderTimerPage()}
 function timerStartPause(){
   timerPrimeAudio();
   timerConfigure(smartTimer.mode||'session',false);
-  if(smartTimer.kind==='strengthsets'&&smartTimer.strengthPhase!=='rest')return;
+
+  if(smartTimer.kind==='strengthsets'){
+    if(smartTimer.strengthPhase==='complete')return;
+
+    if(smartTimer.strengthPhase==='ready'){
+      smartTimer.strengthPhase='work';
+      smartTimer.stopwatchElapsed=0;
+      smartTimer.stopwatchStartedAt=Date.now();
+      smartTimer.running=true;
+      smartTimer.remaining=0;
+      smartTimer.endAt=0;
+      saveSmartTimer();timerEnsureTick();renderTimerPage();
+      return;
+    }
+
+    if(smartTimer.strengthPhase==='work'){
+      if(smartTimer.running){
+        smartTimer.stopwatchElapsed=timerCurrentSeconds();
+        smartTimer.running=false;
+        smartTimer.stopwatchStartedAt=0;
+      }else{
+        smartTimer.stopwatchStartedAt=Date.now();
+        smartTimer.running=true;
+      }
+      saveSmartTimer();timerEnsureTick();renderTimerPage();
+      return;
+    }
+
+    if(smartTimer.strengthPhase==='rest'){
+      if(smartTimer.running){
+        smartTimer.remaining=timerCurrentSeconds();
+        smartTimer.running=false;
+        smartTimer.endAt=0;
+      }else{
+        if(timerCurrentSeconds()<=0)smartTimer.remaining=smartTimer.duration||smartTimer.restSeconds||90;
+        smartTimer.endAt=Date.now()+smartTimer.remaining*1000;
+        smartTimer.running=true;
+      }
+      saveSmartTimer();timerEnsureTick();renderTimerPage();
+      return;
+    }
+  }
+
   if(smartTimer.running){
     if(smartTimer.kind==='stopwatch')smartTimer.stopwatchElapsed=timerCurrentSeconds();
     else smartTimer.remaining=timerCurrentSeconds();
@@ -1728,7 +1772,11 @@ function timerStartPause(){
 function timerStrengthSetComplete(){
   timerPrimeAudio();
   timerConfigure('session',false);
-  if(smartTimer.kind!=='strengthsets'||smartTimer.strengthPhase!=='ready')return;
+  if(smartTimer.kind!=='strengthsets'||!['ready','work'].includes(smartTimer.strengthPhase))return;
+  if(smartTimer.strengthPhase==='work'){
+    smartTimer.stopwatchElapsed=timerCurrentSeconds();
+    smartTimer.stopwatchStartedAt=0;
+  }
   smartTimer.setIndex++;
   smartTimer.finalRest=smartTimer.setIndex>=smartTimer.totalSets;
   smartTimer.strengthPhase='rest';
@@ -1818,6 +1866,13 @@ function timerViewModel(){
       clockText=timerFormat(sec);
       detail=plan.note;
       nextText=finalRest?(nextExercise?nextExercise.name:'Strength work complete'):'Set '+(smartTimer.setIndex+1)+' · Ready';
+    }else if(smartTimer.strengthPhase==='work'){
+      label=smartTimer.running?'SET '+currentSet+' ACTIVE':'SET '+currentSet+' PAUSED';
+      meta=(smartTimer.target||plan.target||'')+' · '+(smartTimer.exerciseName||plan.exerciseName);
+      progress=0;
+      clockText=timerFormat(sec);
+      detail=plan.note;
+      nextText='Set complete → Rest · '+timerFormat(smartTimer.restSeconds||plan.rest||90);
     }else{
       label='SET '+currentSet+' READY';
       meta=smartTimer.exerciseName||plan.exerciseName;
@@ -1868,6 +1923,7 @@ function timerViewModel(){
 }
 function timerPrimaryLabel(vm){
   if(smartTimer.running)return 'Pause';
+  if(vm.kind==='strengthsets'&&smartTimer.strengthPhase==='work')return smartTimer.stopwatchElapsed>0?'Resume':'Start';
   if(vm.kind==='strengthsets'&&smartTimer.strengthPhase==='rest')return 'Resume';
   if(vm.kind==='stopwatch')return smartTimer.stopwatchElapsed>0?'Resume':'Start';
   if(vm.kind==='intervals'&&smartTimer.phaseIndex>=vm.plan.phases.length)return 'Start again';
@@ -1881,7 +1937,9 @@ function timerControls(vm){
   const reset='<button type="button" class="timer-reset" onclick="timerReset()">Reset</button>';
   if(vm.kind==='strengthsets'){
     if(smartTimer.strengthPhase==='complete')return '<button type="button" class="timer-primary" onclick="timerReset()">Start again</button>';
-    if(smartTimer.strengthPhase==='ready')return '<button type="button" class="timer-primary" onclick="timerStrengthSetComplete()">Set complete</button>'+reset;
+    if(smartTimer.strengthPhase==='ready'||smartTimer.strengthPhase==='work'){
+      return primary+'<button type="button" class="timer-set-complete" onclick="timerStrengthSetComplete()">Set complete</button>'+reset;
+    }
     return primary+'<button type="button" onclick="timerSkipStrengthRest()">Skip rest</button>'+reset;
   }
   if(vm.kind==='intervals')return primary+'<button type="button" onclick="timerSkipPhase()">Skip phase</button>'+reset;
