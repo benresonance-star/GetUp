@@ -1250,7 +1250,7 @@ function strengthSetFlowMarkup(id,name,target){
   const statusMain=isComplete?'✓':(isRest||isWork)?timerFormat(state.sec):state.targetText;
   const statusSub=isComplete?'All '+state.sets+' sets logged':isWork?('Set '+(readyIndex+1)+(state.workPerSide?' · repeat timer for each side':'')):isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
   const completionSummary=isComplete&&!isTendon?strengthCompletionSummaryMarkup(id,name,target,entries):'';
-  const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
+  const sessionCue=isComplete&&!isTendon?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
   const valueColumnLabel=state.timedWork?'Time':'Reps';
   const effortColumnLabel=isTendon?'Effort':'Reps in reserve';
@@ -1349,7 +1349,7 @@ function strengthSetComplete(id,encodedName,encodedTarget){
   const validLoad=String(set.load??'').trim()!=='';
   const validReps=Number(set.reps)>0;
   const rirValue=String(set.rir??'').trim();
-  const validRir=rirValue!==''&&Number(rirValue)>=0&&(!isTendon||Number(rirValue)<=10);
+  const validRir=rirValue!==''&&(isTendon?(Number(rirValue)>=1&&Number(rirValue)<=10):Number(rirValue)>=0);
   if(!validLoad||!validReps||!validRir){
     const flow=document.getElementById('strength-flow-'+id);if(flow)flow.classList.add('needs-input');
     const msg=document.getElementById('strength-flow-message-'+id);
