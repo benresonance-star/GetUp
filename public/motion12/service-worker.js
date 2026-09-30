@@ -1,8 +1,8 @@
-/* MOTION12 r47 retirement service worker.
+/* MOTION12 r48 retirement service worker.
    App shell caching is retired so static-site updates load directly.
    User data remains in IndexedDB and is not touched here. */
 
-const BUILD_ID = 'canonical-r47-20260930';
+const BUILD_ID = 'canonical-r48-20260930';
 const CACHE_PREFIX = 'motion12-shell-';
 
 self.addEventListener('install', event => {
@@ -27,6 +27,6 @@ self.addEventListener('message', event => {
     return;
   }
   if (event.data.type === 'GET_BUILD' && event.ports && event.ports[0]) {
-    event.ports[0].postMessage({ build: BUILD_ID, cacheVersion: 'retired-r47' });
+    event.ports[0].postMessage({ build: BUILD_ID, cacheVersion: 'retired-r48' });
   }
 });
