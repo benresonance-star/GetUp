@@ -3219,6 +3219,8 @@ html[data-app-palette="ember"]{
   --pink:#ff4fa3;
   --accent-rgb:255,77,46;
   --accent2-rgb:255,122,26;
+  --tendon:var(--cyan);
+  --tendon-rgb:59,231,225;
 }
 html[data-app-palette="ocean"]{
   --volt:#38a6ff;
@@ -3227,6 +3229,8 @@ html[data-app-palette="ocean"]{
   --pink:#8f7cff;
   --accent-rgb:56,166,255;
   --accent2-rgb:32,214,199;
+  --tendon:var(--cyan);
+  --tendon-rgb:105,231,255;
 }
 html[data-app-palette="forest"]{
   --volt:#4fd270;
@@ -3235,6 +3239,8 @@ html[data-app-palette="forest"]{
   --pink:#efb451;
   --accent-rgb:79,210,112;
   --accent2-rgb:180,223,69;
+  --tendon:var(--cyan);
+  --tendon-rgb:66,217,183;
 }
 html[data-app-palette="violet"]{
   --volt:#8c72ff;
@@ -3243,6 +3249,8 @@ html[data-app-palette="violet"]{
   --pink:#ff71b3;
   --accent-rgb:140,114,255;
   --accent2-rgb:212,92,255;
+  --tendon:var(--cyan);
+  --tendon-rgb:99,220,255;
 }
 html[data-app-palette="gold"]{
   --volt:#ffb62e;
@@ -3251,6 +3259,8 @@ html[data-app-palette="gold"]{
   --pink:#ff786e;
   --accent-rgb:255,182,46;
   --accent2-rgb:255,122,26;
+  --tendon:var(--cyan);
+  --tendon-rgb:84,217,199;
 }
 html[data-app-palette="rose"]{
   --volt:#ff5f8f;
@@ -3259,6 +3269,8 @@ html[data-app-palette="rose"]{
   --pink:#bc79ff;
   --accent-rgb:255,95,143;
   --accent2-rgb:255,140,81;
+  --tendon:var(--cyan);
+  --tendon-rgb:98,220,231;
 }
 
 /* Replace legacy hard-coded ember glows with the selected palette. */
@@ -4793,4 +4805,87 @@ html.standalone .strength-set-columns{
   #dayPage.compact-active .tendon-capacity-section>.tendon-capacity .ex-name h3{
     font-size:12.5px;
   }
+}
+
+
+/* ---- tendon-semantic-colour-r54 ---- */
+/* Tendon Capacity has its own semantic colour derived from the selected app palette.
+   The section locally remaps the normal training accent tokens so all nested
+   strength-set UI remains consistent without hard-coded colours. */
+.tendon-capacity-section{
+  --volt:var(--tendon);
+  --accent-rgb:var(--tendon-rgb);
+  --theme-line:rgba(var(--tendon-rgb),.28);
+  --theme-line-soft:rgba(var(--tendon-rgb),.16);
+  --theme-line-strong:rgba(var(--tendon-rgb),.48);
+}
+
+.tendon-capacity-section>.section-head h2{
+  color:var(--tendon);
+}
+.tendon-capacity-section>.section-head small{
+  color:var(--tendon);
+}
+.tendon-capacity-section>.tendon-capacity{
+  border-color:rgba(var(--tendon-rgb),.38);
+  background:
+    linear-gradient(135deg,rgba(var(--tendon-rgb),.075),var(--surface) 46%);
+}
+.tendon-capacity-section>.tendon-capacity>.ex-top .num{
+  color:var(--tendon);
+  border-color:rgba(var(--tendon-rgb),.42);
+  background:rgba(var(--tendon-rgb),.11);
+}
+.tendon-capacity-section>.tendon-capacity>.ex-top .check{
+  border-color:rgba(var(--tendon-rgb),.52);
+}
+.tendon-capacity-section>.tendon-capacity>.strength-set-flow{
+  border-color:rgba(var(--tendon-rgb),.30);
+}
+.tendon-capacity-section>.tendon-capacity .strength-flow-status{
+  border-color:rgba(var(--tendon-rgb),.34);
+  background:rgba(var(--tendon-rgb),.055);
+}
+.tendon-capacity-section>.tendon-capacity .strength-flow-status span{
+  color:var(--tendon);
+}
+.tendon-capacity-section>.tendon-capacity .strength-set-row.active{
+  border-color:rgba(var(--tendon-rgb),.62);
+  background:rgba(var(--tendon-rgb),.075);
+}
+.tendon-capacity-section>.tendon-capacity .strength-set-row.logged{
+  border-color:rgba(var(--tendon-rgb),.26);
+}
+.tendon-capacity-section>.tendon-capacity .strength-flow-primary{
+  border-color:var(--tendon);
+  background:var(--tendon);
+  color:#081012;
+}
+.tendon-capacity-section>.tendon-capacity .strength-work-timer{
+  border-color:rgba(var(--tendon-rgb),.58)!important;
+  color:var(--tendon)!important;
+  background:rgba(var(--tendon-rgb),.09)!important;
+}
+.tendon-capacity-section>.tendon-capacity .exercise-note-card.has-note{
+  border-color:rgba(var(--tendon-rgb),.34);
+  background:linear-gradient(145deg,rgba(var(--tendon-rgb),.045),#101215 42%);
+}
+.tendon-capacity-section>.tendon-capacity.complete{
+  border-color:rgba(var(--tendon-rgb),.32);
+}
+.tendon-capacity-section>.tendon-capacity.complete>.ex-top .num{
+  background:rgba(var(--tendon-rgb),.16);
+}
+
+/* Compact selected tendon card should stay in the tendon colour rather than
+   reverting to the current app primary accent. */
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.compact-current{
+  border-color:rgba(var(--tendon-rgb),.72);
+  background:linear-gradient(145deg,rgba(var(--tendon-rgb),.10),var(--surface) 42%);
+  box-shadow:inset 3px 0 0 rgba(var(--tendon-rgb),.88);
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.compact-current>.ex-top .num{
+  color:var(--tendon);
+  border-color:rgba(var(--tendon-rgb),.52);
+  background:rgba(var(--tendon-rgb),.14);
 }
