@@ -4543,3 +4543,118 @@ html.standalone .strength-set-columns{
     display:none !important;
   }
 }
+
+
+/* ---- tendon-compact-r52 ---- */
+/* Tendon capacity: compact workout presentation.
+   Collapsed cards show only the actionable summary; tapping a card reveals timer/logging controls. */
+.tendon-compact-summary{display:none;}
+
+#dayPage.compact-active .tendon-capacity-section{
+  margin:0 0 10px;
+}
+#dayPage.compact-active .tendon-capacity-section .section-head{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:8px;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .tendon-capacity-section .section-head h2{
+  font-size:15px;
+  line-height:1.1;
+}
+#dayPage.compact-active .tendon-capacity-section .section-head small{
+  max-width:56%;
+  font-size:9px;
+  line-height:1.15;
+  text-align:right;
+}
+#dayPage.compact-active .tendon-capacity-note{
+  display:none !important;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .ex-top{
+  gap:9px;
+  align-items:center;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .num{
+  width:28px;
+  height:28px;
+  min-width:28px;
+  border-radius:8px;
+  font-size:9px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .check{
+  width:28px;
+  height:28px;
+  min-width:28px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .ex-name{
+  min-width:0;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .ex-name h3{
+  margin:0 0 2px;
+  font-size:13px;
+  line-height:1.15;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .tendon-full-target{
+  display:none;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity .tendon-compact-summary{
+  display:block;
+  margin:0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity:not(.active-timer)>:not(.ex-top){
+  display:none !important;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer{
+  border-color:rgba(99,210,214,.55);
+  box-shadow:inset 3px 0 0 rgba(99,210,214,.55);
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .inline-ex-timer{
+  margin-top:8px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .inputs{
+  display:grid !important;
+  margin-top:8px;
+  gap:5px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .field label{
+  font-size:7px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .field input{
+  min-height:34px;
+  padding:6px;
+  font-size:10px;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .tendon-coaching,
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.active-timer .tendon-progression{
+  display:none !important;
+}
+#dayPage.compact-active .tendon-capacity-section>.tendon-capacity.complete{
+  opacity:.72;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .tendon-capacity-section>.tendon-capacity{
+    padding:8px 9px;
+  }
+  #dayPage.compact-active .tendon-capacity-section .section-head small{
+    max-width:52%;
+    font-size:8px;
+  }
+  #dayPage.compact-active .tendon-capacity-section>.tendon-capacity .ex-name h3{
+    font-size:12.5px;
+  }
+}
