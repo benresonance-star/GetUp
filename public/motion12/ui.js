@@ -377,9 +377,12 @@ function toggleDayCard(day){
 }
 function dayOverviewMarkup(day,w,p){
   const prep=dayOverviewGroup('Movement prep',p.prep,day,w);
-  const work=dayOverviewGroup('Workout',p.work,day,w,1);
+  const tendonAfter=Number.isInteger(p.tendonAfter)?p.tendonAfter:p.work.length;
+  const primary=p.tendon?.length?dayOverviewGroup('Primary strength',p.work.slice(0,tendonAfter),day,w,1):dayOverviewGroup('Workout',p.work,day,w,1);
+  const tendon=p.tendon?.length?dayOverviewGroup('Tendon capacity · '+(p.tendonFocus||'high force'),p.tendon,day,w):'';
+  const finishers=p.tendon?.length?dayOverviewGroup('Finishers / accessories',p.work.slice(tendonAfter),day,w,tendonAfter+1):'';
   const support=dayOverviewGroup('Support',p.support,day,w);
-  return '<div class="day-overview">'+prep+work+support+
+  return '<div class="day-overview">'+prep+primary+tendon+finishers+support+
     '<div class="day-overview-note">Daily mobility reset is available inside the session.</div>'+
     '<button class="day-session-btn '+p.tone+'" type="button" onclick="event.stopPropagation();openDay('+day+')"><span>Go to session</span><span>→</span></button>'+
   '</div>';
@@ -424,9 +427,9 @@ function inlineTimerSeconds(){
 function inlineTimerPreset(name,day,target,isSupport=false){
   const m=String(target||'').match(/(\d+)\s*sec\s*work\s*\/\s*(\d+)\s*sec/i);
   if(m)return {kind:'workrest',work:Number(m[1]),rest:Number(m[2]),label:'Exercise interval'};
+  const iso=String(target||'').match(/^\s*(\d+)\s*×\s*(\d+)\s*sec(?:\s*\/\s*side)?/i);
+  if(/isometric/i.test(name)&&iso)return {kind:'workrest',work:Number(iso[2]),rest:25,label:'High-force isometric hold'};
   if(isSupport){
-    const iso=String(target||'').match(/^\s*(\d+)\s*×\s*(\d+)\s*sec(?:\s*\/\s*side)?/i);
-    if(/isometric/i.test(name)&&iso)return {kind:'workrest',work:Number(iso[2]),rest:25,label:'High-force isometric hold'};
     if(name==='Back extension')return {kind:'rest',rest:60,label:'Support recovery'};
     if(name==='Sliding hamstring curl')return {kind:'rest',rest:45,label:'Support recovery'};
     return {kind:'rest',rest:60,label:'Support recovery'};
@@ -626,19 +629,31 @@ function prepBlockMarkup(day,date,p){
 }
 function supportBlockMarkup(day,date,w,p){
   if(!p.support?.length)return '';
-  const hasTendonCapacity=p.support.some(x=>/isometric/i.test(x[0]||''));
   const cards=p.support.map((x,i)=>{
     const id=`${date}-${day}-support-${i}`,state=logs[id]||{},target=supportTarget(x,w);
-    const isTendon=/isometric/i.test(x[0]||'');
     const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
-    return `<div class="exercise support-exercise ${isTendon?'tendon-capacity ':''}${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
+    return `<div class="exercise support-exercise ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
       <div class="ex-top"><div class="num">S${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
       ${inlineTimerMarkup(id)}
-      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="${isTendon?'heavy KB / bodyweight':'bodyweight / light KB'}" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${isTendon?'4 × 5 sec / side':'sets/reps'}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="${isTendon?'8–9 / 10':'3–4 RIR'}" oninput="saveEx('${id}','rir',this.value)"></div></div>
+      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="bodyweight / light KB" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="3–4 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
     </div>`;
   }).join('');
-  return `<section class="section support-section"><div class="section-head"><h2>${hasTendonCapacity?'Tendon capacity':'Support block'}</h2><small>${hasTendonCapacity?'high force · short holds':'fill gaps · low fatigue'}</small></div>${cards}</section>`;
+  return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
+}
+function tendonBlockMarkup(day,date,p){
+  if(!p.tendon?.length)return '';
+  const cards=p.tendon.map((x,i)=>{
+    const id=`${date}-${day}-tendon-${i}`,state=logs[id]||{},target=x[1]||'';
+    const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
+    return `<div class="exercise support-exercise tendon-capacity ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
+      <div class="ex-top"><div class="num">T${i+1}</div><div class="ex-name"><h3>${x[0]}</h3><p>${target}</p></div><button class="check" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
+      ${inlineTimerMarkup(id)}
+      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="heavy KB / bodyweight" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${target.split('·')[0].trim()}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>Effort</label><input value="${state.rir||''}" placeholder="8–9 / 10" oninput="saveEx('${id}','rir',this.value)"></div></div>
+      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
+    </div>`;
+  }).join('');
+  return `<section class="section tendon-capacity-section"><div class="section-head"><h2>Tendon capacity</h2><small>${p.tendonFocus||'high force · short holds'}</small></div><div class="tip tendon-capacity-note"><b>Placement:</b> after primary compound strength, before lower-priority accessories. Build force smoothly; do not turn the holds into endurance work.</div>${cards}</section>`;
 }
 
 /* Canonical workout-session content order.
@@ -1310,16 +1325,23 @@ function openDay(day,date=null){
  const w=weekNo(),p=program[day];
  setActiveSessionTimerContext(day,date,w);
  showPage('dayPage');
- let exHtml='';p.work.forEach((x,i)=>{exHtml+=exerciseCardMarkup(day,date,w,x,i)});
+ const tendonAfter=Number.isInteger(p.tendonAfter)?p.tendonAfter:p.work.length;
+ const primaryWork=p.tendon?.length?p.work.slice(0,tendonAfter):p.work;
+ const secondaryWork=p.tendon?.length?p.work.slice(tendonAfter):[];
+ const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i)).join('');
+ const secondaryHtml=secondaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,tendonAfter+i)).join('');
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const prepHtml=prepBlockMarkup(day,date,p);
+ const tendonHtml=tendonBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
  const key=`${date}-${day}`;
  const mobilityHtml=`<section class="section mobility-warmup-section" id="mobilitySection"><div class="section-head"><h2>Mobility warm-up</h2><small>first · 6–8 min</small></div><div class="cards">${mob}</div></section>`;
- const mainHtml=`<section class="section workout-exercises-section"><div class="section-head"><h2>Exercises</h2><small>log as you go</small></div>${exHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
+ const primarySection=`<section class="section workout-exercises-section"><div class="section-head"><h2>${p.tendon?.length?'Primary strength':'Exercises'}</h2><small>${p.tendon?.length?'highest-priority work first':'log as you go'}</small></div>${primaryHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
+ const secondarySection=secondaryHtml?`<section class="section workout-exercises-section workout-secondary-section"><div class="section-head"><h2>Finishers / accessories</h2><small>after tendon capacity</small></div>${secondaryHtml}</section>`:'';
+ const mainHtml=primarySection+tendonHtml+secondarySection;
  const completeHtml=`<button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button>`;
  const sessionHtml=workoutSessionMarkup({mobilityHtml,prepHtml,mainHtml,supportHtml,completeHtml});
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.tendon?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
  <div>${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
