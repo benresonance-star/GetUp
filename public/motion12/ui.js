@@ -425,6 +425,8 @@ function inlineTimerPreset(name,day,target,isSupport=false){
   const m=String(target||'').match(/(\d+)\s*sec\s*work\s*\/\s*(\d+)\s*sec/i);
   if(m)return {kind:'workrest',work:Number(m[1]),rest:Number(m[2]),label:'Exercise interval'};
   if(isSupport){
+    const iso=String(target||'').match(/^\s*(\d+)\s*×\s*(\d+)\s*sec(?:\s*\/\s*side)?/i);
+    if(/isometric/i.test(name)&&iso)return {kind:'workrest',work:Number(iso[2]),rest:25,label:'High-force isometric hold'};
     if(name==='Back extension')return {kind:'rest',rest:60,label:'Support recovery'};
     if(name==='Sliding hamstring curl')return {kind:'rest',rest:45,label:'Support recovery'};
     return {kind:'rest',rest:60,label:'Support recovery'};
@@ -624,17 +626,19 @@ function prepBlockMarkup(day,date,p){
 }
 function supportBlockMarkup(day,date,w,p){
   if(!p.support?.length)return '';
+  const hasTendonCapacity=p.support.some(x=>/isometric/i.test(x[0]||''));
   const cards=p.support.map((x,i)=>{
     const id=`${date}-${day}-support-${i}`,state=logs[id]||{},target=supportTarget(x,w);
+    const isTendon=/isometric/i.test(x[0]||'');
     const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
-    return `<div class="exercise support-exercise ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
+    return `<div class="exercise support-exercise ${isTendon?'tendon-capacity ':''}${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
       <div class="ex-top"><div class="num">S${i+1}</div><div class="ex-name"><h3>${x[0]} ${videoButtons(x[0])}</h3><p>${target}</p></div><button class="check" onclick="toggleExercise('${id}')"></button></div>
       ${inlineTimerMarkup(id)}
-      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="bodyweight / light KB" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="sets/reps" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="3–4 RIR" oninput="saveEx('${id}','rir',this.value)"></div></div>
+      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="${isTendon?'heavy KB / bodyweight':'bodyweight / light KB'}" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${isTendon?'4 × 5 sec / side':'sets/reps'}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>RIR / effort</label><input value="${state.rir||''}" placeholder="${isTendon?'8–9 / 10':'3–4 RIR'}" oninput="saveEx('${id}','rir',this.value)"></div></div>
       <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
     </div>`;
   }).join('');
-  return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
+  return `<section class="section support-section"><div class="section-head"><h2>${hasTendonCapacity?'Tendon capacity':'Support block'}</h2><small>${hasTendonCapacity?'high force · short holds':'fill gaps · low fatigue'}</small></div>${cards}</section>`;
 }
 
 /* Canonical workout-session content order.
