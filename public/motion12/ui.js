@@ -1869,7 +1869,8 @@ function timerViewModel(){
     }else if(smartTimer.strengthPhase==='work'){
       label=smartTimer.running?'SET '+currentSet+' ACTIVE':'SET '+currentSet+' PAUSED';
       meta=(smartTimer.target||plan.target||'')+' · '+(smartTimer.exerciseName||plan.exerciseName);
-      progress=0;
+      const ringSecond=sec%60;
+      progress=sec>0&&ringSecond===0?1:ringSecond/60;
       clockText=timerFormat(sec);
       detail=plan.note;
       nextText='Set complete → Rest · '+timerFormat(smartTimer.restSeconds||plan.rest||90);
@@ -1906,11 +1907,12 @@ function timerViewModel(){
     detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
   const duration=Math.max(0,Number(smartTimer.duration)||0);
-  const stepAngle=duration>0?360/duration:360;
-  const gapAngle=duration>0?Math.min(1.6,Math.max(.55,stepAngle*.16)):0;
+  const ringDuration=kind==='strengthsets'&&smartTimer.strengthPhase==='work'?60:duration;
+  const stepAngle=ringDuration>0?360/ringDuration:360;
+  const gapAngle=ringDuration>0?Math.min(1.6,Math.max(.55,stepAngle*.16)):0;
   const fillAngle=Math.max(.1,stepAngle-gapAngle);
-  const majorStepAngle=duration>0?stepAngle*5:360;
-  const majorGapAngle=duration>0?Math.min(3.2,Math.max(1.5,gapAngle*1.9)):0;
+  const majorStepAngle=ringDuration>0?stepAngle*5:360;
+  const majorGapAngle=ringDuration>0?Math.min(3.2,Math.max(1.5,gapAngle*1.9)):0;
   const normalizedProgress=Math.max(0,Math.min(1,progress));
   const transitioning=Date.now()<timerPhaseTransitionUntil;
   return {
@@ -1918,7 +1920,7 @@ function timerViewModel(){
     progress:normalizedProgress,
     ringProgress:transitioning?0:normalizedProgress,
     transitioning,
-    duration,stepAngle,gapAngle,fillAngle,majorStepAngle,majorGapAngle
+    duration,ringDuration,stepAngle,gapAngle,fillAngle,majorStepAngle,majorGapAngle
   };
 }
 function timerPrimaryLabel(vm){
@@ -2079,7 +2081,7 @@ function timerTopRightMeta(vm){
   return vm.kind==='intervals'?'':vm.meta;
 }
 function timerRingSegmentCount(vm){
-  const duration=Math.max(1,Math.round(Number(vm?.duration)||1));
+  const duration=Math.max(1,Math.round(Number(vm?.ringDuration??vm?.duration)||1));
   return Math.min(180,duration);
 }
 function timerRingActiveCount(vm,count=timerRingSegmentCount(vm)){
