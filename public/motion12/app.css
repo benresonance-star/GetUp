@@ -4529,3 +4529,17 @@ html.standalone .strength-set-columns{
     color:var(--ink);
   }
 }
+
+
+/* ---- timer-controls-r48 ---- */
+/* Phone timer contract: dial first; one action group directly beneath it. */
+@media(max-width:480px){
+  #dayPage .workout-primary-timer .mobile-smart-timer-controls,
+  #dayPage.compact-active .workout-primary-timer .mobile-smart-timer-controls{
+    margin:12px 0 0 !important;
+  }
+  #dayPage .workout-primary-timer .workout-timer-footer .smart-timer-controls,
+  #dayPage.compact-active .workout-primary-timer .workout-timer-footer .smart-timer-controls{
+    display:none !important;
+  }
+}
