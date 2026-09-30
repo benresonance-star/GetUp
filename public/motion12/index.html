@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r54-20260930" />
+  <meta name="motion12-build" content="canonical-r55-20261001" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -28,6 +28,8 @@
   <link rel="stylesheet" href="https://raw.githack.com/benresonance-star/GetUp/6f985beb2733317c20d4321dc4fa7ee29f35762e/public/motion12/theme.css" />
   <link rel="stylesheet" href="https://raw.githack.com/benresonance-star/GetUp/6f985beb2733317c20d4321dc4fa7ee29f35762e/public/motion12/app.css" />
   <style>
+    .brand-line{display:flex;align-items:baseline;gap:7px}
+    .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
     .app-update-banner[hidden]{display:none!important}
     .app-update-banner{
       position:fixed;
@@ -69,7 +71,7 @@
 <div class="app">
   <header class="top">
     <div class="topline">
-      <div><div class="brand">MOTION<i>12</i></div><div class="date" id="todayDate"></div></div>
+      <div><div class="brand-line"><div class="brand">MOTION<i>12</i></div><span class="build-revision" id="headerBuildRevision" aria-label="App revision"></span></div><div class="date" id="todayDate"></div></div>
       <div class="top-actions">
         <button class="home-mode-toggle" id="homeModeToggle" type="button" role="switch" aria-checked="false" aria-label="Use compact Home">
           <span class="home-mode-label">Compact</span><span class="switch-track"><span class="switch-knob"></span></span>
@@ -328,8 +330,13 @@
 </script>
 <script>
   (function(){
-    var button=document.getElementById('forceAppUpdateBtn');
+    var settingsButton=document.getElementById('forceAppUpdateBtn');
+    var bannerButton=document.getElementById('appUpdateButton');
     var status=document.getElementById('forceAppUpdateStatus');
+    var buildLabel=document.getElementById('headerBuildRevision');
+    var buildMeta=document.querySelector('meta[name="motion12-build"]')?.content||'';
+    var buildMatch=buildMeta.match(/canonical-(r\d+)/i);
+    if(buildLabel)buildLabel.textContent=buildMatch?buildMatch[1].toLowerCase():'';
 
     async function flushMotion12Data(){
       try{
@@ -340,50 +347,67 @@
       }catch(_){}
     }
 
-    async function forceAppUpdate(){
-      if(!button)return;
-      button.disabled=true;
-      button.textContent='Updating…';
-      if(status)status.textContent='Saving local data and clearing old app cache…';
-
-      try{
-        await flushMotion12Data();
-
-        if('serviceWorker' in navigator){
-          var regs=await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs
-            .filter(function(reg){return reg.scope.indexOf('/public/motion12/')!==-1})
-            .map(function(reg){return reg.unregister()}));
-        }
-
-        if('caches' in window){
-          var keys=await caches.keys();
-          await Promise.all(keys
-            .filter(function(key){return key.indexOf('motion12-shell-')===0})
-            .map(function(key){return caches.delete(key)}));
-        }
-
-        if(status)status.textContent='Loading latest MOTION12 code…';
-
-        var current=new URL(window.location.href);
-        current.searchParams.set('force-update',Date.now().toString());
-
-        // Exact rawcdn commit URLs are immutable. Move those sessions to the live branch.
-        if(window.location.hostname==='rawcdn.githack.com'){
-          current=new URL('https://raw.githack.com/benresonance-star/GetUp/motion12-preview/public/motion12/');
-          current.searchParams.set('force-update',Date.now().toString());
-        }
-
-        window.location.replace(current.href);
-      }catch(err){
-        console.warn('MOTION12 forced update failed',err);
-        if(status)status.textContent='Update failed. Try again while online.';
-        button.disabled=false;
-        button.textContent='Force app update';
+    async function clearRetiredShell(){
+      if('serviceWorker' in navigator){
+        var regs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs
+          .filter(function(reg){
+            return reg.scope.indexOf('/public/motion12/')!==-1 ||
+              reg.scope.indexOf('/motion12-preview/public/motion12/')!==-1;
+          })
+          .map(function(reg){return reg.unregister()}));
+      }
+      if('caches' in window){
+        var keys=await caches.keys();
+        await Promise.all(keys
+          .filter(function(key){return key.indexOf('motion12-shell-')===0})
+          .map(function(key){return caches.delete(key)}));
       }
     }
 
-    if(button)button.addEventListener('click',forceAppUpdate);
+    async function resolveLatestCommit(){
+      var response=await fetch('https://api.github.com/repos/benresonance-star/GetUp/commits/motion12-preview',{
+        method:'GET',
+        cache:'no-store',
+        headers:{
+          'Accept':'application/vnd.github+json'
+        }
+      });
+      if(!response.ok)throw new Error('GitHub update lookup failed ('+response.status+')');
+      var data=await response.json();
+      var sha=String(data&&data.sha||'').trim();
+      if(!/^[0-9a-f]{40}$/i.test(sha))throw new Error('GitHub returned an invalid commit');
+      return sha;
+    }
+
+    async function updateToLatest(sourceButton){
+      var buttons=[settingsButton,bannerButton].filter(Boolean);
+      buttons.forEach(function(b){b.disabled=true});
+      if(settingsButton)settingsButton.textContent='Updating…';
+      if(bannerButton)bannerButton.textContent='Updating…';
+      if(status)status.textContent='Saving local data and resolving the latest MOTION12 revision…';
+
+      try{
+        await flushMotion12Data();
+        await clearRetiredShell();
+
+        if(status)status.textContent='Finding latest commit…';
+        var sha=await resolveLatestCommit();
+        var target='https://raw.githack.com/benresonance-star/GetUp/'+sha+'/public/motion12/';
+
+        if(status)status.textContent='Opening verified latest revision…';
+        window.location.replace(target);
+      }catch(err){
+        console.warn('MOTION12 forced update failed',err);
+        if(status)status.textContent='Update lookup failed. Check your connection and try again.';
+        buttons.forEach(function(b){b.disabled=false});
+        if(settingsButton)settingsButton.textContent='Force app update';
+        if(bannerButton)bannerButton.textContent='Refresh';
+      }
+    }
+
+    if(settingsButton)settingsButton.addEventListener('click',function(){updateToLatest(settingsButton)});
+    if(bannerButton)bannerButton.addEventListener('click',function(){updateToLatest(bannerButton)});
   })();
 </script>
 <script>
