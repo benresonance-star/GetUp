@@ -552,6 +552,16 @@ function inlineTimerTick(){
   if(now>=inlineTimer.endAt){
     const previousEnd=inlineTimer.endAt;
     if(inlineTimer.kind==='strengthsets'&&inlineTimer.phase==='work'){
+      const activeCard=document.getElementById('ex-'+inlineTimer.activeId);
+      const activeName=decodeURIComponent(activeCard?.dataset?.timerName||'');
+      if(/isometric/i.test(activeName)){
+        const entries=strengthSetLogEntries(inlineTimer.activeId,inlineTimer.sets||1);
+        const idx=Math.max(0,Math.min((inlineTimer.sets||1)-1,inlineTimer.setIndex||0));
+        entries[idx]=entries[idx]||{};
+        if(!entries[idx].reps)entries[idx].reps=inlineTimer.workSeconds||inlineTimer.duration||5;
+        logs[inlineTimer.activeId].sets=entries;
+        motion12SetItem('motion12.logs',JSON.stringify(logs));
+      }
       inlineTimer.running=false;
       inlineTimer.phase='ready';
       inlineTimer.remaining=0;
@@ -641,19 +651,25 @@ function supportBlockMarkup(day,date,w,p){
   }).join('');
   return `<section class="section support-section"><div class="section-head"><h2>Support block</h2><small>fill gaps · low fatigue</small></div>${cards}</section>`;
 }
+function activateTendonStrengthCard(event,card){
+  if(event.target.closest('button,input,a,select,textarea,label'))return;
+  const id=card.dataset.timerId,name=decodeURIComponent(card.dataset.timerName||''),target=decodeURIComponent(card.dataset.timerTarget||'');
+  if(!id||!name||!target)return;
+  document.querySelectorAll('.tendon-capacity.compact-current').forEach(el=>{if(el!==card)el.classList.remove('compact-current')});
+  card.classList.add('compact-current');
+  strengthEnsureTimer(id,name,target);
+  refreshStrengthFlowById(id);
+  if(document.getElementById('dayPage')?.classList.contains('compact-active'))card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 function tendonBlockMarkup(day,date,p){
   if(!p.tendon?.length)return '';
   const cards=p.tendon.map((x,i)=>{
     const id=`${date}-${day}-tendon-${i}`,state=logs[id]||{},target=x[1]||'';
-    const shortTarget=(target.split('·')[0]||target).trim();
-    const compactLoad=String(state.load||'').trim();
-    const compactEffort=String(state.rir||'').trim()||'8–9/10';
-    const compactSummary=(compactLoad?compactLoad+' · ':'')+shortTarget+' · '+compactEffort;
     const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
-    return `<div class="exercise support-exercise tendon-capacity ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
-      <div class="ex-top"><div class="num">T${i+1}</div><div class="ex-name"><h3>${x[0]}</h3><p class="tendon-full-target">${target}</p><p class="tendon-compact-summary">${compactSummary}</p></div><button class="check" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
-      ${inlineTimerMarkup(id)}
-      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="heavy KB / bodyweight" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${shortTarget}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>Effort</label><input value="${state.rir||''}" placeholder="8–9 / 10" oninput="saveEx('${id}','rir',this.value)"></div></div>
+    return `<div class="exercise strength-session-slice tendon-capacity ${state.done?'complete':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateTendonStrengthCard(event,this)">
+      <div class="ex-top"><div class="num">T${i+1}</div><div class="ex-name"><h3>${x[0]}</h3><p>${target}</p></div><button class="check" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
+      ${strengthSetFlowMarkup(id,x[0],target)}
+      ${exerciseNoteMarkup(id,state)}
       <div class="tip tendon-coaching">${x[2]}</div><div class="tip progress-rule tendon-progression"><b>Progress:</b> ${x[3]}</div>
     </div>`;
   }).join('');
@@ -708,24 +724,35 @@ const strengthSetFlowNames=new Set([
   'Plank shoulder tap / kettlebell woodchop'
 ]);
 function strengthFlowDayFromId(id){
-  const m=String(id).match(/^\d{4}-\d{2}-\d{2}-(\d+)-\d+$/);
+  const text=String(id);
+  let m=text.match(/^\d{4}-\d{2}-\d{2}-(\d+)-\d+$/);
+  if(m)return Number(m[1]);
+  m=text.match(/^\d{4}-\d{2}-\d{2}-(\d+)-tendon-\d+$/);
   return m?Number(m[1]):programDay();
+}
+function tendonSessionPosition(id){
+  const m=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-tendon-(\d+)$/);
+  if(!m)return null;
+  return {date:m[1],day:Number(m[2]),index:Number(m[3])};
 }
 function strengthFlowDayLabel(id){
   return DAYS[strengthFlowDayFromId(id)]||'Next session';
 }
 function strengthTimedWorkConfig(target){
   const text=String(target||'');
-  let m=text.match(/(\d+)\s*[–-]\s*(\d+)\s*sec(?:\s*\/\s*side)?/i);
-  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[2]),perSide:/\/\s*side/i.test(text)};
-  m=text.match(/(\d+)\s*sec(?:\s*\/\s*side)?/i);
-  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:/\/\s*side/i.test(text)};
+  let m=text.match(/×\s*(\d+)\s*sec(\s*\/\s*side)?/i);
+  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:!!m[2]};
+  m=text.match(/(\d+)\s*[–-]\s*(\d+)\s*sec(\s*\/\s*side)?/i);
+  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[2]),perSide:!!m[3]};
+  m=text.match(/(\d+)\s*sec(\s*\/\s*side)?/i);
+  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:!!m[2]};
   return {enabled:false,min:0,max:0,perSide:false};
 }
 function strengthFlowConfig(name,target){
   const parsed=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
   const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
   const timedWork=strengthTimedWorkConfig(target);
+  const isIsometric=/isometric/i.test(name);
   const base={
     sets:parsed?Number(parsed[1]):3,
     targetText:parsed?parsed[2]:'6–10',
@@ -741,6 +768,24 @@ function strengthFlowConfig(name,target){
     workPerSide:timedWork.perSide,
     advanceTitle:'Increase load',
     advanceText:'Increase the working load one step and return toward the lower end of the prescribed range.'
+  };
+  if(isIsometric)return {...base,
+    targetText:(timedWork.workSeconds||timedWork.min||5)+' sec'+(timedWork.perSide?' / side':''),
+    low:timedWork.min||5,
+    top:timedWork.max||timedWork.min||5,
+    loadPlaceholder:'BW / kg',
+    loadInputMode:'text',
+    repsPlaceholder:(timedWork.min||5)+' sec',
+    noun:'load',
+    timedWork:true,
+    workSeconds:timedWork.min||5,
+    workMaxSeconds:timedWork.max||timedWork.min||5,
+    workPerSide:timedWork.perSide,
+    effortLabel:'Effort',
+    effortPlaceholder:'8–9',
+    effortMax:10,
+    advanceTitle:'Increase tendon load',
+    advanceText:'Increase external load by the smallest practical step while keeping the same short hold duration and controlled position.'
   };
   if(name==='Goblet squat')return {...base,
     advanceText:'Move to the next available kettlebell and return toward the lower end of the '+base.low+'–'+base.top+' rep range.'
@@ -1048,6 +1093,29 @@ function syncSmartStrengthToCurrent({force=false}={}){
   return ctx;
 }
 function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true,scroll=true}={}){
+  const tendonPos=tendonSessionPosition(currentId);
+  if(tendonPos){
+    logs[currentId]=logs[currentId]||{};
+    logs[currentId].done=true;
+    logs[currentId].completedAt=logs[currentId].completedAt||new Date().toISOString();
+    motion12SetItem('motion12.logs',JSON.stringify(logs));
+    document.getElementById('ex-'+currentId)?.classList.add('complete');
+    inlineTimer={...inlineTimer,running:false,remaining:0,endAt:0,phase:'complete',finalRest:false};
+    saveInlineTimer();
+    refreshStrengthFlowById(currentId);
+    const nextId=tendonPos.index+1<(program[tendonPos.day]?.tendon?.length||0)
+      ?tendonPos.date+'-'+tendonPos.day+'-tendon-'+(tendonPos.index+1)
+      :null;
+    if(nextId&&scroll){
+      const nextCard=document.getElementById('ex-'+nextId);
+      if(nextCard){
+        document.querySelectorAll('.tendon-capacity.compact-current').forEach(el=>el.classList.remove('compact-current'));
+        nextCard.classList.add('compact-current');
+        nextCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+      }
+    }
+    return nextId;
+  }
   const pos=strengthSessionPosition(currentId);
   if(!pos)return null;
 
@@ -1173,6 +1241,7 @@ function strengthCompletionSummaryMarkup(id,name,target,entries){
 }
 function strengthSetFlowMarkup(id,name,target){
   const state=strengthFlowState(id,name,target),entries=strengthSetLogEntries(id,state.sets);
+  const isTendon=/isometric/i.test(name);
   const readyIndex=Math.min(state.sets-1,state.setIndex);
   const isRest=state.phase==='rest',isWork=state.phase==='work',isComplete=state.phase==='complete';
   const finalRest=isRest&&(state.finalRest||state.setIndex>=state.sets);
@@ -1180,10 +1249,11 @@ function strengthSetFlowMarkup(id,name,target){
   const statusTitle=isComplete?name.toUpperCase()+' COMPLETE':isWork?'TIMED SET':isRest?(finalRest?'FINAL RECOVERY':'RECOVERY'):'SET '+(readyIndex+1)+' READY';
   const statusMain=isComplete?'✓':(isRest||isWork)?timerFormat(state.sec):state.targetText;
   const statusSub=isComplete?'All '+state.sets+' sets logged':isWork?('Set '+(readyIndex+1)+(state.workPerSide?' · repeat timer for each side':'')):isRest?(finalRest?(nextExercise?'Next · '+nextExercise.name:'Then finish the session'):'Next · Set '+(state.setIndex+1)+' of '+state.sets):'Rest starts automatically after Set complete';
-  const completionSummary=isComplete?strengthCompletionSummaryMarkup(id,name,target,entries):'';
+  const completionSummary=isComplete&&!isTendon?strengthCompletionSummaryMarkup(id,name,target,entries):'';
   const sessionCue=isComplete?strengthSessionCueMarkup(id):'';
   const encName=encodeURIComponent(name),encTarget=encodeURIComponent(target);
   const valueColumnLabel=state.timedWork?'Time':'Reps';
+  const effortColumnLabel=isTendon?'Effort':'Reps in reserve';
   const rows=entries.map((set,i)=>{
     const complete=!!set.complete;
     const active=!isComplete&&!isRest&&i===readyIndex;
@@ -1191,8 +1261,8 @@ function strengthSetFlowMarkup(id,name,target){
     return '<div class="strength-set-row '+(complete?'logged ':'')+(active?'active ':'')+(future?'future':'')+'">'+
       '<div class="strength-set-number"><span>SET</span><b>'+(i+1)+'</b>'+(complete?'<i>✓</i>':'')+'</div>'+
       '<label aria-label="Load"><input type="text" inputmode="'+state.loadInputMode+'" autocomplete="off" value="'+(set.load??'')+'" placeholder="'+state.loadPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'load\',this.value)"></label>'+
-      '<label aria-label="Reps"><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="'+state.repsPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
-      '<label aria-label="Reps in reserve"><input inputmode="numeric" type="number" min="0" max="5" step="1" value="'+(set.rir??'')+'" placeholder="RIR" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
+      '<label aria-label="'+(isTendon?'Time':'Reps')+'"><input inputmode="numeric" type="number" min="1" step="1" value="'+(set.reps??'')+'" placeholder="'+state.repsPlaceholder+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'reps\',this.value)"></label>'+
+      '<label aria-label="'+effortColumnLabel+'"><input inputmode="numeric" type="number" min="'+(isTendon?'1':'0')+'" max="'+(isTendon?(state.effortMax||10):5)+'" step="1" value="'+(set.rir??'')+'" placeholder="'+(isTendon?(state.effortPlaceholder||'8–9'):'RIR')+'" '+(future?'disabled ':'')+'oninput="saveStrengthSetField(\''+id+'\','+i+',\'rir\',this.value)"></label>'+
     '</div>';
   }).join('');
   let actions='';
@@ -1212,7 +1282,7 @@ function strengthSetFlowMarkup(id,name,target){
   }
   return '<div class="strength-set-flow '+(isRest?'resting ':'')+(isWork?'working ':'')+(isComplete?'complete ':'')+'" id="strength-flow-'+id+'">'+
     '<div class="strength-flow-status"><div><span>'+statusTitle+'</span><strong id="strength-flow-clock-'+id+'">'+statusMain+'</strong><small>'+statusSub+'</small></div></div>'+
-    '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>'+valueColumnLabel+'</span><span>Reps in reserve</span></div>'+
+    '<div class="strength-set-columns" aria-hidden="true"><span>Set</span><span>Load</span><span>'+valueColumnLabel+'</span><span>'+effortColumnLabel+'</span></div>'+
     '<div class="strength-set-grid">'+rows+'</div>'+
     completionSummary+
     sessionCue+
@@ -1275,13 +1345,15 @@ function strengthSetComplete(id,encodedName,encodedTarget){
   const timer=strengthEnsureTimer(id,name,target),idx=timer.setIndex;
   if(timer.phase!=='ready'||idx>=timer.sets)return;
   const entries=strengthSetLogEntries(id,timer.sets),set=entries[idx]||{};
+  const isTendon=/isometric/i.test(name);
   const validLoad=String(set.load??'').trim()!=='';
   const validReps=Number(set.reps)>0;
-  const rirValue=String(set.rir??'').trim(),validRir=rirValue!==''&&Number(rirValue)>=0;
+  const rirValue=String(set.rir??'').trim();
+  const validRir=rirValue!==''&&Number(rirValue)>=0&&(!isTendon||Number(rirValue)<=10);
   if(!validLoad||!validReps||!validRir){
     const flow=document.getElementById('strength-flow-'+id);if(flow)flow.classList.add('needs-input');
     const msg=document.getElementById('strength-flow-message-'+id);
-    if(msg)msg.textContent='Enter load, reps and reps in reserve before completing this set.';
+    if(msg)msg.textContent=isTendon?'Enter load, hold time and effort before completing this set.':'Enter load, reps and reps in reserve before completing this set.';
     return;
   }
   logs[id]=logs[id]||{};
@@ -1525,6 +1597,7 @@ function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
     return {category:'Power circuit',seconds:complex?60:40,action:'session',label:complex?'40s / 60s':'20s / 40s',note:'Use the complete Power circuit timer.'};
   }
   if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
+  if(/isometric/i.test(name))return {category:'Tendon capacity',seconds:75,action:'rest',label:'1:15',note:'Recover 60–90 seconds between high-force rounds so force quality stays high.'};
   const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
   const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
