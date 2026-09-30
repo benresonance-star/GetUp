@@ -4484,3 +4484,48 @@ html.standalone .strength-set-columns{
     min-height:0;
   }
 }
+
+
+/* ---- timer-strength-controls-r47 ---- */
+/* Strength set controls: Start/Pause + Reset stay visible; Set complete is a separate action. */
+@media(max-width:480px){
+  #dayPage .workout-primary-timer .workout-timer-footer .smart-timer-controls,
+  #dayPage.compact-active .workout-primary-timer .workout-timer-footer .smart-timer-controls{
+    display:none !important;
+    visibility:hidden !important;
+    height:0 !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+
+  #dayPage .workout-primary-timer .mobile-smart-timer-controls,
+  #dayPage.compact-active .workout-primary-timer .mobile-smart-timer-controls{
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+
+  #dayPage .workout-primary-timer .mobile-smart-timer-controls .timer-primary,
+  #dayPage.compact-active .workout-primary-timer .mobile-smart-timer-controls .timer-primary{
+    order:1;
+    flex:1 1 180px;
+  }
+
+  #dayPage .workout-primary-timer .mobile-smart-timer-controls .timer-reset,
+  #dayPage.compact-active .workout-primary-timer .mobile-smart-timer-controls .timer-reset{
+    order:2;
+    flex:0 0 92px;
+  }
+
+  #dayPage .workout-primary-timer .mobile-smart-timer-controls .timer-set-complete,
+  #dayPage.compact-active .workout-primary-timer .mobile-smart-timer-controls .timer-set-complete{
+    order:3;
+    flex:1 1 100%;
+    min-height:40px;
+    background:rgba(var(--accent-rgb,255,77,46),.10);
+    border-color:rgba(var(--accent-rgb,255,77,46),.42);
+    color:var(--ink);
+  }
+}
