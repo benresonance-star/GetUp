@@ -1,7 +1,7 @@
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const short=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const program={
-  1:{name:'Strength A',why:'Your highest-quality strength session before the fast begins.',time:'30 min',tone:'volt',diet:'Fast starts after training',prep:[
+  1:{name:'Strength A',why:'Your highest-quality strength session before the fast begins.',time:'35–38 min',tone:'volt',diet:'Fast starts after training',prep:[
     ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
   ],work:[
     ['Goblet squat','3 × 6–10','Choose load for ~3 reps in reserve.','10/10/10 with ≥2 RIR twice → next kettlebell.'],
@@ -10,6 +10,9 @@ const program={
     ['1-arm kettlebell press','3 × 6–10 / side','No side lean or leg drive. Let weaker arm govern.','10/10/10 both arms twice → next bell or heavy-set migration.'],
     ['Suitcase carry','2 × 45–60 sec / side','Walk tall; no leaning toward or away from bell.','2 × 60 sec twice → next bell, reset to 30–45 sec.'],
     ['Plank shoulder tap','2 × 6–10 / side','Feet wide enough to keep hips quiet; tap slowly without rotating.','2 × 10/side twice with minimal hip movement → narrow stance slightly or slow the tempo.']
+  ],support:[
+    ['Heavy calf raise isometric','4 × 5 sec / side · 20–30 sec rest','After the main lifts, rise to a strong mid-range single-leg calf position and hold without bouncing. Use a wall or frame only for balance. Add kettlebell load until the hold is about 8–9/10 effort while remaining controlled.','Progress force, not hold duration: add the smallest practical load only when all four holds are steady and pain-free with no next-day tendon irritation.'],
+    ['Split-squat isometric','4 × 5 sec / side · 20–30 sec rest','Use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Hold a kettlebell goblet-style if needed. Build tension smoothly, then hold hard without movement.','Progress force before duration. Add a small amount of load only when all four holds per side are stable, symmetrical and pain-free with no next-day tendon irritation.']
   ]},
   2:{name:'Restore Circuit',why:'Finish the fast with easy continuous movement: enough cardiovascular work to restore, never enough to create fatigue.',time:'8–12 min',tone:'cyan',diet:'Break fast after session',work:[
     ['Kettlebell deadlift','30 sec work / 30 sec recovery','Use a light bell. Smooth repetitions; stop well before fatigue.','RPE 4–5. Do not progress load unless the whole circuit stays easy.','START: use ~50% of your Monday kettlebell Romanian deadlift working load, rounded DOWN to an available bell. If you have no reference yet, start at 12 kg. INCREASE: only after 2 Tuesday sessions where every interval stays RPE ≤4, breathing is controlled and there is no next-day posterior-chain fatigue; move to the next smallest bell (+2–4 kg). Keep this exercise at or below ~60% of Monday RDL load. REDUCE one bell if RPE exceeds 5 or form slows.'],
@@ -17,7 +20,7 @@ const program={
     ['Alternating reverse lunge','30 sec work / 30 sec recovery','Bodyweight; use a long comfortable stride and control the bottom position while alternating legs.','Smooth range only; no grinding.','BODYWEIGHT: do not add kettlebell load on Tuesday. Progress only by smoother range and control.'],
     ['Suitcase march / carry','30 sec work / 30 sec recovery','Light-to-moderate bell; tall posture and relaxed breathing.','Grip should never limit the circuit.','START: use ~50–60% of Monday suitcase-carry load, rounded DOWN. If you have no reference yet, start at 12 kg. INCREASE: after 2 Tuesday sessions with upright posture, no grip limitation and RPE ≤4, move to the next smallest bell. HOLD or reduce if grip, trunk bracing or breathing becomes the limiter.']
   ]},
-  3:{name:'Strength B',why:'Unilateral strength, pushing, pulling, posterior chain and controlled rotation.',time:'28 min',tone:'pink',diet:'High-protein eating day',prep:[
+  3:{name:'Strength B',why:'Unilateral strength, pushing, pulling, posterior chain and controlled rotation.',time:'33–36 min',tone:'pink',diet:'High-protein eating day',prep:[
     ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
   ],work:[
     ['Reverse lunge','3 × 6–10 / leg','Equal stride and depth. Weaker leg governs.','3 × 10 both legs twice → increase kettlebell.'],
@@ -26,6 +29,9 @@ const program={
     ['Back extension','2 × 10–15','Finish straight, not hyperextended.','2 × 15 twice → hold light kettlebell at chest.'],
     ['Single-leg calf raise','2 × 10–15 / side','Full stretch; pause at top.','2 × 15 twice → add kettlebell.'],
     ['Kettlebell woodchop','2 × 6–10 / side','Use a light bell. Move from outside one hip toward the opposite shoulder while pivoting through feet and hips.','2 × 10/side twice with crisp control → increase the bell slightly.']
+  ],support:[
+    ['Heavy calf raise isometric','4 × 5 sec / side · 20–30 sec rest','After the main lifts, rise to a strong mid-range single-leg calf position and hold without bouncing. Use a wall or frame only for balance. Add kettlebell load until the hold is about 8–9/10 effort while remaining controlled.','Progress force, not hold duration: add the smallest practical load only when all four holds are steady and pain-free with no next-day tendon irritation.'],
+    ['Split-squat isometric','4 × 5 sec / side · 20–30 sec rest','Use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Hold a kettlebell goblet-style if needed. Build tension smoothly, then hold hard without movement.','Progress force before duration. Add a small amount of load only when all four holds per side are stable, symmetrical and pain-free with no next-day tendon irritation.']
   ]},
   4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: coordinate squat, leg drive and overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',work:[
     ['2-hand kettlebell swing','20 sec work / 40 sec recovery','Aim for about 8–10 crisp swings, then stop even if time remains.','Power quality wins. If snap slows, reduce load or reps.','START: choose the heaviest bell you can swing for 10 technically crisp reps at RPE ≤6 with obvious speed left. If you do not yet have a calibrated swing load, start at 12 kg if learning the movement or 16 kg if your swing technique is already reliable. INCREASE: after 2 consecutive Thursday sessions completing every prescribed round with 8–10 crisp swings, no visible speed loss, final-session RPE ≤7 and no next-day low-back soreness, move to the next bell (+2–4 kg). If the jump is 4 kg, use 6–8 swings per work interval for the first 1–2 sessions. REDUCE immediately if snap, hinge position or breathing deteriorates.'],
@@ -35,7 +41,7 @@ const program={
     ['Band pull-apart','1 × 12–20','Smooth scapular movement; shoulders stay down and ribs quiet.','Quality only. Stop well before fatigue; do not turn this into extra pulling volume.'],
     ['Wall slide','1 × 8','Move slowly through the largest pain-free overhead range you can control.','Add range and control before adding repetitions.']
   ]},
-  5:{name:'Strength C',why:'Frontal-plane strength plus another balanced full-body exposure.',time:'30 min',tone:'volt',diet:'High-protein eating day',prep:[
+  5:{name:'Strength C',why:'Frontal-plane strength plus another balanced full-body exposure.',time:'35–38 min',tone:'volt',diet:'High-protein eating day',prep:[
     ['Kettlebell halo','1–2 × 5 / direction','Use a light bell. Keep ribs stacked and move slowly around the head without forcing range.']
   ],work:[
     ['Lateral lunge','3 × 6–8 / side','Sit into the working hip; control frontal plane.','3 × 8 twice at same depth → add/increase goblet load.'],
@@ -45,6 +51,9 @@ const program={
     ['Kettlebell Romanian deadlift','2 × 8–12','Controlled lowering; strong hip extension.','12/12 twice → increase load.'],
     ['Suitcase carry','2 × 45 sec / side','Tall and quiet trunk.','60 sec twice → next bell.'],
     ['Plank shoulder tap / kettlebell woodchop','2 × 8–10 / side','Odd weeks shoulder taps; even weeks light kettlebell woodchops.','Progress stance/tempo on taps; progress load cautiously on woodchops.']
+  ],support:[
+    ['Heavy calf raise isometric','4 × 5 sec / side · 20–30 sec rest','After the main lifts, rise to a strong mid-range single-leg calf position and hold without bouncing. Use a wall or frame only for balance. Add kettlebell load until the hold is about 8–9/10 effort while remaining controlled.','Progress force, not hold duration: add the smallest practical load only when all four holds are steady and pain-free with no next-day tendon irritation.'],
+    ['Split-squat isometric','4 × 5 sec / side · 20–30 sec rest','Use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Hold a kettlebell goblet-style if needed. Build tension smoothly, then hold hard without movement.','Progress force before duration. Add a small amount of load only when all four holds per side are stable, symmetrical and pain-free with no next-day tendon irritation.']
   ]},
   6:{name:'Aerobic Power',why:'Raise maximal oxygen uptake without grip or kettlebell technique being the limiter.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
     ['Aerobic intervals','See weekly target','Uphill walk, jog, bike or stairs. Keep output repeatable.','Increase pace only if all intervals complete, <5% fade, ≤8.5/10 finish and recovery is adequate.']
