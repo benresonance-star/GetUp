@@ -645,12 +645,16 @@ function tendonBlockMarkup(day,date,p){
   if(!p.tendon?.length)return '';
   const cards=p.tendon.map((x,i)=>{
     const id=`${date}-${day}-tendon-${i}`,state=logs[id]||{},target=x[1]||'';
+    const shortTarget=(target.split('·')[0]||target).trim();
+    const compactLoad=String(state.load||'').trim();
+    const compactEffort=String(state.rir||'').trim()||'8–9/10';
+    const compactSummary=(compactLoad?compactLoad+' · ':'')+shortTarget+' · '+compactEffort;
     const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
     return `<div class="exercise support-exercise tendon-capacity ${state.done?'complete':''} ${inlineTimer.activeId===id?'active-timer':''}" id="ex-${id}" data-timer-id="${id}" data-timer-day="${day}" data-timer-name="${timerName}" data-timer-target="${timerTarget}" data-timer-support="1" onclick="activateExerciseTimerFromCard(event,this)">
-      <div class="ex-top"><div class="num">T${i+1}</div><div class="ex-name"><h3>${x[0]}</h3><p>${target}</p></div><button class="check" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
+      <div class="ex-top"><div class="num">T${i+1}</div><div class="ex-name"><h3>${x[0]}</h3><p class="tendon-full-target">${target}</p><p class="tendon-compact-summary">${compactSummary}</p></div><button class="check" onclick="event.stopPropagation();toggleExercise('${id}')"></button></div>
       ${inlineTimerMarkup(id)}
-      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="heavy KB / bodyweight" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${target.split('·')[0].trim()}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>Effort</label><input value="${state.rir||''}" placeholder="8–9 / 10" oninput="saveEx('${id}','rir',this.value)"></div></div>
-      <div class="tip">${x[2]}</div><div class="tip progress-rule"><b>Progress:</b> ${x[3]}</div>
+      <div class="inputs"><div class="field"><label>Load / variation</label><input value="${state.load||''}" placeholder="heavy KB / bodyweight" oninput="saveEx('${id}','load',this.value)"></div><div class="field"><label>Actual</label><input value="${state.reps||''}" placeholder="${shortTarget}" oninput="saveEx('${id}','reps',this.value)"></div><div class="field"><label>Effort</label><input value="${state.rir||''}" placeholder="8–9 / 10" oninput="saveEx('${id}','rir',this.value)"></div></div>
+      <div class="tip tendon-coaching">${x[2]}</div><div class="tip progress-rule tendon-progression"><b>Progress:</b> ${x[3]}</div>
     </div>`;
   }).join('');
   return `<section class="section tendon-capacity-section"><div class="section-head"><h2>Tendon capacity</h2><small>${p.tendonFocus||'high force · short holds'}</small></div><div class="tip tendon-capacity-note"><b>Placement:</b> after primary compound strength, before lower-priority accessories. Build force smoothly; do not turn the holds into endurance work.</div>${cards}</section>`;
