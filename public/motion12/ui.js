@@ -2109,6 +2109,7 @@ function renderTimerPage(){
   timerMount.innerHTML=
     '<section class="smart-timer-card session-smart-timer workout-primary-timer">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
+      '<div class="mobile-smart-timer-controls smart-timer-controls" id="mobileSmartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+
       '<div class="timer-ring" id="timerRing">'+timerRingSvgMarkup(vm)+'<div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="workout-timer-footer" id="workoutTimerFooter"><div class="smart-timer-controls" id="smartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+presets+'</div>'+
     '</section>';
@@ -2131,6 +2132,7 @@ function updateSmartTimerDisplay(){
   if(next)next.innerHTML=vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'';
   updateTimerRingSegments(vm);
   const controls=document.getElementById('smartTimerControls');if(controls)controls.innerHTML=timerControls(vm);
+  const mobileControls=document.getElementById('mobileSmartTimerControls');if(mobileControls)mobileControls.innerHTML=timerControls(vm);
   updateTimerSessionProgress(vm);
   syncCompactSessionFocus(vm);
   if([1,3,5].includes(timerContextDay()))refreshStrengthSessionProgress(timerContextDay(),timerContextDate());
