@@ -1,40 +1,35 @@
 name: Motion 12 Preview Pages
 
 on:
-  push:
-    branches:
-      - motion12-preview
-    paths:
-      - .github/workflows/motion12-pages.yml
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: motion12-pages
+  cancel-in-progress: true
 
 jobs:
-  patch-r48:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static app
+        uses: actions/upload-pages-artifact@v4
         with:
-          ref: motion12-preview
-          fetch-depth: 0
+          path: public/motion12
 
-      - name: Patch assets
-        run: python .github/scripts/motion12_r48_patch.py assets
-
-      - name: Commit assets
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/motion12/ui.js public/motion12/app.css
-          git commit -m "Fix MOTION12 strength timer controls under dial"
-
-      - name: Patch r48 shell
-        run: python .github/scripts/motion12_r48_patch.py shell "$(git rev-parse HEAD)"
-
-      - name: Commit and push r48
-        run: |
-          git add public/motion12/index.html public/motion12/service-worker.js public/motion12-update.html
-          git commit -m "Ship MOTION12 r48 timer controls"
-          git push origin HEAD:motion12-preview
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
