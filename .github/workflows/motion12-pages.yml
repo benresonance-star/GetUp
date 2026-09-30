@@ -8,11 +8,33 @@ on:
       - .github/workflows/motion12-pages.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate:
+  patch-r48:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate runner
-        run: echo "MOTION12 patch runner ready"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: motion12-preview
+          fetch-depth: 0
+
+      - name: Patch assets
+        run: python .github/scripts/motion12_r48_patch.py assets
+
+      - name: Commit assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/motion12/ui.js public/motion12/app.css
+          git commit -m "Fix MOTION12 strength timer controls under dial"
+
+      - name: Patch r48 shell
+        run: python .github/scripts/motion12_r48_patch.py shell "$(git rev-parse HEAD)"
+
+      - name: Commit and push r48
+        run: |
+          git add public/motion12/index.html public/motion12/service-worker.js public/motion12-update.html
+          git commit -m "Ship MOTION12 r48 timer controls"
+          git push origin HEAD:motion12-preview
