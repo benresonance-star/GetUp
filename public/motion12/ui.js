@@ -273,6 +273,138 @@ function lucideTrophyMarkup(className='session-trophy-icon'){
     '<path d="M6 9H4.5a1 1 0 0 1 0-5H6"/>'+
   '</svg>';
 }
+
+function practiceKey(date=todayISO()){return 'practice:'+date+':pull-up'}
+function practicePrescription(day=programDay()){
+  const max=Math.max(0,Math.round(Number(settings.pullupMax)||0));
+  const targetSets=3;
+  if(day===1)return {enabled:false,reason:'strength-day',max,targetSets,reps:0,assisted:false,label:'No micro-sets'};
+  if(max<=0)return {enabled:false,reason:'needs-max',max:0,targetSets,reps:0,assisted:false,label:'Set clean pull-up max'};
+  const assisted=max<3;
+  const reps=assisted?1:Math.min(5,Math.max(1,Math.floor((max-1)/2)));
+  return {enabled:true,reason:'',max,targetSets,reps,assisted,label:assisted?'1 assisted rep':reps+' clean rep'+(reps===1?'':'s')};
+}
+function practiceState(date=todayISO()){
+  const raw=logs[practiceKey(date)]||{};
+  return {
+    sets:Math.max(0,Math.min(3,Math.round(Number(raw.sets)||0))),
+    stopped:!!raw.stopped,
+    stopReason:raw.stopReason||'',
+    updatedAt:raw.updatedAt||''
+  };
+}
+function practiceDotsMarkup(state,targetSets=3,compact=false){
+  return '<div class="practice-dots '+(compact?'compact-practice-dots':'')+'" aria-label="'+state.sets+' of '+targetSets+' practice sets complete">'+
+    Array.from({length:targetSets},(_,i)=>'<span class="'+(i<state.sets?'done':'')+'" aria-hidden="true">'+(i<state.sets?'✓':i+1)+'</span>').join('')+
+  '</div>';
+}
+function persistPractice(date,next){
+  const key=practiceKey(date),previous=logs[key]&&typeof logs[key]==='object'?logs[key]:{};
+  logs[key]={...previous,...next,updatedAt:new Date().toISOString()};
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+}
+function refreshPracticeHome(){
+  if(document.getElementById('homePage')?.classList.contains('active'))renderHome();
+}
+function completePracticeSet(){
+  const date=todayISO(),rx=practicePrescription(),st=practiceState(date);
+  if(!rx.enabled||st.stopped||st.sets>=rx.targetSets)return;
+  persistPractice(date,{
+    sets:st.sets+1,
+    stopped:false,
+    stopReason:'',
+    movement:'pull-up',
+    targetSets:rx.targetSets,
+    prescribedReps:rx.reps,
+    assisted:rx.assisted,
+    cleanMaxAtPrescription:rx.max,
+    rirFloor:4,
+    lastCompletedAt:new Date().toISOString()
+  });
+  refreshPracticeHome();
+}
+function stopPracticeToday(){
+  const date=todayISO(),rx=practicePrescription(),st=practiceState(date);
+  if(!rx.enabled||st.sets>=rx.targetSets)return;
+  persistPractice(date,{
+    sets:st.sets,
+    stopped:true,
+    stopReason:'quality-threshold',
+    stoppedAt:new Date().toISOString(),
+    movement:'pull-up'
+  });
+  refreshPracticeHome();
+}
+function undoPracticeToday(){
+  const date=todayISO(),st=practiceState(date);
+  if(st.stopped){
+    persistPractice(date,{stopped:false,stopReason:'',stoppedAt:null});
+  }else if(st.sets>0){
+    persistPractice(date,{sets:st.sets-1,lastCompletedAt:null});
+  }else{
+    return;
+  }
+  refreshPracticeHome();
+}
+function openPracticeSettings(){
+  document.getElementById('settingsBtn')?.click();
+  setTimeout(()=>{
+    const input=document.getElementById('pullupMaxInput');
+    if(!input)return;
+    input.scrollIntoView({behavior:'smooth',block:'center'});
+    input.focus();
+  },120);
+}
+function practiceHomeMarkup(compact=false){
+  const rx=practicePrescription(),st=practiceState(),done=st.sets>=rx.targetSets;
+
+  if(compact){
+    if(rx.reason==='strength-day'){
+      return '<div class="compact-practice-strip gated">'+
+        '<div class="compact-practice-copy"><span class="compact-label">Practice · Pull-up</span><b>Recovery gate</b><small>Pull-ups are already in Strength A today.</small></div>'+
+        '<span class="compact-practice-status">SKIP</span>'+
+      '</div>';
+    }
+    if(rx.reason==='needs-max'){
+      return '<div class="compact-practice-strip setup">'+
+        '<div class="compact-practice-copy"><span class="compact-label">Practice · Pull-up</span><b>Set a clean pull-up max</b><small>Used to keep micro-sets comfortably submaximal.</small></div>'+
+        '<button class="compact-practice-setup" type="button" onclick="openPracticeSettings()">SET MAX</button>'+
+      '</div>';
+    }
+    const actions=st.stopped
+      ? '<div class="compact-practice-finished"><span>STOPPED</span><button type="button" onclick="undoPracticeToday()">UNDO</button></div>'
+      : done
+        ? '<div class="compact-practice-finished done"><span>DONE ✓</span><button type="button" onclick="undoPracticeToday()">UNDO</button></div>'
+        : '<div class="compact-practice-actions"><button class="primary" type="button" onclick="completePracticeSet()">+ SET</button><button type="button" onclick="stopPracticeToday()">STOP</button>'+(st.sets?'<button type="button" onclick="undoPracticeToday()">UNDO</button>':'')+'</div>';
+    return '<div class="compact-practice-strip '+(st.stopped?'stopped':done?'complete':'')+'">'+
+      '<div class="compact-practice-copy"><span class="compact-label">Practice · Pull-up</span><b>'+rx.label+' · RIR 4–6</b><small>Three crisp micro-sets spread through the day.</small></div>'+
+      '<div class="compact-practice-state">'+practiceDotsMarkup(st,rx.targetSets,true)+actions+'</div>'+
+    '</div>';
+  }
+
+  if(rx.reason==='strength-day'){
+    return '<section class="section practice-section"><div class="section-head"><h2>Practice</h2><small>strength skill</small></div>'+
+      '<div class="card practice-card gated"><div class="practice-main"><div><span class="tag">Pull-up · recovery gate</span><h3>No micro-sets today</h3><p>Pull-ups are already trained in Strength A. Keep the separate Practice dose off so it does not become hidden extra volume.</p></div><span class="practice-status-chip">SKIP</span></div></div></section>';
+  }
+  if(rx.reason==='needs-max'){
+    return '<section class="section practice-section"><div class="section-head"><h2>Practice</h2><small>strength skill</small></div>'+
+      '<div class="card practice-card setup"><div class="practice-main"><div><span class="tag">Pull-up · setup</span><h3>Set your clean pull-up max</h3><p>MOTION12 uses it only to calculate deliberately easy Practice sets. Re-test after four weeks.</p></div><button class="practice-setup-btn" type="button" onclick="openPracticeSettings()">Set clean max</button></div></div></section>';
+  }
+
+  const actionMarkup=st.stopped
+    ? '<div class="practice-stop-note"><b>Stopped for today.</b><span>The quality threshold was protected; do not make up the missed sets.</span></div><button type="button" onclick="undoPracticeToday()">Undo last action</button>'
+    : done
+      ? '<div class="practice-stop-note complete"><b>Practice complete.</b><span>Three fresh exposures are enough for today.</span></div><button type="button" onclick="undoPracticeToday()">Undo last set</button>'
+      : '<button class="primary" type="button" onclick="completePracticeSet()">Set complete</button><button type="button" onclick="stopPracticeToday()">Too hard · stop today</button>'+(st.sets?'<button type="button" onclick="undoPracticeToday()">Undo last set</button>':'');
+
+  return '<section class="section practice-section"><div class="section-head"><h2>Practice</h2><small>strength skill · micro-dose</small></div>'+
+    '<div class="card practice-card '+(st.stopped?'stopped':done?'complete':'')+'">'+
+      '<div class="practice-main"><div><span class="tag">Pull-up · clean max '+rx.max+'</span><h3>'+rx.label+' per set</h3><p>Spread 3 micro-sets through the day. Count a set only while technique stays crisp and you still have 4–6 reps in reserve.</p></div>'+
+      '<div class="practice-progress">'+practiceDotsMarkup(st,rx.targetSets,false)+'<b>'+st.sets+' / '+rx.targetSets+'</b></div></div>'+
+      '<div class="practice-actions">'+actionMarkup+'</div>'+
+    '</div></section>';
+}
+
 function strengthWorkFullyComplete(date,day){
   if(![1,3,5].includes(day))return false;
   const work=program[day]?.work||[];
@@ -304,6 +436,7 @@ function renderCompactHome(d,w,p,fat,cal,strip){
           <span class="compact-session-cta">${sessionComplete?'REVIEW →':'START →'}</span>
         </div>
       </button>
+      ${practiceHomeMarkup(true)}
 
       <div class="compact-week">${strip}</div>
 
@@ -342,6 +475,7 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
   <div class="homegrid"><div>
   ${streakBand(false)}
   <section class="hero ${sessionComplete?'completed':''}">${sessionComplete?'<div class="hero-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</div>':''}<div class="eyebrow">Week ${w} · Today</div>${sessionComplete?'<div class="session-complete-label hero-complete-label">✓ Session complete</div>':''}<h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${sessionComplete?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
+  ${practiceHomeMarkup(false)}
   <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div></section>
   </div><div>
   <section class="section"><div class="section-head"><h2>Why today</h2></div><div class="card accent"><span class="tag">Training logic</span><h3 style="margin-top:12px">${p.why}</h3><p style="margin-top:8px">Today’s progression: <b class="volt">${weeklyTarget(d,w)}</b></p></div></section>
@@ -2441,6 +2575,7 @@ settingsImportFile.onchange=async()=>{
 document.getElementById('settingsBtn').onclick=()=>{
   document.getElementById('startDateInput').value=settings.startDate;
   document.getElementById('bodyweightInput').value=settings.bodyweight;
+  document.getElementById('pullupMaxInput').value=settings.pullupMax||'';
   document.getElementById('heightInput').value=settings.height||'';
   document.getElementById('ageInput').value=settings.age||'';
   document.getElementById('sexInput').value=settings.sex||'';
@@ -2477,6 +2612,7 @@ document.getElementById('saveSettings').onclick=()=>{
   settings={...settings,
     startDate:document.getElementById('startDateInput').value||settings.startDate,
     bodyweight:Number(document.getElementById('bodyweightInput').value)||settings.bodyweight,
+    pullupMax:Math.min(30,Math.max(0,Math.round(Number(document.getElementById('pullupMaxInput').value)||0))),
     height:Number(document.getElementById('heightInput').value)||0,
     age:Number(document.getElementById('ageInput').value)||0,
     sex:document.getElementById('sexInput').value||'',
