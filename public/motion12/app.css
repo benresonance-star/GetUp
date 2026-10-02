@@ -5165,3 +5165,64 @@ html.standalone .strength-set-columns{
     min-height:24px;
   }
 }
+
+
+/* Compact Home height budget with Practice */
+@media(max-width:520px) and (max-height:880px){
+  #homePage.compact-active .compact-home{gap:8px}
+  #homePage.compact-active .compact-session{
+    min-height:92px;
+    padding:14px 15px;
+    border-radius:20px;
+  }
+  #homePage.compact-active .compact-session h1{
+    margin:5px 0 4px;
+    font-size:27px;
+  }
+  #homePage.compact-active .compact-session-right{gap:7px}
+  #homePage.compact-active .compact-session-right span{padding:7px 9px}
+  #homePage.compact-active .compact-practice-strip{
+    min-height:52px;
+    padding:8px 10px;
+  }
+  #homePage.compact-active .compact-week{gap:4px}
+  #homePage.compact-active .compact-week .daydot{
+    min-height:38px;
+    padding:6px 1px;
+  }
+  #homePage.compact-active .compact-metrics,
+  #homePage.compact-active .compact-bottom-grid{gap:7px}
+  #homePage.compact-active .compact-card{
+    padding:10px 11px;
+    border-radius:16px;
+  }
+  #homePage.compact-active .compact-card strong{
+    margin-top:5px;
+    font-size:18px;
+  }
+  #homePage.compact-active .compact-card small{
+    margin-top:4px;
+    font-size:9.5px;
+  }
+  #homePage.compact-active .compact-card-head{margin-bottom:7px}
+  #homePage.compact-active .compact-meal-grid{gap:4px}
+  #homePage.compact-active .compact-meal{
+    min-height:34px;
+    padding:5px 6px;
+    font-size:9px;
+  }
+  #homePage.compact-active .compact-meal .meal-check{
+    width:17px;
+    height:17px;
+    min-width:17px;
+  }
+}
+/* On genuinely short screens, preserve every control instead of clipping the
+   bottom of Compact Home. Taller phones remain a one-screen dashboard. */
+@media(max-width:520px) and (max-height:760px){
+  #homePage.compact-active{
+    height:auto;
+    min-height:0;
+    overflow:visible;
+  }
+}
