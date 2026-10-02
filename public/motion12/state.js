@@ -25,7 +25,7 @@ function applyAppPalette(value){
   if(meta)meta.setAttribute('content',tokens.volt);
   return palette;
 }
-const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',appPalette:'ember',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
+const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,pullupMax:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',appPalette:'ember',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};
 const motion12PersistedView=window.Motion12Persistence.view();
 const storedSettings=motion12PersistedView.settings||{};
 const storedPortions=storedSettings.portions||{};
