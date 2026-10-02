@@ -280,8 +280,8 @@ function practicePrescription(day=programDay()){
   const targetSets=3;
   if(day===1)return {enabled:false,reason:'strength-day',max,targetSets,reps:0,assisted:false,label:'No micro-sets'};
   if(max<=0)return {enabled:false,reason:'needs-max',max:0,targetSets,reps:0,assisted:false,label:'Set clean pull-up max'};
-  const assisted=max<3;
-  const reps=assisted?1:Math.min(5,Math.max(1,Math.floor((max-1)/2)));
+  const assisted=max<5;
+  const reps=assisted?1:max===5?1:max===6?2:max<=8?3:max<=10?4:5;
   return {enabled:true,reason:'',max,targetSets,reps,assisted,label:assisted?'1 assisted rep':reps+' clean rep'+(reps===1?'':'s')};
 }
 function practiceState(date=todayISO()){
@@ -377,7 +377,7 @@ function practiceHomeMarkup(compact=false){
         ? '<div class="compact-practice-finished done"><span>DONE ✓</span><button type="button" onclick="undoPracticeToday()">UNDO</button></div>'
         : '<div class="compact-practice-actions"><button class="primary" type="button" onclick="completePracticeSet()">+ SET</button><button type="button" onclick="stopPracticeToday()">STOP</button>'+(st.sets?'<button type="button" onclick="undoPracticeToday()">UNDO</button>':'')+'</div>';
     return '<div class="compact-practice-strip '+(st.stopped?'stopped':done?'complete':'')+'">'+
-      '<div class="compact-practice-copy"><span class="compact-label">Practice · Pull-up</span><b>'+rx.label+' · RIR 4–6</b><small>Three crisp micro-sets spread through the day.</small></div>'+
+      '<div class="compact-practice-copy"><span class="compact-label">Practice · Pull-up</span><b>'+rx.label+' · RIR ≥4</b><small>Aim for RIR 4–6; never grind a practice set.</small></div>'+
       '<div class="compact-practice-state">'+practiceDotsMarkup(st,rx.targetSets,true)+actions+'</div>'+
     '</div>';
   }
@@ -399,7 +399,7 @@ function practiceHomeMarkup(compact=false){
 
   return '<section class="section practice-section"><div class="section-head"><h2>Practice</h2><small>strength skill · micro-dose</small></div>'+
     '<div class="card practice-card '+(st.stopped?'stopped':done?'complete':'')+'">'+
-      '<div class="practice-main"><div><span class="tag">Pull-up · clean max '+rx.max+'</span><h3>'+rx.label+' per set</h3><p>Spread 3 micro-sets through the day. Count a set only while technique stays crisp and you still have 4–6 reps in reserve.</p></div>'+
+      '<div class="practice-main"><div><span class="tag">Pull-up · clean max '+rx.max+'</span><h3>'+rx.label+' per set</h3><p>Spread 3 micro-sets through the day. Count a set only while technique stays crisp and you still have at least 4 reps in reserve; aim for 4–6.</p></div>'+
       '<div class="practice-progress">'+practiceDotsMarkup(st,rx.targetSets,false)+'<b>'+st.sets+' / '+rx.targetSets+'</b></div></div>'+
       '<div class="practice-actions">'+actionMarkup+'</div>'+
     '</div></section>';
