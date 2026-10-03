@@ -5450,46 +5450,42 @@ html.standalone .strength-set-columns{
   font-size:7.5px;
 }
 #dayPage.compact-active .aerobic-b-movements{
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:5px;
+  grid-template-columns:1fr;
+  gap:6px;
 }
 #dayPage.compact-active .aerobic-b-movement{
-  grid-template-columns:20px minmax(0,1fr) auto;
-  gap:5px;
-  min-height:38px;
-  padding:6px;
-  border-radius:9px;
+  grid-template-columns:24px minmax(0,1fr) auto;
+  gap:8px;
+  min-height:44px;
+  padding:8px 9px;
+  border-radius:10px;
 }
 #dayPage.compact-active .aerobic-b-order{
-  width:20px;
-  height:20px;
-  border-radius:7px;
-  font-size:7px;
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:8px;
 }
 #dayPage.compact-active .aerobic-b-movement b{
-  font-size:9px;
+  font-size:11.5px;
+  line-height:1.15;
 }
 #dayPage.compact-active .aerobic-b-movement small{
   display:none;
 }
 #dayPage.compact-active .aerobic-b-movement>strong{
-  font-size:10px;
+  font-size:12px;
 }
 #dayPage.compact-active .aerobic-b-recovery{
-  min-height:32px;
-  padding:5px 7px;
+  min-height:38px;
+  padding:7px 9px;
 }
 #dayPage.compact-active .aerobic-b-recovery span{
-  font-size:7px;
+  font-size:7.5px;
 }
 #dayPage.compact-active .aerobic-b-recovery b{
-  font-size:9px;
+  font-size:10.5px;
 }
 #dayPage.compact-active .aerobic-b-recovery>strong{
-  font-size:10px;
-}
-@media(max-width:390px){
-  #dayPage.compact-active .aerobic-b-movements{
-    grid-template-columns:1fr;
-  }
+  font-size:12px;
 }
