@@ -55,7 +55,7 @@ const program={
     ['Split-squat isometric','3 × 5 sec / side · 20–30 sec between sides · 60–90 sec between rounds','After the primary lifts, use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Build force smoothly for about 1 second, hold hard for 3–4 seconds, then release under control at about 8–9/10 effort.','Progress force rather than duration. Add load only when all three rounds per side remain stable, symmetrical and pain-free with no next-day tendon irritation.'],
     ['Heavy calf raise isometric','3 × 5 sec / side · 20–30 sec between sides · 60–90 sec between rounds','Use a strong mid-range single-leg calf position without bouncing. Use a wall or frame only for balance. Build force smoothly, hold hard for 3–4 seconds, then release under control at about 8–9/10 effort.','Progress force rather than duration. Add the smallest practical load only when all three rounds are steady and pain-free with no next-day tendon irritation.']
   ]},
-  6:{name:'Aerobic Power',why:'Raise maximal oxygen uptake without grip or kettlebell technique being the limiter.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
+  6:{name:'Aerobic Power',why:'Raise maximal aerobic power with repeatable high-quality work. Choose locomotion or kettlebell + bodyweight while keeping the same aerobic objective.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
     ['Aerobic intervals','See weekly target','Uphill walk, jog, bike or stairs. Keep output repeatable.','Increase pace only if all intervals complete, <5% fade, ≤8.5/10 finish and recovery is adequate.']
   ]},
   0:{name:'Aerobic Base Circuit',why:'Build an easy aerobic base with continuous bodyweight and light kettlebell work while staying fresh for Monday.',time:'14–24 min',tone:'cyan',diet:'Normal eating day',work:[
@@ -84,6 +84,14 @@ function conditioningTarget(day,w){
   return '';
 }
 const aerobicTargets=['40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','40 min brisk / hills','3 × 3 min hard / 3 min easy','4 × 3 min hard / 3 min easy','4 × 4 min hard / 3 min easy','30–40 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','4 × 4 min hard / 3 min easy','2 km walk test'];
+const aerobicPowerB={
+  name:'Aerobic Power B',
+  target:'4 × 4 min work / 3 min active recovery × 4 rounds',
+  objective:'Same Aerobic Power objective as Session A: drive cardiovascular output high while keeping movement repeatable and technically crisp.',
+  work:[
+    ['Kettlebell + bodyweight 4×4','4 × 4 min work / 3 min active recovery × 4 rounds','During each 4-minute work block rotate every minute: 2-hand kettlebell swing → squat-to-calf-raise → alternating reverse lunge → 2-hand kettlebell swing. Keep moving continuously but never let grip, back or local muscle fatigue become the limiter.','Build cardiovascular output first: establish all four rounds cleanly, then increase cadence slightly. Increase kettlebell load only when technique stays crisp and breathing—not grip or muscular fatigue—remains the limiter.','START: use a kettlebell around 40–60% of your normal swing capacity, rounded down. You should finish each swing minute able to perform another clean minute. REDUCE immediately if grip, back or technique becomes the bottleneck.']
+  ]
+};
 
 const videoLinks={
   'Kettlebell halo':[{label:'Form',url:'https://www.youtube.com/watch?v=jRwUtI5aIhE'}],
