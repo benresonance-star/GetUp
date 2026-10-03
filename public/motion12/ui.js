@@ -257,7 +257,7 @@ function sessionsLastSevenDays(){
   return count;
 }
 function streakBand(compact=false){
-  const s=programProgressStats(),q=dailyMotivationQuote();
+  const s=programProgressStats(),q=dailyMotivationQuote(),last7=sessionsLastSevenDays();
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
   const remaining=Math.max(0,s.programDays-s.completed);
   const progress=Math.max(0,Math.min(100,Math.round((s.completed/s.programDays)*100)));
@@ -268,7 +268,7 @@ function streakBand(compact=false){
     '<div class="momentum-head"><span>12-week momentum</span><b>'+remaining+' <small>to go</small></b></div>'+
     '<div class="momentum-progress" aria-label="'+progress+'% complete"><i style="width:'+progress+'%"></i></div>'+
     '<div class="momentum-metrics">'+
-      '<div class="streak-main"><span>Last 7 days</span><b>'+sessionsLastSevenDays()+' session'+(sessionsLastSevenDays()===1?'':'s')+'</b></div>'+
+      '<div class="streak-main"><span>Last 7 days</span><b>'+last7+' session'+(last7===1?'':'s')+'</b></div>'+
       '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
       '<div class="streak-stat"><span>Completed</span><b>'+s.completed+'/'+s.programDays+'</b></div>'+
     '</div>'+
