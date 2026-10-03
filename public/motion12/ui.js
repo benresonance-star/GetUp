@@ -1535,6 +1535,33 @@ function aerobicPowerSessionWork(date=todayISO()){
 function aerobicPowerSessionTarget(date=todayISO(),w=weekNo()){
   return aerobicPowerVariant(date)==='B'?aerobicPowerB.target:(aerobicTargets[w-1]||'Aerobic session');
 }
+const AEROBIC_POWER_B_MOVEMENTS=[
+  {name:'2-hand kettlebell swing',duration:60,short:'Swing'},
+  {name:'Squat-to-calf-raise',duration:60,short:'Squat + calf raise'},
+  {name:'Alternating reverse lunge',duration:60,short:'Reverse lunge'},
+  {name:'2-hand kettlebell swing',duration:60,short:'Swing'}
+];
+function aerobicPowerBBreakdownMarkup(){
+  return '<div class="aerobic-b-breakdown" aria-label="Aerobic Power B four-minute work sequence">'+
+    '<div class="aerobic-b-breakdown-head"><span>4:00 work block</span><b>Repeat × 4 rounds</b></div>'+
+    '<div class="aerobic-b-movements">'+
+      AEROBIC_POWER_B_MOVEMENTS.map((m,i)=>
+        '<div class="aerobic-b-movement"><span class="aerobic-b-order">'+(i+1)+'</span><div><b>'+m.name+'</b><small>'+(i===3?'Strong finish · stay crisp':'Continuous, repeatable pace')+'</small></div><strong>1:00</strong></div>'
+      ).join('')+
+    '</div>'+
+    '<div class="aerobic-b-recovery"><span>Then</span><b>Active recovery</b><strong>3:00</strong></div>'+
+  '</div>';
+}
+function aerobicPowerBMovementState(remaining=240){
+  const sec=Math.max(0,Math.min(240,Math.ceil(Number(remaining)||0)));
+  const elapsed=Math.max(0,240-sec);
+  const index=Math.min(3,Math.floor(elapsed/60));
+  const movement=AEROBIC_POWER_B_MOVEMENTS[index];
+  const within=elapsed-(index*60);
+  const movementRemaining=Math.max(1,60-within);
+  const next=index<3?AEROBIC_POWER_B_MOVEMENTS[index+1]:null;
+  return {index,movement,movementRemaining,next};
+}
 function aerobicPowerVariantMarkup(date,w){
   const variant=aerobicPowerVariant(date),aTarget=aerobicTargets[w-1]||'Aerobic session';
   return '<section class="section aerobic-power-choice"><div class="section-head"><h2>Aerobic Power session</h2><small>same objective · choose one</small></div>'+
@@ -1567,8 +1594,9 @@ function exerciseCardMarkup(day,date,w,x,i,options={}){
       '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
     '</div>';
   }
+  const aerobicBreakdown=day===6&&x[0]==='Kettlebell + bodyweight 4×4'?aerobicPowerBBreakdownMarkup():'';
   return '<div class="exercise '+(state.done?'complete ':'')+(inlineTimer.activeId===id?'active-timer':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0" onclick="activateExerciseTimerFromCard(event,this)">'+
-    '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+inlineTimerMarkup(id)+
+    '<div class="ex-top"><div class="num">'+(i+1)+'</div><div class="ex-name"><h3>'+x[0]+' '+videoButtons(x[0])+'</h3><p>'+target+'</p></div><button class="check" onclick="toggleExercise(\''+id+'\')"></button></div>'+aerobicBreakdown+inlineTimerMarkup(id)+
     '<div class="inputs"><div class="field"><label>Load / pace</label><input value="'+(state.load||'')+'" placeholder="e.g. 20 kg" oninput="saveEx(\''+id+'\',\'load\',this.value)"></div><div class="field"><label>Actual</label><input value="'+(state.reps||'')+'" placeholder="sets/reps" oninput="saveEx(\''+id+'\',\'reps\',this.value)"></div><div class="field"><label>RIR / effort</label><input value="'+(state.rir||'')+'" placeholder="2 RIR" oninput="saveEx(\''+id+'\',\'rir\',this.value)"></div></div>'+
     exerciseNoteMarkup(id,state)+
     '<div class="tip">'+x[2]+'</div><div class="tip progress-rule"><b>Progress:</b> '+x[3]+'</div>'+loadGuideMarkup(x[4])+
@@ -2140,7 +2168,7 @@ function timerViewModel(){
   timerConfigure(smartTimer.mode||'session',false);
   const plan=timerSessionPlan(),sec=timerCurrentSeconds(),kind=smartTimer.kind;
   let label='REST',meta=plan.title,progress=0,detail='',nextText='';
-  let clockText='';
+  let clockText='',ringDurationOverride=0;
   if(kind==='strengthsets'){
     const currentSet=Math.min(smartTimer.totalSets,smartTimer.setIndex+1);
     if(smartTimer.strengthPhase==='complete'){
@@ -2186,6 +2214,20 @@ function timerViewModel(){
       progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
       const next=plan.phases[smartTimer.phaseIndex+1];
       nextText=next?timerPhaseReadable(next.label)+' · '+(next.seconds>=60?timerFormat(next.seconds):next.seconds+' sec'):'Complete';
+      if(plan.aerobicAlternate&&String(phase.label).toUpperCase()==='WORK'){
+        const move=aerobicPowerBMovementState(sec);
+        label='WORK · '+move.movement.short.toUpperCase();
+        meta='Round '+phase.round+' of '+plan.rounds+' · '+move.movement.name;
+        clockText=timerFormat(move.movementRemaining);
+        progress=move.movementRemaining/60;
+        ringDurationOverride=60;
+        detail='Minute '+(move.index+1)+' of 4 · '+move.movement.name;
+        nextText=move.next?move.next.name+' · 1:00':'Active recovery · 3:00';
+      }else if(plan.aerobicAlternate&&String(phase.label).toUpperCase()==='RECOVER'){
+        meta='Round '+phase.round+' of '+plan.rounds+' · Active recovery';
+        detail=phase.round===plan.rounds?'Cool down while breathing settles':'Easy walk or march';
+        nextText=phase.round===plan.rounds?'Complete':'2-hand kettlebell swing · 1:00';
+      }
     }
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
@@ -2201,7 +2243,7 @@ function timerViewModel(){
     detail=smartTimer.mode==='session'?plan.note:(smartTimer.exerciseName?(smartTimer.exerciseCategory+' recovery preset · adjust ±15 sec if needed.'):'Use this for any set that needs a different recovery time.');
   }
   const duration=Math.max(0,Number(smartTimer.duration)||0);
-  const ringDuration=kind==='strengthsets'&&smartTimer.strengthPhase==='work'?60:duration;
+  const ringDuration=ringDurationOverride||((kind==='strengthsets'&&smartTimer.strengthPhase==='work')?60:duration);
   const stepAngle=ringDuration>0?360/ringDuration:360;
   const gapAngle=ringDuration>0?Math.min(1.6,Math.max(.55,stepAngle*.16)):0;
   const fillAngle=Math.max(.1,stepAngle-gapAngle);
