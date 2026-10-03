@@ -2353,7 +2353,14 @@ function timerSessionProgressData(vm){
 
     let currentName='Session complete',currentDetail='All '+workIndices.length+' work stations complete';
     if(currentPhase){
-      if(timerIsRecoveryPhase(currentPhase.label)){
+      if(plan.aerobicAlternate&&String(currentPhase.label).toUpperCase()==='WORK'){
+        const move=aerobicPowerBMovementState(vm?.sec??240);
+        currentName=move.movement.name;
+        currentDetail='Minute '+(move.index+1)+' of 4 · 1:00';
+      }else if(plan.aerobicAlternate&&timerIsRecoveryPhase(currentPhase.label)){
+        currentName='Active recovery';
+        currentDetail='3:00 · '+(currentPhase.round===plan.rounds?'cool down':'easy walk or march');
+      }else if(timerIsRecoveryPhase(currentPhase.label)){
         currentName=timerPhaseReadable(currentPhase.label);
         currentDetail=currentPhase.cue||(nextWork?'Next · '+timerPhaseReadable(nextWork.label):'Final recovery');
       }else{
