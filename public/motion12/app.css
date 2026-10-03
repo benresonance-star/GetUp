@@ -5339,3 +5339,157 @@ html.standalone .strength-set-columns{
   #dayPage.compact-active .aerobic-variant-option>b{font-size:9px}
   #dayPage.compact-active .aerobic-variant-option>small{font-size:7px}
 }
+
+
+/* Aerobic Power B · explicit four-minute movement sequence */
+.aerobic-b-breakdown{
+  margin:12px 0 10px;
+  padding:11px;
+  border:1px solid rgba(59,231,225,.22);
+  border-radius:15px;
+  background:rgba(59,231,225,.035);
+}
+.aerobic-b-breakdown-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.aerobic-b-breakdown-head span{
+  color:var(--cyan);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.aerobic-b-breakdown-head b{
+  color:var(--muted);
+  font-size:9px;
+}
+.aerobic-b-movements{
+  display:grid;
+  gap:5px;
+}
+.aerobic-b-movement{
+  min-width:0;
+  display:grid;
+  grid-template-columns:24px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  min-height:42px;
+  padding:7px 8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#111316;
+}
+.aerobic-b-order{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:rgba(59,231,225,.08);
+  color:var(--cyan);
+  font-size:9px;
+  font-weight:950;
+}
+.aerobic-b-movement>div{
+  min-width:0;
+}
+.aerobic-b-movement b{
+  display:block;
+  color:#f0f2f3;
+  font-size:11px;
+  line-height:1.15;
+}
+.aerobic-b-movement small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.2;
+}
+.aerobic-b-movement>strong,
+.aerobic-b-recovery>strong{
+  color:var(--cyan);
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+.aerobic-b-recovery{
+  margin-top:6px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  min-height:39px;
+  padding:7px 9px;
+  border:1px dashed rgba(255,255,255,.13);
+  border-radius:11px;
+}
+.aerobic-b-recovery span{
+  color:var(--muted);
+  font-size:8px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.aerobic-b-recovery b{
+  color:#e9ebed;
+  font-size:10.5px;
+}
+#dayPage.compact-active .aerobic-b-breakdown{
+  margin:8px 0 7px;
+  padding:8px;
+  border-radius:12px;
+}
+#dayPage.compact-active .aerobic-b-breakdown-head{
+  margin-bottom:6px;
+}
+#dayPage.compact-active .aerobic-b-breakdown-head span,
+#dayPage.compact-active .aerobic-b-breakdown-head b{
+  font-size:7.5px;
+}
+#dayPage.compact-active .aerobic-b-movements{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px;
+}
+#dayPage.compact-active .aerobic-b-movement{
+  grid-template-columns:20px minmax(0,1fr) auto;
+  gap:5px;
+  min-height:38px;
+  padding:6px;
+  border-radius:9px;
+}
+#dayPage.compact-active .aerobic-b-order{
+  width:20px;
+  height:20px;
+  border-radius:7px;
+  font-size:7px;
+}
+#dayPage.compact-active .aerobic-b-movement b{
+  font-size:9px;
+}
+#dayPage.compact-active .aerobic-b-movement small{
+  display:none;
+}
+#dayPage.compact-active .aerobic-b-movement>strong{
+  font-size:10px;
+}
+#dayPage.compact-active .aerobic-b-recovery{
+  min-height:32px;
+  padding:5px 7px;
+}
+#dayPage.compact-active .aerobic-b-recovery span{
+  font-size:7px;
+}
+#dayPage.compact-active .aerobic-b-recovery b{
+  font-size:9px;
+}
+#dayPage.compact-active .aerobic-b-recovery>strong{
+  font-size:10px;
+}
+@media(max-width:390px){
+  #dayPage.compact-active .aerobic-b-movements{
+    grid-template-columns:1fr;
+  }
+}
