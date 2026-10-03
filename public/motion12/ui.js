@@ -244,6 +244,18 @@ function dailyMotivationQuote(date=todayISO()){
   const day=Math.floor(new Date(date+'T00:00:00').getTime()/86400000);
   return MOTIVATION_QUOTES[((day%MOTIVATION_QUOTES.length)+MOTIVATION_QUOTES.length)%MOTIVATION_QUOTES.length];
 }
+function sessionsLastSevenDays(){
+  const today=new Date(todayISO()+'T00:00:00');
+  let count=0;
+  for(let i=0;i<7;i++){
+    const d=new Date(today);
+    d.setDate(today.getDate()-i);
+    const date=iso(d),day=d.getDay();
+    reconcileStrengthSessionCompletion(date,day);
+    if(completedOn(date,day))count++;
+  }
+  return count;
+}
 function streakBand(compact=false){
   const s=programProgressStats(),q=dailyMotivationQuote();
   const week=s.weekElapsed?(s.weekCompleted+'/'+s.weekElapsed):'—';
@@ -256,7 +268,7 @@ function streakBand(compact=false){
     '<div class="momentum-head"><span>12-week momentum</span><b>'+remaining+' <small>to go</small></b></div>'+
     '<div class="momentum-progress" aria-label="'+progress+'% complete"><i style="width:'+progress+'%"></i></div>'+
     '<div class="momentum-metrics">'+
-      '<div class="streak-main"><span>Current streak</span><b>'+s.currentStreak+' day'+(s.currentStreak===1?'':'s')+'</b></div>'+
+      '<div class="streak-main"><span>Last 7 days</span><b>'+sessionsLastSevenDays()+' session'+(sessionsLastSevenDays()===1?'':'s')+'</b></div>'+
       '<div class="streak-stat"><span>This week</span><b>'+week+'</b></div>'+
       '<div class="streak-stat"><span>Completed</span><b>'+s.completed+'/'+s.programDays+'</b></div>'+
     '</div>'+
