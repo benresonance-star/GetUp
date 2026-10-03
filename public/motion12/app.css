@@ -5226,3 +5226,116 @@ html.standalone .strength-set-columns{
     overflow:visible;
   }
 }
+
+
+/* Aerobic Power A / B session chooser */
+.aerobic-power-choice{
+  margin-bottom:10px;
+}
+.aerobic-variant-switch{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.aerobic-variant-option{
+  min-width:0;
+  min-height:82px;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface);
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+}
+.aerobic-variant-option>span{
+  display:inline-grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  margin-bottom:8px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:950;
+}
+.aerobic-variant-option>b{
+  display:block;
+  font-size:13px;
+  line-height:1.15;
+}
+.aerobic-variant-option>small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.25;
+}
+.aerobic-variant-option.selected{
+  border-color:rgba(59,231,225,.5);
+  background:linear-gradient(145deg,rgba(59,231,225,.08),var(--surface) 46%);
+  box-shadow:inset 3px 0 0 var(--cyan);
+}
+.aerobic-variant-option.selected>span{
+  border-color:rgba(59,231,225,.45);
+  color:var(--cyan);
+  background:rgba(59,231,225,.08);
+}
+.aerobic-variant-note{
+  margin:7px 2px 0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.35;
+}
+
+/* Compact workout keeps the choice available as a shallow segmented row. */
+#dayPage.compact-active .aerobic-power-choice{
+  margin:0 0 6px;
+}
+#dayPage.compact-active .aerobic-power-choice>.section-head,
+#dayPage.compact-active .aerobic-variant-note{
+  display:none;
+}
+#dayPage.compact-active .aerobic-variant-switch{
+  gap:5px;
+}
+#dayPage.compact-active .aerobic-variant-option{
+  min-height:42px;
+  padding:7px 9px;
+  border-radius:12px;
+  display:grid;
+  grid-template-columns:20px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:7px;
+  align-items:center;
+}
+#dayPage.compact-active .aerobic-variant-option>span{
+  grid-row:1 / span 2;
+  width:20px;
+  height:20px;
+  margin:0;
+  border-radius:7px;
+  font-size:8px;
+}
+#dayPage.compact-active .aerobic-variant-option>b{
+  font-size:10px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#dayPage.compact-active .aerobic-variant-option>small{
+  margin:1px 0 0;
+  font-size:7.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media(max-width:390px){
+  #dayPage.compact-active .aerobic-variant-option{
+    padding:6px 7px;
+    column-gap:5px;
+  }
+  #dayPage.compact-active .aerobic-variant-option>b{font-size:9px}
+  #dayPage.compact-active .aerobic-variant-option>small{font-size:7px}
+}
