@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e10">
+  <title>MOTION12 update recovery</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0d0e10;color:#f5f6f7;font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:min(430px,calc(100% - 32px));padding:26px;border:1px solid #28313a;border-radius:22px;background:#14171b}
+    h1{margin:0 0 8px;font-size:24px}
+    p{margin:0;color:#aeb4bb}
+    .status{margin-top:18px;color:#f5f6f7;font-weight:700}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Updating MOTION12</h1>
+    <p>This resets only the app shell cache and service worker. Training data in IndexedDB is left untouched.</p>
+    <div class="status" id="status">Preparing update…</div>
+  </main>
+<script>
+(async function(){
+  var status=document.getElementById('status');
+  try{
+    if('serviceWorker' in navigator){
+      var regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(function(reg){
+        return reg.scope.includes('/public/motion12/') ? reg.unregister() : Promise.resolve(false);
+      }));
+    }
+    if('caches' in window){
+      var keys=await caches.keys();
+      await Promise.all(keys.filter(function(k){return k.indexOf('motion12-shell-')===0}).map(function(k){return caches.delete(k)}));
+    }
+    status.textContent='Update cache cleared. Reopening MOTION12…';
+    var target='./motion12/?recovery=canonical-r60-20261003&t='+Date.now();
+    setTimeout(function(){location.replace(target)},350);
+  }catch(err){
+    status.textContent='Could not clear the app shell automatically. Close this page and reopen MOTION12.';
+  }
+})();
+</script>
+</body>
+</html>

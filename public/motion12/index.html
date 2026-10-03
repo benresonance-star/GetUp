@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#121212" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MOTION 12" />
+  <meta name="application-name" content="MOTION 12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <title>MOTION 12 — 12-week fitness reset</title>
+  <meta name="motion12-build" content="canonical-r60-20261003" />
+  <script>
+    (function(){
+      var standalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      if (standalone) document.documentElement.classList.add('standalone');
+      if ('scrollRestoration' in history) history.scrollRestoration='manual';
+      window.addEventListener('load',function(){
+        requestAnimationFrame(function(){window.scrollTo(0,0)});
+      },{once:true});
+    })();
+  </script>
+  <link rel="stylesheet" href="https://raw.githack.com/benresonance-star/GetUp/efa85a1ea6940490d6de8e1c143316fa21bca8c5/public/motion12/theme.css" />
+  <link rel="stylesheet" href="https://raw.githack.com/benresonance-star/GetUp/efa85a1ea6940490d6de8e1c143316fa21bca8c5/public/motion12/app.css" />
+  <style>
+    .brand-line{display:flex;align-items:baseline;gap:7px}
+    .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .app-update-banner[hidden]{display:none!important}
+    .app-update-banner{
+      position:fixed;
+      left:50%;
+      bottom:calc(86px + env(safe-area-inset-bottom,0px));
+      z-index:220;
+      width:min(486px,calc(100% - 28px));
+      transform:translateX(-50%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:11px 12px 11px 14px;
+      border:1px solid rgba(var(--accent-rgb,255,77,46),.40);
+      border-radius:16px;
+      background:rgba(18,20,23,.97);
+      box-shadow:0 14px 34px rgba(0,0,0,.36);
+      -webkit-backdrop-filter:blur(16px);
+      backdrop-filter:blur(16px);
+    }
+    .app-update-banner span{min-width:0}
+    .app-update-banner b{display:block;font-size:12px;color:var(--ink)}
+    .app-update-banner small{display:block;margin-top:2px;color:var(--muted);font-size:9px;line-height:1.3}
+    .app-update-banner button{
+      flex:0 0 auto;
+      min-height:38px;
+      padding:8px 12px;
+      border:0;
+      border-radius:999px;
+      background:var(--volt,#ff4d2e);
+      color:#0b0c0e;
+      font-size:10px;
+      font-weight:950;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="topline">
+      <div><div class="brand-line"><div class="brand">MOTION<i>12</i></div><span class="build-revision" id="headerBuildRevision" aria-label="App revision"></span></div><div class="date" id="todayDate"></div></div>
+      <div class="top-actions">
+        <button class="home-mode-toggle" id="homeModeToggle" type="button" role="switch" aria-checked="false" aria-label="Use compact Home">
+          <span class="home-mode-label">Compact</span><span class="switch-track"><span class="switch-knob"></span></span>
+        </button>
+        <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="gear-label">Settings</span></button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section id="homePage" class="page active"></section>
+    <section id="daysPage" class="page"></section>
+    <section id="dayPage" class="page"></section>
+    <section id="progressPage" class="page"></section>
+  </main>
+  <nav class="bottomnav" aria-label="Primary">
+    <button class="navbtn active" data-page="homePage"><svg class="nav-icon" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="navbtn" data-page="daysPage"><svg class="nav-icon" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span>Days</span></button>
+    <button class="navbtn" data-page="progressPage"><svg class="nav-icon" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>Progress</span></button>
+  </nav>
+</div>
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h2>Program settings</h2>
+    <div class="field"><label>12-week start date (Monday)</label><input type="date" id="startDateInput"></div>
+    <div class="field"><label>Bodyweight (kg)</label><input type="number" id="bodyweightInput" step="0.1" min="30" max="250"></div>
+    <div class="field"><label>Clean pull-up max · Practice</label><input type="number" id="pullupMaxInput" step="1" min="1" max="30" inputmode="numeric" placeholder="e.g. 6"><p class="settings-note practice-settings-note">Used only to set the submaximal Practice dose. Monday micro-sets are automatically disabled; re-test a clean maximum after four weeks.</p></div>
+    <div class="settings-grid">
+      <div class="field"><label>Height (cm)</label><input type="number" id="heightInput" step="1" min="120" max="230"></div>
+      <div class="field"><label>Age</label><input type="number" id="ageInput" step="1" min="18" max="100"></div>
+    </div>
+    <div class="field"><label>Sex for calorie estimate</label><select id="sexInput"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option></select></div>
+    <div class="field"><label>Daily step baseline</label><input type="number" id="stepsInput" step="500" min="0"></div>
+    <div class="field"><label>Known maintenance calories — optional</label><input type="number" id="maintenanceInput" step="50" min="1200" max="6000" placeholder="Overrides estimate if known"></div>
+    <div class="field app-colour-field">
+      <div class="app-colour-head"><label>App colour</label><b id="appPaletteName">Ember</b></div>
+      <input type="hidden" id="appPaletteInput" value="ember">
+      <div class="palette-picker" id="appPalettePicker" role="radiogroup" aria-label="App colour">
+        <button class="palette-swatch selected" type="button" role="radio" aria-checked="true" data-palette="ember" onclick="setAppPalettePicker('ember',true)" style="--sw1:#ff4d2e;--sw2:#ff7a1a"><span class="palette-swatch-preview"></span><small>Ember</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="ocean" onclick="setAppPalettePicker('ocean',true)" style="--sw1:#38a6ff;--sw2:#20d6c7"><span class="palette-swatch-preview"></span><small>Ocean</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="forest" onclick="setAppPalettePicker('forest',true)" style="--sw1:#4fd270;--sw2:#b4df45"><span class="palette-swatch-preview"></span><small>Forest</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="violet" onclick="setAppPalettePicker('violet',true)" style="--sw1:#8c72ff;--sw2:#d45cff"><span class="palette-swatch-preview"></span><small>Violet</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="gold" onclick="setAppPalettePicker('gold',true)" style="--sw1:#ffb62e;--sw2:#ff7a1a"><span class="palette-swatch-preview"></span><small>Gold</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="rose" onclick="setAppPalettePicker('rose',true)" style="--sw1:#ff5f8f;--sw2:#ff8c51"><span class="palette-swatch-preview"></span><small>Rose</small></button>
+      </div>
+      <p class="settings-note palette-picker-note">Tap a swatch to preview it. Save keeps the colour; Cancel restores the previous palette.</p>
+    </div>
+    <details class="portion-settings">
+      <summary>Portion calibration</summary>
+      <p class="settings-note">Edit these once to match your usual portions. Calories/macros recalculate from representative food values.</p>
+      <div class="settings-grid">
+        <div class="field"><label>Greek yoghurt (g)</label><input type="number" id="yogurtInput" step="10" min="0"></div>
+        <div class="field"><label>Berries (g)</label><input type="number" id="berriesInput" step="10" min="0"></div>
+        <div class="field"><label>Walnuts/almonds (g)</label><input type="number" id="nutsInput" step="5" min="0"></div>
+        <div class="field"><label>Ground flax/chia (g)</label><input type="number" id="seedsInput" step="5" min="0"></div>
+        <div class="field"><label>Latte milk each (ml)</label><input type="number" id="latteMilkInput" step="10" min="0"></div>
+        <div class="field"><label>Lunch protein</label><select id="lunchProteinInput"><option value="chicken">Chicken breast — ~65 g cooked</option><option value="leanMince">Lean mince — ~77 g cooked</option><option value="oilyFish">Oily fish — ~87 g cooked</option></select></div>
+        <div class="field"><label>Dinner protein</label><select id="dinnerProteinInput"><option value="chicken">Chicken breast — ~65 g cooked</option><option value="leanMince">Lean mince — ~77 g cooked</option><option value="oilyFish">Oily fish — ~87 g cooked</option></select></div>
+        <p class="settings-note protein-equivalent-note">Each cooked portion supplies about 20 g protein. Calories vary by protein choice and are recalculated in the meal plan.</p>
+        <div class="field"><label>Lunch whole grain — cooked (g)</label><input type="number" id="lunchRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Dinner whole grain — cooked (g)</label><input type="number" id="dinnerRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Legumes each meal — cooked (g)</label><input type="number" id="legumesInput" step="10" min="0"></div>
+        <div class="field"><label>Vegetables each meal (g)</label><input type="number" id="vegInput" step="10" min="0"></div>
+        <div class="field"><label>Extra-virgin olive oil each meal (g)</label><input type="number" id="oilInput" step="0.5" min="0"></div>
+        <div class="field"><label>Protein powder (g)</label><input type="number" id="powderInput" step="5" min="0"></div>
+        <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
+      </div>
+    </details>
+    <details class="data-settings">
+      <summary>Training data</summary>
+      <p class="settings-note">MOTION12 stores live app and training data in IndexedDB and mirrors the latest validated state to a separate local shadow for recovery. Existing legacy localStorage migration keys are not modified.</p>
+      <div class="data-settings-actions">
+        <button type="button" id="exportDataBtn">Export backup</button>
+        <button type="button" id="importDataBtn">Import backup</button>
+        <input type="file" id="settingsImportFile" accept="application/json,.json" hidden>
+      </div>
+      <div class="data-store-status" id="dataStoreStatus"></div>
+    </details>
+    <details class="data-settings app-diagnostics">
+      <summary>App diagnostics</summary>
+      <div class="diagnostics-grid">
+        <div class="diagnostic-cell"><span>Build</span><b id="diagBuild">—</b></div>
+        <div class="diagnostic-cell"><span>Data schema</span><b id="diagSchema">—</b></div>
+        <div class="diagnostic-cell"><span>Database</span><b id="diagDatabase">—</b></div>
+        <div class="diagnostic-cell"><span>Installation</span><b id="diagInstall">—</b></div>
+        <div class="diagnostic-cell"><span>Service worker</span><b id="diagWorker">—</b></div>
+        <div class="diagnostic-cell"><span>Persistent storage</span><b id="diagPersistent">—</b></div>
+        <div class="diagnostic-cell"><span>Shadow recovery</span><b id="diagShadow">—</b></div>
+        <div class="diagnostic-cell" style="grid-column:1/-1"><span>Last data change</span><b id="diagSaved">—</b></div>
+      </div>
+      <p class="diagnostics-note">The installation ID belongs to this local MOTION12 data store. App-code updates should leave it unchanged.</p>
+      <div class="data-settings-actions" style="margin-top:12px">
+        <button type="button" id="forceAppUpdateBtn">Force app update</button>
+      </div>
+      <div class="data-store-status" id="forceAppUpdateStatus" aria-live="polite"></div>
+      <p class="settings-note">Reloads the latest static-site code and clears only old MOTION12 app-shell caches. Training data in IndexedDB is preserved.</p>
+    </details>
+    <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
+  </div>
+</div>
+<div class="readonly-banner" id="readonlyBanner" hidden>
+  <div><b>READ ONLY</b><span id="readonlyBannerText">Storage is unavailable. Changes are disabled.</span></div>
+  <div class="readonly-banner-actions">
+    <button type="button" id="readonlyRetryBtn">Retry</button>
+    <button type="button" id="readonlyImportBtn">Import backup</button>
+  </div>
+</div>
+<div class="recovery-overlay" id="recoveryOverlay" hidden>
+  <div class="recovery-card">
+    <span class="recovery-kicker">DATA RECOVERY</span>
+    <h2>Training data storage needs attention</h2>
+    <p id="recoveryMessage">MOTION12 could not open its IndexedDB store. Your original localStorage migration source has not been changed.</p>
+    <div class="recovery-status" id="recoveryStatus"></div>
+    <div class="recovery-actions">
+      <button type="button" class="primary" id="recoveryRetryBtn">Retry IndexedDB</button>
+      <button type="button" id="recoveryReadonlyBtn">Open read-only</button>
+      <button type="button" id="recoveryImportBtn">Import backup</button>
+    </div>
+    <input type="file" id="recoveryImportFile" accept="application/json,.json" hidden>
+    <small>Read-only mode never writes to IndexedDB or the local shadow. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
+  </div>
+</div>
+<div class="app-update-banner" id="appUpdateBanner" hidden>
+  <span><b>Update available</b><small>Refresh the app code. Your MOTION12 data stays in IndexedDB.</small></span>
+  <button type="button" id="appUpdateButton">Refresh</button>
+</div>
+<script src="https://raw.githack.com/benresonance-star/GetUp/efa85a1ea6940490d6de8e1c143316fa21bca8c5/public/motion12/program.js"></script>
+<script src="https://raw.githack.com/benresonance-star/GetUp/efa85a1ea6940490d6de8e1c143316fa21bca8c5/public/motion12/persistence.js"></script>
+<script>
+  (function(){
+    var scriptsLoaded=false;
+    var recovery=document.getElementById('recoveryOverlay');
+    var recoveryMessage=document.getElementById('recoveryMessage');
+    var recoveryStatus=document.getElementById('recoveryStatus');
+    var importFile=document.getElementById('recoveryImportFile');
+    var readonlyBanner=document.getElementById('readonlyBanner');
+    var readonlyText=document.getElementById('readonlyBannerText');
+
+    function loadScript(src){
+      return new Promise(function(resolve,reject){
+        var s=document.createElement('script');
+        s.src='https://raw.githack.com/benresonance-star/GetUp/efa85a1ea6940490d6de8e1c143316fa21bca8c5/public/motion12/'+src;
+        s.onload=resolve;
+        s.onerror=function(){reject(new Error('Failed to load '+src))};
+        document.body.appendChild(s);
+      });
+    }
+    async function startApp(){
+      if(scriptsLoaded){
+        if(window.motion12ReloadStateFromPersistence)window.motion12ReloadStateFromPersistence();
+        applyReadOnlyShell();
+        return;
+      }
+      await loadScript('state.js');
+      await loadScript('ui.js');
+      scriptsLoaded=true;
+      applyReadOnlyShell();
+    }
+    function setRecoveryStatus(text,type){
+      recoveryStatus.textContent=text||'';
+      recoveryStatus.className='recovery-status '+(type||'');
+    }
+    function showRecovery(err,phase){
+      var message=err&&err.message?err.message:String(err||'IndexedDB is unavailable');
+      recoveryMessage.textContent='MOTION12 could not safely persist training data. Your original localStorage migration source has not been changed.';
+      setRecoveryStatus((phase?phase+': ':'')+message,'error');
+      recovery.hidden=false;
+    }
+    function hideRecovery(){recovery.hidden=true;setRecoveryStatus('','')}
+    function applyReadOnlyShell(){
+      var ro=window.Motion12Persistence.isReadOnly();
+      document.body.classList.toggle('motion12-readonly',ro);
+      readonlyBanner.hidden=!ro;
+      if(ro){
+        var s=window.Motion12Persistence.status();
+        readonlyText.textContent='Using '+(s.recoverySource||'recovery data')+'. Changes are disabled until storage recovers.';
+      }
+    }
+    async function retryStorage(){
+      setRecoveryStatus('Retrying IndexedDB…','working');
+      try{
+        await window.Motion12Persistence.retryBootstrap();
+        hideRecovery();
+        await startApp();
+        document.body.classList.remove('motion12-readonly');
+        readonlyBanner.hidden=true;
+      }catch(err){
+        showRecovery(err,'Retry failed');
+      }
+    }
+    async function openReadOnly(){
+      setRecoveryStatus('Preparing read-only recovery data…','working');
+      try{
+        await window.Motion12Persistence.enterReadOnly();
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+      }catch(err){
+        showRecovery(err,'Read-only recovery failed');
+      }
+    }
+    function chooseImport(){importFile.value='';importFile.click()}
+    async function importBackupFile(file){
+      if(!file)return;
+      setRecoveryStatus('Validating backup…','working');
+      try{
+        var json=await file.text();
+        var result=await window.Motion12Persistence.recoverFromBackup(json);
+        if(!result.valid){
+          var errors=(result.issues||[]).filter(function(x){return x.severity==='error'}).slice(0,3).map(function(x){return x.message}).join(' · ');
+          throw new Error(errors||'Backup validation failed');
+        }
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+        if(result.readOnly){
+          readonlyText.textContent='Imported backup is open read-only because IndexedDB is still unavailable.';
+        }
+      }catch(err){
+        showRecovery(err,'Backup import failed');
+      }
+    }
+
+    document.getElementById('recoveryRetryBtn').onclick=retryStorage;
+    document.getElementById('recoveryReadonlyBtn').onclick=openReadOnly;
+    document.getElementById('recoveryImportBtn').onclick=chooseImport;
+    document.getElementById('readonlyRetryBtn').onclick=retryStorage;
+    document.getElementById('readonlyImportBtn').onclick=chooseImport;
+    importFile.onchange=function(){importBackupFile(importFile.files&&importFile.files[0])};
+
+    window.addEventListener('motion12:persistence-failure',function(e){
+      showRecovery(e.detail&&e.detail.error,e.detail&&e.detail.phase||'Storage failure');
+    });
+    window.addEventListener('motion12:readonly-write-blocked',function(){
+      applyReadOnlyShell();
+    });
+
+    if(!window.Motion12Persistence){
+      showRecovery(new Error('Persistence module did not initialize'),'Startup');
+      return;
+    }
+
+    window.Motion12Persistence.bootstrap()
+      .then(startApp)
+      .catch(function(err){showRecovery(err,'Startup')});
+
+    function flushLocalState(){
+      try{
+        window.Motion12Persistence.writeShadow();
+        window.Motion12Persistence.flush().catch(function(){});
+      }catch(_){}
+    }
+    window.addEventListener('pagehide',flushLocalState);
+    document.addEventListener('visibilitychange',function(){
+      if(document.visibilityState==='hidden')flushLocalState();
+    });
+  })();
+</script>
+<script>
+  (function(){
+    var settingsButton=document.getElementById('forceAppUpdateBtn');
+    var bannerButton=document.getElementById('appUpdateButton');
+    var status=document.getElementById('forceAppUpdateStatus');
+    var buildLabel=document.getElementById('headerBuildRevision');
+    var buildMeta=document.querySelector('meta[name="motion12-build"]')?.content||'';
+    var buildMatch=buildMeta.match(/canonical-(r\d+)/i);
+    if(buildLabel)buildLabel.textContent=buildMatch?buildMatch[1].toLowerCase():'';
+
+    async function flushMotion12Data(){
+      try{
+        if(window.Motion12Persistence){
+          if(typeof window.Motion12Persistence.writeShadow==='function')window.Motion12Persistence.writeShadow();
+          if(typeof window.Motion12Persistence.flush==='function')await window.Motion12Persistence.flush();
+        }
+      }catch(_){}
+    }
+
+    async function clearRetiredShell(){
+      if('serviceWorker' in navigator){
+        var regs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs
+          .filter(function(reg){
+            return reg.scope.indexOf('/public/motion12/')!==-1 ||
+              reg.scope.indexOf('/motion12-preview/public/motion12/')!==-1;
+          })
+          .map(function(reg){return reg.unregister()}));
+      }
+      if('caches' in window){
+        var keys=await caches.keys();
+        await Promise.all(keys
+          .filter(function(key){return key.indexOf('motion12-shell-')===0})
+          .map(function(key){return caches.delete(key)}));
+      }
+    }
+
+    async function resolveLatestCommit(){
+      var response=await fetch('https://api.github.com/repos/benresonance-star/GetUp/commits/motion12-preview',{
+        method:'GET',
+        cache:'no-store',
+        headers:{
+          'Accept':'application/vnd.github+json'
+        }
+      });
+      if(!response.ok)throw new Error('GitHub update lookup failed ('+response.status+')');
+      var data=await response.json();
+      var sha=String(data&&data.sha||'').trim();
+      if(!/^[0-9a-f]{40}$/i.test(sha))throw new Error('GitHub returned an invalid commit');
+      return sha;
+    }
+
+    async function updateToLatest(sourceButton){
+      var buttons=[settingsButton,bannerButton].filter(Boolean);
+      buttons.forEach(function(b){b.disabled=true});
+      if(settingsButton)settingsButton.textContent='Updating…';
+      if(bannerButton)bannerButton.textContent='Updating…';
+      if(status)status.textContent='Saving local data and resolving the latest MOTION12 revision…';
+
+      try{
+        await flushMotion12Data();
+        await clearRetiredShell();
+
+        if(status)status.textContent='Finding latest commit…';
+        var sha=await resolveLatestCommit();
+        var target='https://raw.githack.com/benresonance-star/GetUp/'+sha+'/public/motion12/';
+
+        if(status)status.textContent='Opening verified latest revision…';
+        window.location.replace(target);
+      }catch(err){
+        console.warn('MOTION12 forced update failed',err);
+        if(status)status.textContent='Update lookup failed. Check your connection and try again.';
+        buttons.forEach(function(b){b.disabled=false});
+        if(settingsButton)settingsButton.textContent='Force app update';
+        if(bannerButton)bannerButton.textContent='Refresh';
+      }
+    }
+
+    if(settingsButton)settingsButton.addEventListener('click',function(){updateToLatest(settingsButton)});
+    if(bannerButton)bannerButton.addEventListener('click',function(){updateToLatest(bannerButton)});
+  })();
+</script>
+<script>
+  (function(){
+    window.addEventListener('load',function(){
+      (async function(){
+        try{
+          if('serviceWorker' in navigator){
+            var regs=await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs
+              .filter(function(reg){return reg.scope.indexOf('/benresonance-star/GetUp/motion12-preview/public/motion12/')!==-1})
+              .map(function(reg){return reg.unregister()}));
+          }
+          if('caches' in window){
+            var keys=await caches.keys();
+            await Promise.all(keys
+              .filter(function(key){return key.indexOf('motion12-shell-')===0})
+              .map(function(key){return caches.delete(key)}));
+          }
+        }catch(err){
+          console.warn('MOTION12 shell cleanup failed',err);
+        }
+        if(navigator.storage && typeof navigator.storage.persist==='function'){
+          navigator.storage.persist().catch(function(){});
+        }
+      })();
+    });
+  })();
+</script>
+</script>
+</body>
+</html>
