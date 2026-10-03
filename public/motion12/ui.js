@@ -2182,7 +2182,7 @@ function timerViewModel(){
       label='COMPLETE';meta=plan.title;progress=0;
       detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':plan.aerobicAlternate?'All '+plan.rounds+' Aerobic Power B rounds complete':'All '+plan.rounds+' hard intervals complete';
     }else{
-      label=phase.label;meta='Round '+phase.round+' of '+plan.rounds+(phase.cue?' · '+phase.cue:'');
+      label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;
       progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
       const next=plan.phases[smartTimer.phaseIndex+1];
       nextText=next?timerPhaseReadable(next.label)+' · '+(next.seconds>=60?timerFormat(next.seconds):next.seconds+' sec'):'Complete';
@@ -2313,10 +2313,10 @@ function timerSessionProgressData(vm){
     if(currentPhase){
       if(timerIsRecoveryPhase(currentPhase.label)){
         currentName=timerPhaseReadable(currentPhase.label);
-        currentDetail=nextWork?'Next · '+timerPhaseReadable(nextWork.label):'Final recovery';
+        currentDetail=currentPhase.cue||(nextWork?'Next · '+timerPhaseReadable(nextWork.label):'Final recovery');
       }else{
         currentName=timerPhaseReadable(currentPhase.label);
-        currentDetail='Current station';
+        currentDetail=currentPhase.cue||'Current station';
       }
     }
     return {
