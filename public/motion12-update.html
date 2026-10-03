@@ -36,7 +36,7 @@
       await Promise.all(keys.filter(function(k){return k.indexOf('motion12-shell-')===0}).map(function(k){return caches.delete(k)}));
     }
     status.textContent='Update cache cleared. Reopening MOTION12…';
-    var target='./motion12/?recovery=canonical-r57-20261003&t='+Date.now();
+    var target='./motion12/?recovery=canonical-r58-20261003&t='+Date.now();
     setTimeout(function(){location.replace(target)},350);
   }catch(err){
     status.textContent='Could not clear the app shell automatically. Close this page and reopen MOTION12.';
