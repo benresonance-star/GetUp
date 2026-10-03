@@ -528,7 +528,8 @@ function dayOverviewMarkup(day,w,p){
   const tendon=p.tendon?.length?dayOverviewGroup('Tendon capacity · '+(p.tendonFocus||'high force'),p.tendon,day,w):'';
   const finishers=p.tendon?.length?dayOverviewGroup('Finishers / accessories',p.work.slice(tendonAfter),day,w,tendonAfter+1):'';
   const support=dayOverviewGroup('Support',p.support,day,w);
-  return '<div class="day-overview">'+prep+primary+tendon+finishers+support+
+  const aerobicAlternate=day===6?'<div class="day-overview-note"><b>Alternate B:</b> kettlebell + bodyweight · 4:00 work / 3:00 recovery × 4 rounds.</div>':'';
+  return '<div class="day-overview">'+prep+primary+tendon+finishers+support+aerobicAlternate+
     '<div class="day-overview-note">Daily mobility reset is available inside the session.</div>'+
     '<button class="day-session-btn '+p.tone+'" type="button" onclick="event.stopPropagation();openDay('+day+')"><span>Go to session</span><span>→</span></button>'+
   '</div>';
@@ -543,7 +544,7 @@ function renderDays(){
         <div class="day-card-copy">
           <div class="label">${DAYS[day]} · ${p.time}</div>
           <h3>${p.name}</h3>
-          <p>${weeklyTarget(day,w)}</p>
+          <p>${day===6?weeklyTarget(day,w)+' · A / B available':weeklyTarget(day,w)}</p>
         </div>
         <div class="day-chevron ${p.tone}" aria-hidden="true">⌄</div>
       </div>
@@ -1523,9 +1524,40 @@ function strengthSkipRest(id){
   inlineSkipStrengthRest();
   refreshStrengthFlow();
 }
-function exerciseCardMarkup(day,date,w,x,i){
-  const id=exId(day,i,date),state=logs[id]||{};
-  let target=x[1];if(day===6)target=aerobicTargets[w-1];
+function aerobicPowerVariantKey(date=todayISO()){return 'aerobic-power-variant:'+date}
+function aerobicPowerVariant(date=todayISO()){
+  const value=logs[aerobicPowerVariantKey(date)]?.variant;
+  return value==='B'?'B':'A';
+}
+function aerobicPowerSessionWork(date=todayISO()){
+  return aerobicPowerVariant(date)==='B'?aerobicPowerB.work:program[6].work;
+}
+function aerobicPowerSessionTarget(date=todayISO(),w=weekNo()){
+  return aerobicPowerVariant(date)==='B'?aerobicPowerB.target:(aerobicTargets[w-1]||'Aerobic session');
+}
+function aerobicPowerVariantMarkup(date,w){
+  const variant=aerobicPowerVariant(date),aTarget=aerobicTargets[w-1]||'Aerobic session';
+  return '<section class="section aerobic-power-choice"><div class="section-head"><h2>Aerobic Power session</h2><small>same objective · choose one</small></div>'+
+    '<div class="aerobic-variant-switch" role="group" aria-label="Choose Aerobic Power session">'+
+      '<button type="button" class="aerobic-variant-option '+(variant==='A'?'selected':'')+'" aria-pressed="'+(variant==='A'?'true':'false')+'" onclick="setAerobicPowerVariant(\'A\')"><span>A</span><b>Locomotion</b><small>'+aTarget+'</small></button>'+
+      '<button type="button" class="aerobic-variant-option '+(variant==='B'?'selected':'')+'" aria-pressed="'+(variant==='B'?'true':'false')+'" onclick="setAerobicPowerVariant(\'B\')"><span>B</span><b>Kettlebell + bodyweight</b><small>4:00 work / 3:00 recovery × 4</small></button>'+
+    '</div><p class="aerobic-variant-note">Both count as the same Saturday Aerobic Power session. Switching variants resets the session timer.</p></section>';
+}
+function setAerobicPowerVariant(variant){
+  if(variant!=='A'&&variant!=='B')return;
+  const date=timerContextDate(),key=aerobicPowerVariantKey(date);
+  logs[key]={...(logs[key]||{}),variant,updatedAt:new Date().toISOString()};
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  setActiveSessionTimerContext(6,date,timerContextWeek());
+  timerConfigure('session',true);
+  openDay(6,date);
+}
+function aerobicPowerExerciseId(date,i,variant=aerobicPowerVariant(date)){
+  return variant==='B'?date+'-6-b-'+i:exId(6,i,date);
+}
+function exerciseCardMarkup(day,date,w,x,i,options={}){
+  const id=options.id||exId(day,i,date),state=logs[id]||{};
+  let target=options.target||x[1];if(day===6&&!options.target)target=aerobicTargets[w-1];
   const timerName=encodeURIComponent(x[0]),timerTarget=encodeURIComponent(target);
   if([1,3,5].includes(day)&&strengthSetFlowNames.has(x[0])){
     return '<div class="exercise strength-session-slice '+(state.done?'complete':'')+'" id="ex-'+id+'" data-timer-id="'+id+'" data-timer-day="'+day+'" data-timer-name="'+timerName+'" data-timer-target="'+timerTarget+'" data-timer-support="0">'+
@@ -1547,15 +1579,19 @@ function openDay(day,date=null){
  const w=weekNo(),p=program[day];
  setActiveSessionTimerContext(day,date,w);
  showPage('dayPage');
- const tendonAfter=Number.isInteger(p.tendonAfter)?p.tendonAfter:p.work.length;
- const primaryWork=p.tendon?.length?p.work.slice(0,tendonAfter):p.work;
- const secondaryWork=p.tendon?.length?p.work.slice(tendonAfter):[];
- const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i)).join('');
+ const sessionWork=day===6?aerobicPowerSessionWork(date):p.work;
+ const tendonAfter=Number.isInteger(p.tendonAfter)?p.tendonAfter:sessionWork.length;
+ const primaryWork=p.tendon?.length?sessionWork.slice(0,tendonAfter):sessionWork;
+ const secondaryWork=p.tendon?.length?sessionWork.slice(tendonAfter):[];
+ const aerobicVariant=day===6?aerobicPowerVariant(date):'';
+ const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i,day===6?{id:aerobicPowerExerciseId(date,i,aerobicVariant),target:aerobicPowerSessionTarget(date,w)}:{})).join('');
  const secondaryHtml=secondaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,tendonAfter+i)).join('');
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const prepHtml=prepBlockMarkup(day,date,p);
  const tendonHtml=tendonBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
+ const variantHtml=day===6?aerobicPowerVariantMarkup(date,w):'';
+ const sessionTarget=day===6?aerobicPowerSessionTarget(date,w):weeklyTarget(day,w);
  const key=`${date}-${day}`;
  const mobilityHtml=`<section class="section mobility-warmup-section" id="mobilitySection"><div class="section-head"><h2>Mobility warm-up</h2><small>first · 6–8 min</small></div><div class="cards">${mob}</div></section>`;
  const primarySection=`<section class="section workout-exercises-section"><div class="section-head"><h2>${p.tendon?.length?'Primary strength':'Exercises'}</h2><small>${p.tendon?.length?'highest-priority work first':'log as you go'}</small></div>${primaryHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
@@ -1563,9 +1599,9 @@ function openDay(day,date=null){
  const mainHtml=primarySection+tendonHtml+secondarySection;
  const completeHtml=`<button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button>`;
  const sessionHtml=workoutSessionMarkup({mobilityHtml,prepHtml,mainHtml,supportHtml,completeHtml});
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${p.work.length+(p.prep?.length||0)+(p.tendon?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
- <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${weeklyTarget(day,w)}</h3></div></div>
- <div>${sessionHtml}</div></div>`;
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}${day===6?' · '+aerobicVariant:''}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${sessionWork.length+(p.prep?.length||0)+(p.tendon?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${sessionTarget}</h3></div></div>
+ <div>${variantHtml}${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
    const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
@@ -1721,6 +1757,14 @@ function strengthExercisePlan(day=timerContextDay(),w=timerContextWeek(),preferr
 function timerSessionPlan(day=timerContextDay(),w=timerContextWeek()){
   if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w);
   if(day===6){
+    if(aerobicPowerVariant(timerContextDate())==='B'){
+      const rounds=4,phases=[];
+      for(let r=1;r<=rounds;r++){
+        phases.push({label:'WORK',seconds:240,round:r,cue:'Swing → squat-to-calf-raise → reverse lunge → swing'});
+        phases.push({label:'RECOVER',seconds:180,round:r,cue:r===rounds?'Active recovery / cool down':'Easy walk or march'});
+      }
+      return {kind:'intervals',title:'Aerobic Power B · kettlebell + bodyweight',note:'4:00 work / 3:00 active recovery × 4. Keep the cardiovascular system—not grip or local muscle fatigue—as the limiter.',rounds,phases,aerobicAlternate:true};
+    }
     const target=aerobicTargets[w-1]||'Aerobic session';
     const m=target.match(/(\d+)\s*×\s*(\d+)\s*min hard\s*\/\s*(\d+)\s*min easy/i);
     if(m){
@@ -1747,7 +1791,7 @@ function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
   const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
   const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
-  if(name==='Aerobic intervals'){
+  if(name==='Aerobic intervals'||name==='Kettlebell + bodyweight 4×4'){
     const plan=timerSessionPlan(day,w);
     if(plan.kind==='intervals'){
       const recover=plan.phases.find(x=>x.label==='RECOVER');
@@ -1783,9 +1827,10 @@ function timerUseExercisePreset(name){
 function exercisePresetMarkup(){
   const p=program[timerContextDay()];
   if(!p?.work?.length)return '';
+  const work=timerContextDay()===6?aerobicPowerSessionWork(timerContextDate()):p.work;
   const circuitDay=timerContextDay()===0||timerContextDay()===2||timerContextDay()===4;
   return '<section class="section timer-exercise-section"><div class="section-head"><h2>'+(circuitDay?'Circuit timing':'Exercise recovery')+'</h2><small>'+(circuitDay?'session sequence':'tap to load')+'</small></div><div class="exercise-rest-list">'+
-    p.work.map(x=>{
+    work.map(x=>{
       const name=x[0],rec=exerciseRestPreset(name),active=smartTimer.exerciseName===name?' active':'';
       const safeName=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return '<button class="exercise-rest-preset'+active+'" type="button" onclick="timerUseExercisePreset(\''+safeName+'\')">'+
@@ -2135,12 +2180,12 @@ function timerViewModel(){
     const phase=plan.phases[Math.min(smartTimer.phaseIndex,plan.phases.length-1)];
     if(smartTimer.phaseIndex>=plan.phases.length){
       label='COMPLETE';meta=plan.title;progress=0;
-      detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':'All '+plan.rounds+' hard intervals complete';
+      detail=plan.circuit?'All '+plan.rounds+' circuit rounds complete':plan.aerobicAlternate?'All '+plan.rounds+' Aerobic Power B rounds complete':'All '+plan.rounds+' hard intervals complete';
     }else{
-      label=phase.label;meta='Round '+phase.round+' of '+plan.rounds;
+      label=phase.label;meta='Round '+phase.round+' of '+plan.rounds+(phase.cue?' · '+phase.cue:'');
       progress=smartTimer.duration?sec/smartTimer.duration:0;detail=plan.title;
       const next=plan.phases[smartTimer.phaseIndex+1];
-      nextText=next?timerPhaseReadable(next.label)+' · '+next.seconds+' sec':'Complete';
+      nextText=next?timerPhaseReadable(next.label)+' · '+(next.seconds>=60?timerFormat(next.seconds):next.seconds+' sec'):'Complete';
     }
   }else if(kind==='sets'){
     label=smartTimer.setIndex>=plan.sets?'COMPLETE':smartTimer.running?'REST':'SET '+(smartTimer.setIndex+1);
