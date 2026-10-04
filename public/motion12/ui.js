@@ -435,17 +435,17 @@ function renderCompactHome(d,w,p,fat,cal,strip){
   const remaining=tot?.remaining;
   const loss=cal?cal.predictedLoss:'—';
   const mealCount=compactMealCount(d,date);
-  const sessionComplete=completedOn(date,d);
+  const sessionComplete=completedOn(date,d),sessionIsPaused=sessionPaused(date+'-'+d);
   document.getElementById('homePage').classList.add('compact-active');
   document.getElementById('homePage').innerHTML=`
     <div class="compact-home">
       ${streakBand(true)}
-      <button class="compact-session ${sessionComplete?'completed':''}" type="button" onclick="openDay(${d},'${date}')">
-        <div><span class="compact-kicker">Week ${w} · Today</span>${sessionComplete?'<span class="session-complete-label">✓ Session complete</span>':''}<h1>${p.name}</h1><p>${weeklyTarget(d,w)} · ${p.why}</p></div>
+      <button class="compact-session ${sessionComplete?'completed':''} ${sessionIsPaused?'paused':''}" type="button" onclick="${sessionIsPaused?`reopenSession('${date}-${d}')`:`openDay(${d},'${date}')`}">
+        <div><span class="compact-kicker">Week ${w} · Today</span>${sessionComplete?'<span class="session-complete-label">✓ Session complete</span>':sessionIsPaused?'<span class="session-paused-label">Session paused</span>':''}<h1>${p.name}</h1><p>${weeklyTarget(d,w)} · ${p.why}</p></div>
         <div class="compact-session-right">
           ${sessionComplete?'<span class="compact-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</span>':''}
           <b>${p.time}</b>
-          <span class="compact-session-cta">${sessionComplete?'REVIEW →':'START →'}</span>
+          <span class="compact-session-cta">${sessionComplete?'REVIEW →':sessionIsPaused?'RESUME →':'START →'}</span>
         </div>
       </button>
       ${practiceHomeMarkup(true)}
@@ -480,13 +480,13 @@ function renderCompactHome(d,w,p,fat,cal,strip){
       </div>
     </div>`;
 }
-function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();reconcileStrengthSessionCompletion(todayISO(),d);const sessionComplete=completedOn(todayISO(),d);const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);reconcileStrengthSessionCompletion(ds,dd);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
+function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=program[d],diet=dietText(d),fat=fatLossTargets(),cal=calorieTargets();reconcileStrengthSessionCompletion(todayISO(),d);const sessionComplete=completedOn(todayISO(),d),sessionIsPaused=sessionPaused(todayISO()+'-'+d);const start=new Date(settings.startDate+'T00:00:00');const weekStart=new Date(start);weekStart.setDate(start.getDate()+(w-1)*7);let strip='';for(let i=0;i<7;i++){const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+i);const dd=dt.getDay();const ds=iso(dt);reconcileStrengthSessionCompletion(ds,dd);strip+=`<button class="daydot ${dd===d&&ds===todayISO()?'today':''} ${completedOn(ds,dd)?'done':''}" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`}
  document.getElementById('homePage').classList.remove('compact-active');
  if(settings.homeMode==='compact'){renderCompactHome(d,w,p,fat,cal,strip);return;}
  document.getElementById('homePage').innerHTML=`
   <div class="homegrid"><div>
   ${streakBand(false)}
-  <section class="hero ${sessionComplete?'completed':''}">${sessionComplete?'<div class="hero-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</div>':''}<div class="eyebrow">Week ${w} · Today</div>${sessionComplete?'<div class="session-complete-label hero-complete-label">✓ Session complete</div>':''}<h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="openDay(${d},'${todayISO()}')"><span>${sessionComplete?'Review completed session':'Start today’s session'}</span><span>→</span></button></section>
+  <section class="hero ${sessionComplete?'completed':''}">${sessionComplete?'<div class="hero-session-trophy" aria-label="Session completed">'+lucideTrophyMarkup('session-trophy-icon')+'</div>':''}<div class="eyebrow">Week ${w} · Today</div>${sessionComplete?'<div class="session-complete-label hero-complete-label">✓ Session complete</div>':sessionIsPaused?'<div class="session-paused-label hero-paused-label">Session paused</div>':''}<h1>${p.name}</h1><div class="sub">${p.why}</div><div class="hero-meta"><span class="pill">◷ ${p.time}</span><span class="pill">◎ ${settings.steps.toLocaleString()} steps baseline</span></div><button class="cta" onclick="${sessionIsPaused?`reopenSession('${todayISO()}-${d}')`:`openDay(${d},'${todayISO()}')`}"><span>${sessionComplete?'Review completed session':sessionIsPaused?'Resume today’s session':'Start today’s session'}</span><span>→</span></button></section>
   ${practiceHomeMarkup(false)}
   <section class="section"><div class="section-head"><h2>This week</h2><small>Week ${w} of 12</small></div><div class="weekstrip">${strip}</div><div class="progressbar"><i style="width:${Math.round((w-1)/11*100)}%"></i></div></section>
   </div><div>
@@ -1647,9 +1647,9 @@ function openDay(day,date=null){
  const primarySection=`<section class="section workout-exercises-section"><div class="section-head"><h2>${p.tendon?.length?'Primary strength':'Exercises'}</h2><small>${p.tendon?.length?'highest-priority work first':'log as you go'}</small></div>${primaryHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
  const secondarySection=secondaryHtml?`<section class="section workout-exercises-section workout-secondary-section"><div class="section-head"><h2>Finishers / accessories</h2><small>after tendon capacity</small></div>${secondaryHtml}</section>`:'';
  const mainHtml=primarySection+tendonHtml+secondarySection;
- const completeHtml=`<button id="completeSessionButton" class="complete-session ${logs[key]?.completed?'done':''}" onclick="completeSession('${key}')">${logs[key]?.completed?'✓ Session complete':'Complete session'}</button>`;
+ const completeHtml=sessionEndActionsMarkup(key);
  const sessionHtml=workoutSessionMarkup({mobilityHtml,prepHtml,mainHtml,supportHtml,completeHtml});
- document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge" aria-live="polite"></span><h1>${p.name}${day===6?' · '+aerobicVariant:''}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${sessionWork.length+(p.prep?.length||0)+(p.tendon?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
+ document.getElementById('dayPage').innerHTML=`<div class="day-page-wrap"><div class="sticky-col"><button class="back" onclick="showPage('homePage')">← Home</button><div class="page-title"><div class="eyebrow">${DAYS[day]} · Week ${w}</div><span class="session-mode-badge ${sessionPaused(key)?'paused':''}" aria-live="polite">${sessionPaused(key)?'PAUSED':''}</span><h1>${p.name}${day===6?' · '+aerobicVariant:''}</h1><p>${p.why}</p></div><div class="session-summary"><div class="mini"><b>${p.time.replace(' min','')}</b><span>minutes</span></div><div class="mini"><b>${sessionWork.length+(p.prep?.length||0)+(p.tendon?.length||0)+(p.support?.length||0)}</b><span>moves</span></div><div class="mini"><b>${settings.steps/1000}k</b><span>steps</span></div></div>
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${sessionTarget}</h3></div></div>
  <div>${variantHtml}${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
@@ -1703,7 +1703,102 @@ function saveExerciseNote(id,textarea){
   const card=textarea?.closest('.exercise-note-card');
   if(card)card.classList.toggle('has-note',String(value).trim().length>0);
 }
-function completeSession(key){logs[key]=logs[key]||{};logs[key].completed=!logs[key].completed;motion12SetItem('motion12.logs',JSON.stringify(logs));renderHome();renderDays();openDay(Number(key.split('-').pop()),key.slice(0,10))}
+function sessionPaused(key){
+  return !!logs[key]?.paused&&!logs[key]?.completed;
+}
+function pauseSessionTimers(){
+  if(smartTimer.running){
+    if(smartTimer.kind==='stopwatch'||(smartTimer.kind==='strengthsets'&&smartTimer.strengthPhase==='work')){
+      smartTimer.stopwatchElapsed=timerCurrentSeconds();
+      smartTimer.stopwatchStartedAt=0;
+    }else{
+      smartTimer.remaining=timerCurrentSeconds();
+    }
+    smartTimer.running=false;
+    smartTimer.endAt=0;
+    saveSmartTimer();
+  }
+  if(inlineTimer.running){
+    inlineTimer.remaining=inlineTimerSeconds();
+    inlineTimer.running=false;
+    inlineTimer.endAt=0;
+    saveInlineTimer();
+  }
+}
+function currentSessionResumeExerciseId(key){
+  const current=document.querySelector('.exercise.session-current[data-timer-id]');
+  if(current?.dataset?.timerId)return current.dataset.timerId;
+  const day=Number(key.split('-').pop()),date=key.slice(0,10);
+  if([1,3,5].includes(day)){
+    return strengthSessionSequence(day,date).find(item=>!logs[item.id]?.done)?.id||'';
+  }
+  return document.querySelector('.exercise[data-timer-id]:not(.complete)')?.dataset?.timerId||'';
+}
+function sessionEndActionsMarkup(key){
+  const completed=!!logs[key]?.completed,paused=sessionPaused(key);
+  const pauseLabel=paused?'Reopen session':'Pause session';
+  const pauseAction=paused?'reopenSession':'pauseSession';
+  return '<div class="session-end-actions '+(paused?'paused':'')+'">'+
+    '<button id="pauseSessionButton" class="session-pause-button '+(paused?'reopen':'')+'" type="button" onclick="'+pauseAction+'(\''+key+'\')">'+pauseLabel+'</button>'+
+    '<button id="completeSessionButton" class="complete-session '+(completed?'done':'')+'" type="button" onclick="completeSession(\''+key+'\')">'+(completed?'✓ Session complete':'Complete session')+'</button>'+
+  '</div>';
+}
+function pauseSession(key){
+  logs[key]=logs[key]||{};
+  if(logs[key].completed)return;
+  pauseSessionTimers();
+  const resumeExerciseId=currentSessionResumeExerciseId(key);
+  logs[key]={
+    ...logs[key],
+    paused:true,
+    pausedAt:new Date().toISOString(),
+    ...(resumeExerciseId?{resumeExerciseId}:{})
+  };
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  const actions=document.querySelector('.session-stage-complete .session-end-actions');
+  if(actions)actions.outerHTML=sessionEndActionsMarkup(key);
+  const badge=document.querySelector('#dayPage .session-mode-badge');
+  if(badge){badge.textContent='PAUSED';badge.classList.add('paused')}
+  renderHome();
+  renderDays();
+}
+function reopenSession(key){
+  logs[key]=logs[key]||{};
+  if(logs[key].completed)return;
+  const resumeExerciseId=logs[key].resumeExerciseId||'';
+  logs[key]={...logs[key],paused:false,resumedAt:new Date().toISOString()};
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  const day=Number(key.split('-').pop()),date=key.slice(0,10);
+  openDay(day,date);
+  requestAnimationFrame(()=>{
+    const target=resumeExerciseId&&document.getElementById('ex-'+resumeExerciseId);
+    if(target&&!target.classList.contains('complete')){
+      document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
+      target.classList.add('session-current');
+      if(document.getElementById('dayPage')?.classList.contains('compact-active'))target.classList.add('compact-current');
+      const item=strengthSessionItemById(resumeExerciseId);
+      if(item){
+        smartTimer.exerciseName=item.name;
+        smartTimer.exerciseCategory='Strength';
+        timerConfigure('session',false);
+        refreshStrengthSessionProgress(item.day,item.date);
+        renderTimerPage();
+      }
+      target.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  });
+}
+function completeSession(key){
+  logs[key]=logs[key]||{};
+  const completing=!logs[key].completed;
+  logs[key]={...logs[key],completed:completing,paused:false};
+  if(completing)logs[key].completedAt=logs[key].completedAt||new Date().toISOString();
+  else delete logs[key].completedAt;
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  renderHome();
+  renderDays();
+  openDay(Number(key.split('-').pop()),key.slice(0,10));
+}
 function renderProgress(){
   const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
   const p=protein(),fat=fatLossTargets(),cal=calorieTargets(),ps=programProgressStats();
