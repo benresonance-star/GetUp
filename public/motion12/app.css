@@ -5489,3 +5489,85 @@ html.standalone .strength-set-columns{
 #dayPage.compact-active .aerobic-b-recovery>strong{
   font-size:12px;
 }
+
+
+/* ---- session-pause-r63 ---- */
+.session-end-actions{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);
+  gap:9px;
+  align-items:stretch;
+  margin:10px 0;
+}
+.session-end-actions .complete-session{
+  margin:0;
+  min-width:0;
+}
+.session-pause-button{
+  min-width:0;
+  border:1px solid rgba(var(--accent-rgb,255,77,46),.42);
+  border-radius:18px;
+  background:rgba(var(--accent-rgb,255,77,46),.07);
+  color:var(--ink);
+  padding:16px 12px;
+  font-size:14px;
+  font-weight:950;
+  cursor:pointer;
+}
+.session-pause-button.reopen{
+  background:var(--surface2);
+  border-color:var(--volt);
+  color:var(--volt);
+}
+.session-end-actions.paused{
+  padding:8px;
+  border:1px solid rgba(var(--accent-rgb,255,77,46),.28);
+  border-radius:21px;
+  background:rgba(var(--accent-rgb,255,77,46),.045);
+}
+.session-mode-badge.paused,
+.session-paused-label{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  border:1px solid rgba(var(--accent-rgb,255,77,46),.42);
+  border-radius:999px;
+  background:rgba(var(--accent-rgb,255,77,46),.08);
+  color:var(--volt);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.session-mode-badge.paused{
+  margin-top:7px;
+  padding:4px 8px;
+}
+.session-paused-label{
+  margin:4px 0 2px;
+  padding:4px 7px;
+}
+.compact-session.paused{
+  border-color:rgba(var(--accent-rgb,255,77,46),.42);
+}
+#dayPage.compact-active .session-end-actions{
+  gap:7px;
+  margin:7px 0;
+}
+#dayPage.compact-active .session-pause-button,
+#dayPage.compact-active .session-end-actions .complete-session{
+  min-height:46px;
+  padding:12px 9px;
+  font-size:12px;
+}
+@media(max-width:390px){
+  .session-end-actions{
+    grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);
+    gap:7px;
+  }
+  .session-pause-button,
+  .session-end-actions .complete-session{
+    padding:14px 9px;
+    font-size:12.5px;
+  }
+}
