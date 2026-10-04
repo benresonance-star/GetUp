@@ -419,14 +419,14 @@ function practiceHomeMarkup(compact=false){
 
 function strengthWorkFullyComplete(date,day){
   if(![1,3,5].includes(day))return false;
-  const work=program[day]?.work||[];
-  return work.length>0&&work.every((_,i)=>!!logs[date+'-'+day+'-'+i]?.done);
+  const sequence=strengthSessionSequence(day,date);
+  return sequence.length>0&&sequence.every(item=>!!logs[item.id]?.done);
 }
 function reconcileStrengthSessionCompletion(date,day){
   if(!strengthWorkFullyComplete(date,day))return false;
   const key=date+'-'+day;
   if(logs[key]?.completed)return true;
-  logs[key]={...(logs[key]||{}),completed:true,completedAt:logs[key]?.completedAt||new Date().toISOString(),source:'all-strength-work-complete'};
+  logs[key]={...(logs[key]||{}),completed:true,completedAt:logs[key]?.completedAt||new Date().toISOString(),source:'all-strength-sequence-complete'};
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   return true;
 }
@@ -802,10 +802,17 @@ function activateTendonStrengthCard(event,card){
   if(event.target.closest('button,input,a,select,textarea,label'))return;
   const id=card.dataset.timerId,name=decodeURIComponent(card.dataset.timerName||''),target=decodeURIComponent(card.dataset.timerTarget||'');
   if(!id||!name||!target)return;
-  document.querySelectorAll('.tendon-capacity.compact-current').forEach(el=>{if(el!==card)el.classList.remove('compact-current')});
-  card.classList.add('compact-current');
+  document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
+  card.classList.add('session-current');
+  if(document.getElementById('dayPage')?.classList.contains('compact-active'))card.classList.add('compact-current');
   strengthEnsureTimer(id,name,target);
+  smartTimer.exerciseName=name;
+  smartTimer.exerciseCategory='Strength';
+  timerConfigure('session',true);
+  const item=strengthSessionItemById(id);
+  if(item)refreshStrengthSessionProgress(item.day,item.date);
   refreshStrengthFlowById(id);
+  if(document.getElementById('sessionTimerMount'))renderTimerPage();
   if(document.getElementById('dayPage')?.classList.contains('compact-active'))card.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function tendonBlockMarkup(day,date,p){
@@ -881,6 +888,44 @@ function tendonSessionPosition(id){
   const m=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-tendon-(\d+)$/);
   if(!m)return null;
   return {date:m[1],day:Number(m[2]),index:Number(m[3])};
+}
+function strengthSessionSequence(day,date){
+  if(![1,3,5].includes(day))return [];
+  const p=program[day]||{},work=p.work||[],tendon=p.tendon||[];
+  const requested=Number.isInteger(p.tendonAfter)?p.tendonAfter:work.length;
+  const tendonAfter=tendon.length?Math.max(0,Math.min(work.length,requested)):work.length;
+  const sequence=[];
+  const addWork=(sourceIndex)=>{
+    const item=work[sourceIndex];
+    if(!item)return;
+    sequence.push({
+      kind:'work',
+      sourceIndex,
+      id:exId(day,sourceIndex,date),
+      name:item[0],
+      target:item[1],
+      day,date
+    });
+  };
+  for(let i=0;i<tendonAfter;i++)addWork(i);
+  tendon.forEach((item,sourceIndex)=>{
+    sequence.push({
+      kind:'tendon',
+      sourceIndex,
+      id:date+'-'+day+'-tendon-'+sourceIndex,
+      name:item[0],
+      target:item[1],
+      day,date
+    });
+  });
+  for(let i=tendonAfter;i<work.length;i++)addWork(i);
+  return sequence.map((item,index)=>({...item,index,total:sequence.length}));
+}
+function strengthSessionItemById(id){
+  const text=String(id);
+  const pos=strengthSessionPosition(text)||tendonSessionPosition(text);
+  if(!pos||![1,3,5].includes(pos.day))return null;
+  return strengthSessionSequence(pos.day,pos.date).find(item=>item.id===text)||null;
 }
 function strengthFlowDayLabel(id){
   return DAYS[strengthFlowDayFromId(id)]||'Next session';
@@ -1063,16 +1108,14 @@ function strengthEnsureTimer(id,name,target){
   return inlineTimer;
 }
 function strengthPreviousCompletedSession(id,total){
-  const match=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)$/);
-  if(!match)return null;
-  const currentDate=match[1];
-  const suffix='-'+match[2]+'-'+match[3];
+  const current=strengthSessionItemById(id);
+  if(!current)return null;
   const matches=Object.keys(logs)
-    .filter(k=>k!==id&&k.endsWith(suffix)&&/^\d{4}-\d{2}-\d{2}-\d+-\d+$/.test(k))
-    .filter(k=>k.slice(0,10)<currentDate)
-    .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=total&&logs[k].sets.slice(0,total).every(s=>s?.complete))
-    .sort((a,b)=>b.localeCompare(a));
-  return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,total)}:null;
+    .map(key=>({key,item:strengthSessionItemById(key)}))
+    .filter(x=>x.key!==id&&x.item&&x.item.kind===current.kind&&x.item.day===current.day&&x.item.sourceIndex===current.sourceIndex&&x.item.date<current.date)
+    .filter(x=>Array.isArray(logs[x.key]?.sets)&&logs[x.key].sets.length>=total&&logs[x.key].sets.slice(0,total).every(s=>s?.complete))
+    .sort((a,b)=>b.item.date.localeCompare(a.item.date));
+  return matches.length?{id:matches[0].key,sets:logs[matches[0].key].sets.slice(0,total)}:null;
 }
 function strengthNormalizeLoad(v){return String(v??'').trim().toLowerCase()}
 function strengthFormatLoad(v){
@@ -1141,49 +1184,50 @@ function strengthCompletionSummary(id,name,target,entries){
   };
 }
 function strengthSessionProgressState(day,date){
-  const work=program[day]?.work||[];
-  const completed=work.map((_,i)=>!!logs[exId(day,i,date)]?.done);
+  const sequence=strengthSessionSequence(day,date);
+  const completed=sequence.map(item=>!!logs[item.id]?.done);
   let currentIndex=-1;
-  const currentEl=document.querySelector('.exercise.session-current');
+  const currentEl=document.querySelector('.exercise.session-current[data-timer-id]');
   if(currentEl?.dataset?.timerId){
-    const pos=strengthSessionPosition(currentEl.dataset.timerId);
-    if(pos&&pos.day===day&&pos.date===date&&!completed[pos.index])currentIndex=pos.index;
+    const current=strengthSessionItemById(currentEl.dataset.timerId);
+    if(current&&current.day===day&&current.date===date&&!logs[current.id]?.done)currentIndex=current.index;
   }
   if(currentIndex<0)currentIndex=completed.findIndex(done=>!done);
   const completedCount=completed.filter(Boolean).length;
-  const remainingCount=Math.max(0,work.length-completedCount-(currentIndex>=0?1:0));
-  return {work,completed,currentIndex,completedCount,remainingCount,total:work.length};
+  const remainingCount=Math.max(0,sequence.length-completedCount-(currentIndex>=0?1:0));
+  return {sequence,completed,currentIndex,completedCount,remainingCount,total:sequence.length};
 }
 function strengthSessionProgressMarkup(day,date){
   if(![1,3,5].includes(day))return '';
   const s=strengthSessionProgressState(day,date);
-  const segments=s.work.map((x,i)=>{
+  const segments=s.sequence.map((x,i)=>{
     const state=s.completed[i]?'complete':i===s.currentIndex?'current':'remaining';
-    return '<span class="strength-progress-segment '+state+'" title="'+x[0]+'" aria-label="'+x[0]+' · '+state+'"></span>';
+    return '<span class="strength-progress-segment '+state+'" title="'+x.name+'" aria-label="'+x.name+' · '+state+'"></span>';
   }).join('');
-  const currentName=s.currentIndex>=0?s.work[s.currentIndex][0]:'Strength work complete';
-  const currentTarget=s.currentIndex>=0?s.work[s.currentIndex][1]:'All '+s.total+' exercises completed';
+  const current=s.currentIndex>=0?s.sequence[s.currentIndex]:null;
+  const currentName=current?current.name:'Strength sequence complete';
+  const currentTarget=current?current.target:'All '+s.total+' sequenced exercises completed';
   return '<div class="strength-session-progress" id="strengthSessionProgress">'+
     '<div class="strength-progress-head"><div><span>Session progress</span><strong>'+currentName+'</strong></div><b>'+s.completedCount+' / '+s.total+'</b></div>'+
-    '<div class="strength-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+s.completedCount+' of '+s.total+' strength exercises complete">'+segments+'</div>'+
-    '<div class="strength-progress-foot"><span class="done">'+s.completedCount+' complete</span><span class="current">'+(s.currentIndex>=0?'Current · '+currentTarget:'Complete')+'</span><span class="remain">'+s.remainingCount+' remaining</span></div>'+
+    '<div class="strength-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+s.completedCount+' of '+s.total+' sequenced exercises complete">'+segments+'</div>'+
+    '<div class="strength-progress-foot"><span class="done">'+s.completedCount+' complete</span><span class="current">'+(current?'Current · '+currentTarget:'Complete')+'</span><span class="remain">'+s.remainingCount+' remaining</span></div>'+
   '</div>';
 }
 function refreshStrengthSessionProgress(day=null,date=null){
   const existing=document.getElementById('strengthSessionProgress');
   if(!existing)return;
   if(day===null||date===null){
-    const current=document.querySelector('.exercise.session-current');
+    const current=document.querySelector('.exercise.session-current[data-timer-id]');
     if(current?.dataset?.timerId){
-      const pos=strengthSessionPosition(current.dataset.timerId);
-      if(pos){day=pos.day;date=pos.date}
+      const item=strengthSessionItemById(current.dataset.timerId);
+      if(item){day=item.day;date=item.date}
     }
   }
   if(day===null||date===null){
     const any=document.querySelector('.strength-session-slice[data-timer-id]');
     if(any?.dataset?.timerId){
-      const pos=strengthSessionPosition(any.dataset.timerId);
-      if(pos){day=pos.day;date=pos.date}
+      const item=strengthSessionItemById(any.dataset.timerId);
+      if(item){day=item.day;date=item.date}
     }
   }
   if(day===null||date===null)return;
@@ -1195,27 +1239,26 @@ function strengthSessionPosition(id){
   return {date:m[1],day:Number(m[2]),index:Number(m[3])};
 }
 function strengthNextExercise(id){
-  const pos=strengthSessionPosition(id);
-  if(!pos||![1,3,5].includes(pos.day))return null;
-  const work=program[pos.day]?.work||[];
+  const current=strengthSessionItemById(id);
+  if(!current)return null;
+  const sequence=strengthSessionSequence(current.day,current.date);
   const candidate=(i)=>{
-    const nextId=exId(pos.day,i,pos.date);
-    return logs[nextId]?.done?null:{id:nextId,index:i,name:work[i][0],target:work[i][1],day:pos.day,date:pos.date,total:work.length};
+    const item=sequence[i];
+    return !item||logs[item.id]?.done?null:item;
   };
-  for(let i=pos.index+1;i<work.length;i++){
+  for(let i=current.index+1;i<sequence.length;i++){
     const next=candidate(i);if(next)return next;
   }
   // If exercises were completed out of order, return to the first unfinished one
-  // rather than falsely declaring the strength session complete.
-  for(let i=0;i<pos.index;i++){
+  // rather than falsely declaring the strength sequence complete.
+  for(let i=0;i<current.index;i++){
     const next=candidate(i);if(next)return next;
   }
   return null;
 }
 function strengthExerciseIdFromName(name,day=timerContextDay(),date=timerContextDate()){
-  const work=program[day]?.work||[];
-  const index=work.findIndex(x=>x[0]===name);
-  return index>=0?exId(day,index,date):null;
+  const item=strengthSessionSequence(day,date).find(x=>x.name===name);
+  return item?.id||null;
 }
 function refreshStrengthFlowById(id){
   const flow=document.getElementById('strength-flow-'+id);
@@ -1228,19 +1271,13 @@ function refreshStrengthFlowById(id){
 }
 function currentStrengthExerciseContext(day=timerContextDay(),date=timerContextDate()){
   if(![1,3,5].includes(day))return null;
-  const work=program[day]?.work||[];
+  const sequence=strengthSessionSequence(day,date);
   const currentEl=document.querySelector('.exercise.session-current[data-timer-id]');
   if(currentEl?.dataset?.timerId){
-    const pos=strengthSessionPosition(currentEl.dataset.timerId);
-    if(pos&&pos.day===day&&pos.date===date&&!logs[currentEl.dataset.timerId]?.done){
-      const target=decodeURIComponent(currentEl.dataset.timerTarget||'');
-      const name=decodeURIComponent(currentEl.dataset.timerName||'');
-      return {id:currentEl.dataset.timerId,index:pos.index,name,target,day,date};
-    }
+    const current=strengthSessionItemById(currentEl.dataset.timerId);
+    if(current&&current.day===day&&current.date===date&&!logs[current.id]?.done)return current;
   }
-  const index=work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
-  if(index<0)return null;
-  return {id:exId(day,index,date),index,name:work[index][0],target:work[index][1],day,date};
+  return sequence.find(item=>!logs[item.id]?.done)||null;
 }
 function syncSmartStrengthToCurrent({force=false}={}){
   const ctx=currentStrengthExerciseContext();
@@ -1253,31 +1290,8 @@ function syncSmartStrengthToCurrent({force=false}={}){
   return ctx;
 }
 function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true,scroll=true}={}){
-  const tendonPos=tendonSessionPosition(currentId);
-  if(tendonPos){
-    logs[currentId]=logs[currentId]||{};
-    logs[currentId].done=true;
-    logs[currentId].completedAt=logs[currentId].completedAt||new Date().toISOString();
-    motion12SetItem('motion12.logs',JSON.stringify(logs));
-    document.getElementById('ex-'+currentId)?.classList.add('complete');
-    inlineTimer={...inlineTimer,running:false,remaining:0,endAt:0,phase:'complete',finalRest:false};
-    saveInlineTimer();
-    refreshStrengthFlowById(currentId);
-    const nextId=tendonPos.index+1<(program[tendonPos.day]?.tendon?.length||0)
-      ?tendonPos.date+'-'+tendonPos.day+'-tendon-'+(tendonPos.index+1)
-      :null;
-    if(nextId&&scroll){
-      const nextCard=document.getElementById('ex-'+nextId);
-      if(nextCard){
-        document.querySelectorAll('.tendon-capacity.compact-current').forEach(el=>el.classList.remove('compact-current'));
-        nextCard.classList.add('compact-current');
-        nextCard.scrollIntoView({behavior:'smooth',block:'nearest'});
-      }
-    }
-    return nextId;
-  }
-  const pos=strengthSessionPosition(currentId);
-  if(!pos)return null;
+  const current=strengthSessionItemById(currentId);
+  if(!current)return null;
 
   logs[currentId]=logs[currentId]||{};
   logs[currentId].done=true;
@@ -1313,15 +1327,13 @@ function strengthAdvanceAfterFinalRest(currentId,{syncInline=true,syncSmart=true
     refreshStrengthSessionProgress(next.day,next.date);
     if(document.getElementById('sessionTimerMount'))renderTimerPage();
 
-    if(scroll&&nextCard){
-      nextCard.scrollIntoView({behavior:'smooth',block:'nearest'});
-    }
+    if(scroll&&nextCard)nextCard.scrollIntoView({behavior:'smooth',block:'nearest'});
     return next;
   }
 
   refreshStrengthFlowById(currentId);
-  refreshStrengthSessionProgress(pos.day,pos.date);
-  reconcileStrengthSessionCompletion(pos.date,pos.day);
+  refreshStrengthSessionProgress(current.day,current.date);
+  reconcileStrengthSessionCompletion(current.date,current.day);
   if(syncInline){
     inlineTimer={...inlineTimer,running:false,remaining:0,endAt:0,phase:'complete',finalRest:false};
     saveInlineTimer();
@@ -1346,30 +1358,27 @@ function strengthSessionCueMarkup(id){
     '</div>';
   }
   return '<div class="strength-session-cue final">'+
-    '<div><span>Strength work complete</span><strong>Finish the session</strong><small>Review anything you need, then mark today complete.</small></div>'+
+    '<div><span>Strength sequence complete</span><strong>Finish the session</strong><small>Review anything you need, then mark today complete.</small></div>'+
     '<button type="button" onclick="event.stopPropagation();strengthGoToSessionComplete()">Finish session <b>→</b></button>'+
   '</div>';
 }
 function strengthContinueToNext(currentId,nextId){
-  document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
+  document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
   const next=document.getElementById('ex-'+nextId);
-  if(!next)return;
+  const item=strengthSessionItemById(nextId);
+  if(!next||!item)return;
   next.classList.add('session-current');
-  const pos=strengthSessionPosition(nextId);
-  if(pos){
-    refreshStrengthSessionProgress(pos.day,pos.date);
-    const work=program[pos.day]?.work||[];
-    const item=work[pos.index];
-    if(item){
-      inlineTimer={...defaultInlineTimer};
-      saveInlineTimer();
-      strengthEnsureTimer(nextId,item[0],item[1]);
-      smartTimer.exerciseName=item[0];
-      smartTimer.exerciseCategory='Strength';
-      timerConfigure('session',true);
-      if(document.getElementById('sessionTimerMount'))renderTimerPage();
-    }
-  }
+  if(document.getElementById('dayPage')?.classList.contains('compact-active'))next.classList.add('compact-current');
+  refreshStrengthSessionProgress(item.day,item.date);
+
+  inlineTimer={...defaultInlineTimer};
+  saveInlineTimer();
+  strengthEnsureTimer(nextId,item.name,item.target);
+  smartTimer.exerciseName=item.name;
+  smartTimer.exerciseCategory='Strength';
+  timerConfigure('session',true);
+  if(document.getElementById('sessionTimerMount'))renderTimerPage();
+
   next.scrollIntoView({behavior:'smooth',block:'start'});
   setTimeout(()=>{
     const flow=next.querySelector('.strength-set-flow');
@@ -1644,9 +1653,9 @@ function openDay(day,date=null){
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${sessionTarget}</h3></div></div>
  <div>${variantHtml}${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
-   const firstIncomplete=p.work.findIndex((_,i)=>!logs[exId(day,i,date)]?.done);
-   document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
-   if(firstIncomplete>=0)document.getElementById('ex-'+exId(day,firstIncomplete,date))?.classList.add('session-current');
+   const firstIncomplete=strengthSessionSequence(day,date).find(item=>!logs[item.id]?.done);
+   document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
+   if(firstIncomplete)document.getElementById('ex-'+firstIncomplete.id)?.classList.add('session-current');
  }
  applySessionCompactMode();
  renderTimerPage();
@@ -1658,14 +1667,18 @@ function toggleExercise(id){
   logs[id].done=!logs[id].done;
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done);
-  const pos=strengthSessionPosition(id);
-  if(pos&&[1,3,5].includes(pos.day)){
-    const work=program[pos.day]?.work||[];
-    const firstIncomplete=work.findIndex((_,i)=>!logs[exId(pos.day,i,pos.date)]?.done);
-    document.querySelectorAll('.exercise.session-current').forEach(el=>el.classList.remove('session-current'));
-    if(firstIncomplete>=0)document.getElementById('ex-'+exId(pos.day,firstIncomplete,pos.date))?.classList.add('session-current');
-    refreshStrengthSessionProgress(pos.day,pos.date);
+  const item=strengthSessionItemById(id);
+  if(item){
+    const firstIncomplete=strengthSessionSequence(item.day,item.date).find(step=>!logs[step.id]?.done);
+    document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
+    if(firstIncomplete){
+      const card=document.getElementById('ex-'+firstIncomplete.id);
+      card?.classList.add('session-current');
+      if(document.getElementById('dayPage')?.classList.contains('compact-active'))card?.classList.add('compact-current');
+    }
+    refreshStrengthSessionProgress(item.day,item.date);
     if(settings.homeMode==='compact')syncCompactSessionFocus(timerViewModel());
+    reconcileStrengthSessionCompletion(item.date,item.day);
   }
 }
 function saveEx(id,k,v){logs[id]=logs[id]||{};logs[id][k]=v;motion12SetItem('motion12.logs',JSON.stringify(logs))}
@@ -2312,30 +2325,30 @@ function timerSessionProgressData(vm){
   if(!p)return null;
 
   if([1,3,5].includes(day)){
-    const date=timerContextDate(),work=p.work||[];
-    const completed=work.map((_,i)=>!!logs[exId(day,i,date)]?.done);
+    const date=timerContextDate(),sequence=strengthSessionSequence(day,date);
+    const completed=sequence.map(item=>!!logs[item.id]?.done);
     let currentIndex=-1;
     if(smartTimer.exerciseName){
-      const matched=work.findIndex(x=>x[0]===smartTimer.exerciseName);
+      const matched=sequence.findIndex(x=>x.name===smartTimer.exerciseName);
       if(matched>=0&&!completed[matched])currentIndex=matched;
     }
     if(currentIndex<0)currentIndex=completed.findIndex(done=>!done);
     const completedCount=completed.filter(Boolean).length;
-    const remainingCount=Math.max(0,work.length-completedCount-(currentIndex>=0?1:0));
+    const remainingCount=Math.max(0,sequence.length-completedCount-(currentIndex>=0?1:0));
     return {
       type:'strength',
-      total:work.length,
+      total:sequence.length,
       completedCount,
       remainingCount,
       currentIndex,
-      segments:work.map((x,i)=>({
-        name:x[0],
+      segments:sequence.map((x,i)=>({
+        name:x.name,
         state:completed[i]?'complete':i===currentIndex?'current':'remaining'
       })),
       eyebrow:'Strength session',
-      currentName:currentIndex>=0?work[currentIndex][0]:'Strength work complete',
-      currentDetail:currentIndex>=0?work[currentIndex][1]:'All '+work.length+' exercises complete',
-      countText:completedCount+' / '+work.length
+      currentName:currentIndex>=0?sequence[currentIndex].name:'Strength sequence complete',
+      currentDetail:currentIndex>=0?sequence[currentIndex].target:'All '+sequence.length+' sequenced exercises complete',
+      countText:completedCount+' / '+sequence.length
     };
   }
 
@@ -2486,10 +2499,19 @@ function syncCompactSessionFocus(vm){
   const page=document.getElementById('dayPage');
   if(!page)return;
   const compact=page.classList.contains('compact-active');
-  const cards=[...page.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
+  const day=timerContextDay(),date=timerContextDate();
+
+  let cards=[];
+  if([1,3,5].includes(day)){
+    cards=strengthSessionSequence(day,date)
+      .map(item=>document.getElementById('ex-'+item.id))
+      .filter(Boolean);
+  }else{
+    cards=[...page.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
+  }
   cards.forEach(card=>{
     card.classList.remove('compact-current');
-    if(![1,3,5].includes(timerContextDay()))card.classList.remove('session-current');
+    if(![1,3,5].includes(day))card.classList.remove('session-current');
   });
   if(!cards.length)return;
 
@@ -2502,6 +2524,9 @@ function syncCompactSessionFocus(vm){
   if(progress&&progress.type==='intervals'&&!progress.exerciseIndex)index=index%cards.length;
   index=Math.max(0,Math.min(cards.length-1,index));
 
+  if([1,3,5].includes(day)){
+    cards.forEach(card=>card.classList.remove('session-current'));
+  }
   const current=cards[index];
   if(current){
     current.classList.add('session-current');
