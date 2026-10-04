@@ -999,7 +999,18 @@ function strengthFlowConfig(name,target){
 function strengthSetLogEntries(id,total){
   logs[id]=logs[id]||{};
   const current=Array.isArray(logs[id].sets)?logs[id].sets:[];
-  logs[id].sets=Array.from({length:total},(_,i)=>({...current[i]}));
+  const previous=strengthPreviousCompletedSession(id,total);
+  logs[id].sets=Array.from({length:total},(_,i)=>{
+    const entry={...current[i]};
+    const prior=previous?.sets?.[i];
+    if(prior){
+      const hasLoad=entry.load!==undefined&&entry.load!==null&&String(entry.load).trim()!=='';
+      const hasReps=entry.reps!==undefined&&entry.reps!==null&&String(entry.reps).trim()!=='';
+      if(!hasLoad&&prior.load!==undefined&&prior.load!==null&&String(prior.load).trim()!=='')entry.load=prior.load;
+      if(!hasReps&&prior.reps!==undefined&&prior.reps!==null&&String(prior.reps).trim()!=='')entry.reps=prior.reps;
+    }
+    return entry;
+  });
   return logs[id].sets;
 }
 function saveStrengthSetField(id,setIndex,key,value){
@@ -1054,9 +1065,11 @@ function strengthEnsureTimer(id,name,target){
 function strengthPreviousCompletedSession(id,total){
   const match=String(id).match(/^(\d{4}-\d{2}-\d{2})-(\d+)-(\d+)$/);
   if(!match)return null;
+  const currentDate=match[1];
   const suffix='-'+match[2]+'-'+match[3];
   const matches=Object.keys(logs)
-    .filter(k=>k!==id&&k.endsWith(suffix))
+    .filter(k=>k!==id&&k.endsWith(suffix)&&/^\d{4}-\d{2}-\d{2}-\d+-\d+$/.test(k))
+    .filter(k=>k.slice(0,10)<currentDate)
     .filter(k=>Array.isArray(logs[k]?.sets)&&logs[k].sets.length>=total&&logs[k].sets.slice(0,total).every(s=>s?.complete))
     .sort((a,b)=>b.localeCompare(a));
   return matches.length?{id:matches[0],sets:logs[matches[0]].sets.slice(0,total)}:null;
