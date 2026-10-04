@@ -13,7 +13,13 @@ function applySessionCompactMode(){
   page.classList.toggle('compact-active',compact);
   page.dataset.sessionMode=compact?'compact':'full';
   const badge=page.querySelector('.session-mode-badge');
-  if(badge)badge.textContent=compact?'COMPACT SESSION':'';
+  if(badge){
+    const key=(typeof timerContextDate==='function'&&typeof timerContextDay==='function')
+      ?timerContextDate()+'-'+timerContextDay():'';
+    const paused=key&&typeof sessionPaused==='function'&&sessionPaused(key);
+    badge.textContent=paused?(compact?'PAUSED · COMPACT':'PAUSED'):(compact?'COMPACT SESSION':'');
+    badge.classList.toggle('paused',!!paused);
+  }
   if(compact&&typeof timerViewModel==='function')syncCompactSessionFocus(timerViewModel());
 }
 function toggleHomeMode(){
@@ -426,7 +432,7 @@ function reconcileStrengthSessionCompletion(date,day){
   if(!strengthWorkFullyComplete(date,day))return false;
   const key=date+'-'+day;
   if(logs[key]?.completed)return true;
-  logs[key]={...(logs[key]||{}),completed:true,completedAt:logs[key]?.completedAt||new Date().toISOString(),source:'all-strength-sequence-complete'};
+  logs[key]={...(logs[key]||{}),completed:true,paused:false,completedAt:logs[key]?.completedAt||new Date().toISOString(),source:'all-strength-sequence-complete'};
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   return true;
 }
@@ -1653,9 +1659,12 @@ function openDay(day,date=null){
  <div class="card accent"><span class="tag">Today’s progression</span><h3 style="margin-top:10px">${sessionTarget}</h3></div></div>
  <div>${variantHtml}${sessionHtml}</div></div>`;
  if([1,3,5].includes(day)){
-   const firstIncomplete=strengthSessionSequence(day,date).find(item=>!logs[item.id]?.done);
+   const sequence=strengthSessionSequence(day,date);
+   const storedSelected=logs[key]?.selectedExerciseId||logs[key]?.resumeExerciseId||'';
+   const selected=sequence.find(item=>item.id===storedSelected&&!logs[item.id]?.done)
+     ||sequence.find(item=>!logs[item.id]?.done);
    document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
-   if(firstIncomplete)document.getElementById('ex-'+firstIncomplete.id)?.classList.add('session-current');
+   if(selected)document.getElementById('ex-'+selected.id)?.classList.add('session-current');
  }
  applySessionCompactMode();
  renderTimerPage();
@@ -1725,14 +1734,33 @@ function pauseSessionTimers(){
     saveInlineTimer();
   }
 }
-function currentSessionResumeExerciseId(key){
+function stoppedTimerSnapshot(timer,isSmart=false){
+  const snapshot=JSON.parse(JSON.stringify(timer||{}));
+  snapshot.running=false;
+  snapshot.endAt=0;
+  if(isSmart)snapshot.stopwatchStartedAt=0;
+  return snapshot;
+}
+function exerciseBelongsToSession(id,key){
+  if(!id)return false;
+  const date=key.slice(0,10),day=Number(key.split('-').pop());
+  return String(id).startsWith(date+'-'+day+'-');
+}
+function currentSessionSelectedExerciseId(key){
+  if(exerciseBelongsToSession(inlineTimer.activeId,key))return inlineTimer.activeId;
   const current=document.querySelector('.exercise.session-current[data-timer-id]');
-  if(current?.dataset?.timerId)return current.dataset.timerId;
+  if(current?.dataset?.timerId&&exerciseBelongsToSession(current.dataset.timerId,key))return current.dataset.timerId;
+  const active=document.querySelector('.exercise.active-timer[data-timer-id]');
+  if(active?.dataset?.timerId&&exerciseBelongsToSession(active.dataset.timerId,key))return active.dataset.timerId;
   const day=Number(key.split('-').pop()),date=key.slice(0,10);
   if([1,3,5].includes(day)){
     return strengthSessionSequence(day,date).find(item=>!logs[item.id]?.done)?.id||'';
   }
-  return document.querySelector('.exercise[data-timer-id]:not(.complete)')?.dataset?.timerId||'';
+  return [...document.querySelectorAll('.exercise[data-timer-id]')]
+    .find(card=>exerciseBelongsToSession(card.dataset.timerId,key)&&!card.classList.contains('complete'))?.dataset?.timerId||'';
+}
+function currentSessionResumeExerciseId(key){
+  return currentSessionSelectedExerciseId(key);
 }
 function sessionEndActionsMarkup(key){
   const completed=!!logs[key]?.completed,paused=sessionPaused(key);
@@ -1747,43 +1775,65 @@ function pauseSession(key){
   logs[key]=logs[key]||{};
   if(logs[key].completed)return;
   pauseSessionTimers();
-  const resumeExerciseId=currentSessionResumeExerciseId(key);
+  const selectedExerciseId=currentSessionSelectedExerciseId(key);
+  const resumeExerciseId=selectedExerciseId||currentSessionResumeExerciseId(key);
   logs[key]={
     ...logs[key],
     paused:true,
     pausedAt:new Date().toISOString(),
-    ...(resumeExerciseId?{resumeExerciseId}:{})
+    ...(resumeExerciseId?{resumeExerciseId}:{}),
+    ...(selectedExerciseId?{selectedExerciseId}:{}),
+    pausedTimers:{
+      smartTimer:stoppedTimerSnapshot(smartTimer,true),
+      inlineTimer:stoppedTimerSnapshot(inlineTimer,false)
+    }
   };
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   const actions=document.querySelector('.session-stage-complete .session-end-actions');
   if(actions)actions.outerHTML=sessionEndActionsMarkup(key);
   const badge=document.querySelector('#dayPage .session-mode-badge');
-  if(badge){badge.textContent='PAUSED';badge.classList.add('paused')}
+  if(badge){
+    badge.textContent=document.getElementById('dayPage')?.classList.contains('compact-active')?'PAUSED · COMPACT':'PAUSED';
+    badge.classList.add('paused');
+  }
   renderHome();
   renderDays();
+}
+function restorePausedTimerSnapshots(key){
+  const snapshots=logs[key]?.pausedTimers;
+  if(!snapshots||typeof snapshots!=='object')return;
+  if(snapshots.smartTimer&&typeof snapshots.smartTimer==='object'){
+    smartTimer={...defaultSmartTimer,...snapshots.smartTimer,running:false,endAt:0,stopwatchStartedAt:0};
+    saveSmartTimer();
+  }
+  if(snapshots.inlineTimer&&typeof snapshots.inlineTimer==='object'){
+    inlineTimer={...defaultInlineTimer,...snapshots.inlineTimer,running:false,endAt:0};
+    saveInlineTimer();
+  }
 }
 function reopenSession(key){
   logs[key]=logs[key]||{};
   if(logs[key].completed)return;
-  const resumeExerciseId=logs[key].resumeExerciseId||'';
+  const selectedExerciseId=logs[key].selectedExerciseId||logs[key].resumeExerciseId||'';
+  restorePausedTimerSnapshots(key);
   logs[key]={...logs[key],paused:false,resumedAt:new Date().toISOString()};
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   const day=Number(key.split('-').pop()),date=key.slice(0,10);
   openDay(day,date);
   requestAnimationFrame(()=>{
-    const target=resumeExerciseId&&document.getElementById('ex-'+resumeExerciseId);
+    const target=selectedExerciseId&&document.getElementById('ex-'+selectedExerciseId);
     if(target&&!target.classList.contains('complete')){
       document.querySelectorAll('.exercise.session-current,.exercise.compact-current').forEach(el=>el.classList.remove('session-current','compact-current'));
       target.classList.add('session-current');
       if(document.getElementById('dayPage')?.classList.contains('compact-active'))target.classList.add('compact-current');
-      const item=strengthSessionItemById(resumeExerciseId);
+      const item=strengthSessionItemById(selectedExerciseId);
       if(item){
         smartTimer.exerciseName=item.name;
         smartTimer.exerciseCategory='Strength';
-        timerConfigure('session',false);
+        saveSmartTimer();
         refreshStrengthSessionProgress(item.day,item.date);
-        renderTimerPage();
       }
+      renderTimerPage();
       target.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
   });
