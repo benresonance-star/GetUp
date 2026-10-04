@@ -351,27 +351,34 @@
   }
   function buildSessionsFromLogs(logsRaw,settingsRaw,existingSessions){
     const startDate=settingsRaw&&settingsRaw.startDate||undefined;
-    const sessionsByKey={},sessionCompletion={};
+    const sessionsByKey={},sessionMeta={};
     Object.keys(logsRaw||{}).forEach(key=>{
       const sk=parseSessionKey(key);
-      if(sk&&logsRaw[key]&&typeof logsRaw[key]==='object'&&Object.prototype.hasOwnProperty.call(logsRaw[key],'completed')){
-        sessionCompletion[sk.date+':'+sk.day]=!!logsRaw[key].completed;
+      const raw=logsRaw[key];
+      if(sk&&raw&&typeof raw==='object'&&!Array.isArray(raw)){
+        sessionMeta[sk.date+':'+sk.day]=clone(raw);
       }
     });
     Object.keys(logsRaw||{}).forEach(key=>{
       const parsed=parseExerciseKey(key,startDate);if(!parsed)return;
       const groupKey=parsed.date+':'+parsed.day;
+      const meta=sessionMeta[groupKey]||{};
       const session=sessionsByKey[groupKey]||(sessionsByKey[groupKey]=sessionShell(parsed.date,parsed.day,startDate,existingSessions));
-      session.exercises.push(legacyExerciseRecord(key,parsed,logsRaw[key],!!sessionCompletion[groupKey]));
+      session.exercises.push(legacyExerciseRecord(key,parsed,logsRaw[key],!!meta.completed));
     });
-    Object.keys(sessionCompletion).forEach(groupKey=>{
+    Object.keys(sessionMeta).forEach(groupKey=>{
       if(!sessionsByKey[groupKey]){
         const parts=groupKey.split(':');
         sessionsByKey[groupKey]=sessionShell(parts[0],Number(parts[1]),startDate,existingSessions);
       }
     });
     Object.keys(sessionsByKey).forEach(groupKey=>{
-      const s=sessionsByKey[groupKey],done=!!sessionCompletion[groupKey],day=Number(groupKey.split(':')[1]),week=weekForDate(s.scheduledDate,startDate);
+      const s=sessionsByKey[groupKey];
+      const meta=sessionMeta[groupKey]||{};
+      const old=existingSessions&&existingSessions[s.id]||{};
+      const has=k=>Object.prototype.hasOwnProperty.call(meta,k);
+      const done=has('completed')?!!meta.completed:old.status==='completed';
+      const day=Number(groupKey.split(':')[1]),week=weekForDate(s.scheduledDate,startDate);
       const prescribed=LEGACY_PROGRAM_2026_09_27[day]?.work||[];
       prescribed.forEach((_,index)=>{
         const parsedSlot=slotFor(day,'work',index,week);
@@ -384,11 +391,38 @@
         const bk=String(b.legacy?.sourceKey||'').includes('-prep-')?-2:String(b.legacy?.sourceKey||'').includes('-support-')?2:0;
         return ak-bk||a.order-b.order;
       });
+
+      const paused=done?false:(has('paused')?!!meta.paused:!!old.paused);
       const anyStarted=s.exercises.some(x=>x.status==='in-progress'||x.status==='completed');
-      s.status=done?'completed':anyStarted?'in-progress':'planned';
-      if(done)s.completedAt=s.completedAt||s.scheduledDate+'T23:59:59.000Z';
-      else delete s.completedAt;
+      s.status=done?'completed':(paused||anyStarted)?'in-progress':'planned';
+      s.paused=paused;
+
+      const copyString=(field)=>{
+        const value=has(field)?meta[field]:old[field];
+        if(value!==undefined&&value!==null&&String(value).trim()!=='')s[field]=String(value);
+        else delete s[field];
+      };
+      copyString('pausedAt');
+      copyString('resumedAt');
+      copyString('resumeExerciseId');
+      copyString('selectedExerciseId');
+
+      const timerState=has('pausedTimers')?meta.pausedTimers:old.pausedTimers;
+      if(timerState&&typeof timerState==='object'&&!Array.isArray(timerState))s.pausedTimers=clone(timerState);
+      else delete s.pausedTimers;
+
+      if(done){
+        const completedAt=has('completedAt')?meta.completedAt:old.completedAt;
+        s.completedAt=completedAt?String(completedAt):(s.completedAt||s.scheduledDate+'T23:59:59.000Z');
+      }else{
+        delete s.completedAt;
+      }
       s.updatedAt=nowIso();
+      s.legacy={
+        ...(s.legacy||{}),
+        sourceKey:s.scheduledDate+'-'+day,
+        raw:clone(meta)
+      };
     });
     return Object.fromEntries(Object.values(sessionsByKey).map(s=>[s.id,s]));
   }
@@ -428,7 +462,18 @@
     Object.values(data.sessions||{}).forEach(session=>{
       const day=DAY_BY_TYPE[session.dayType];
       if(day===undefined)return;
-      out[session.scheduledDate+'-'+day]={completed:session.status==='completed'};
+      const sessionKey=session.scheduledDate+'-'+day;
+      const rawSession=session.legacy&&session.legacy.raw&&typeof session.legacy.raw==='object'
+        ?clone(session.legacy.raw):{};
+      const sessionEntry={...rawSession,completed:session.status==='completed',paused:!!session.paused};
+      if(session.completedAt)sessionEntry.completedAt=session.completedAt;else delete sessionEntry.completedAt;
+      for(const field of ['pausedAt','resumedAt','resumeExerciseId','selectedExerciseId']){
+        if(session[field]!==undefined&&session[field]!==null&&String(session[field]).trim()!=='')sessionEntry[field]=String(session[field]);
+        else delete sessionEntry[field];
+      }
+      if(session.pausedTimers&&typeof session.pausedTimers==='object')sessionEntry.pausedTimers=clone(session.pausedTimers);
+      else delete sessionEntry.pausedTimers;
+      out[sessionKey]=sessionEntry;
       (session.exercises||[]).forEach(e=>{
         const key=exerciseSourceKey(session,e);if(!key)return;
         const raw=e.legacy&&e.legacy.raw&&typeof e.legacy.raw==='object'?clone(e.legacy.raw):{};
@@ -469,6 +514,24 @@
       if(s.programId!=='motion12')issues.push(issue(p+'.programId','program.id','programId must be motion12'));
       if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s.scheduledDate||'')))issues.push(issue(p+'.scheduledDate','date.iso','scheduledDate must be YYYY-MM-DD'));
       if(!Number.isInteger(s.weekNumber)||s.weekNumber<1)issues.push(issue(p+'.weekNumber','week.invalid','weekNumber must be positive'));
+      if(s.paused!==undefined&&typeof s.paused!=='boolean')issues.push(issue(p+'.paused','session.paused','paused must be boolean'));
+      for(const field of ['pausedAt','resumedAt']){
+        if(s[field]!==undefined&&(!String(s[field]).trim()||!Number.isFinite(Date.parse(String(s[field]))))){
+          issues.push(issue(p+'.'+field,'session.timestamp',field+' must be an ISO-compatible timestamp'));
+        }
+      }
+      for(const field of ['resumeExerciseId','selectedExerciseId']){
+        if(s[field]!==undefined&&(typeof s[field]!=='string'||!s[field].trim())){
+          issues.push(issue(p+'.'+field,'session.exercise-ref',field+' must be a non-empty exercise reference'));
+        }
+      }
+      if(s.pausedTimers!==undefined&&(!s.pausedTimers||typeof s.pausedTimers!=='object'||Array.isArray(s.pausedTimers))){
+        issues.push(issue(p+'.pausedTimers','session.timer-state','pausedTimers must be an object'));
+      }
+      if(s.paused&&s.status==='completed')issues.push(issue(p+'.paused','session.pause-complete','Completed session cannot remain paused'));
+      if(s.pausedTimers?.smartTimer?.running===true||s.pausedTimers?.inlineTimer?.running===true){
+        issues.push(issue(p+'.pausedTimers','session.timer-running','Paused timer snapshots should be stopped','warning'));
+      }
       if(!Array.isArray(s.exercises))issues.push(issue(p+'.exercises','exercise.array','exercises must be an array'));
       (s.exercises||[]).forEach((e,ei)=>{
         const ep=p+'.exercises['+ei+']';
