@@ -1868,35 +1868,27 @@ function timerContextDate(){return activeSessionTimerContext?.date||todayISO()}
 function timerContextWeek(){return Number(activeSessionTimerContext?.week)||weekNo()}
 function toggleSessionTimerDetails(){/* full workout timer is always visible */}
 function scrollToSessionRuntime(){/* no jump: timer remains in normal workout flow */}
+function circuitTimingFromTarget(target,fallbackWork=30,fallbackRest=30){
+  const m=String(target||'').match(/(\d+)\s*sec\s*work\s*\/\s*(\d+)\s*sec\s*(?:recovery|transition)/i);
+  return m?{work:Number(m[1]),rest:Number(m[2])}:{work:fallbackWork,rest:fallbackRest};
+}
 function conditioningCircuitPlan(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
-  let stations=[],roundRest=0,title='',note='';
+  const work=program[day]?.work||[];
+  let roundRest=0,title=conditioningTarget(day,w),note='';
+  const fallback=day===2?{work:30,rest:30}:day===0?{work:40,rest:20}:{work:20,rest:40};
+  const stations=work.map(ex=>{
+    const timing=circuitTimingFromTarget(ex?.[1],fallback.work,fallback.rest);
+    return {label:ex?.[0]||'Exercise',work:timing.work,rest:timing.rest};
+  });
+  if(!stations.length)return null;
+
   if(day===2){
-    stations=[
-      {label:'Kettlebell deadlift',work:30,rest:30},
-      {label:'Two-arm kettlebell row',work:30,rest:30},
-      {label:'Alternating reverse lunge',work:30,rest:30},
-      {label:'Suitcase march / carry',work:30,rest:30}
-    ];
-    title=conditioningTarget(day,w);
-    note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by 30 seconds easy recovery.';
+    note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by the recovery programmed on the exercise card.';
   }else if(day===4){
-    stations=[
-      {label:'Kettlebell squat → jerk → strict press',work:40,rest:60},
-      {label:'2-hand kettlebell swing',work:20,rest:40},
-      {label:'Push-up',work:20,rest:40}
-    ];
-    title=conditioningTarget(day,w);
-    note='Power circuit: use the full 40/60 window for the kettlebell complex, then keep swings and push-ups crisp at 20/40. Quality beats speed.';
+    note='Power circuit: follow the work/recovery timing shown on each exercise card. Keep every rep crisp; quality beats speed.';
   }else if(day===0){
-    stations=[
-      {label:'Squat-to-calf-raise',work:40,rest:20},
-      {label:'Push-up',work:40,rest:20},
-      {label:'Alternating reverse lunge',work:40,rest:20},
-      {label:'Suitcase march / carry',work:40,rest:20}
-    ];
     roundRest=60;
-    title=conditioningTarget(day,w);
     note='Aerobic-base circuit: RPE 5–6. Keep moving easily and use the full 60-second recovery between rounds.';
   }else return null;
 
@@ -1982,8 +1974,9 @@ function timerSessionPlan(day=timerContextDay(),w=timerContextWeek()){
 function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
   if(day===2)return {category:'Recovery circuit',seconds:30,action:'session',label:'30s / 30s',note:'Use the complete Restore circuit timer.'};
   if(day===4){
-    const complex=name==='Kettlebell squat → jerk → strict press';
-    return {category:'Power circuit',seconds:complex?60:40,action:'session',label:complex?'40s / 60s':'20s / 40s',note:'Use the complete Power circuit timer.'};
+    const exercise=program[day]?.work?.find(x=>x[0]===name);
+    const timing=circuitTimingFromTarget(exercise?.[1],20,40);
+    return {category:'Power circuit',seconds:timing.rest,action:'session',label:timing.work+'s / '+timing.rest+'s',note:'Use the complete Power circuit timer.'};
   }
   if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
   if(/isometric/i.test(name))return {category:'Tendon capacity',seconds:75,action:'rest',label:'1:15',note:'Recover 60–90 seconds between high-force rounds so force quality stays high.'};
@@ -2081,11 +2074,22 @@ function syncCircuitTimerExercise(plan=timerSessionPlan()){
     smartTimer.exerciseCategory='Circuit station';
   }
 }
+function timerPlanSignature(plan){
+  if(!plan?.circuit)return '';
+  return (plan.phases||[]).map(p=>[
+    p.phaseType||'',
+    Number.isInteger(p.stationIndex)?p.stationIndex:'',
+    p.label||'',
+    p.seconds||0
+  ].join(':')).join('|');
+}
 function timerConfigure(mode=smartTimer.mode||'session',force=false){
   const dayKey=timerContextDate()+':'+timerContextWeek();
-  if(!force&&smartTimer.dayKey===dayKey&&smartTimer.mode===mode&&smartTimer.kind)return;
   const plan=timerSessionPlan();
-  smartTimer={...defaultSmartTimer,mode,dayKey};
+  const planSignature=timerPlanSignature(plan);
+  const circuitPlanCurrent=!plan?.circuit||smartTimer.planSignature===planSignature;
+  if(!force&&smartTimer.dayKey===dayKey&&smartTimer.mode===mode&&smartTimer.kind&&circuitPlanCurrent)return;
+  smartTimer={...defaultSmartTimer,mode,dayKey,planSignature};
   if(mode==='rest'){
     smartTimer.kind='rest'; smartTimer.duration=90; smartTimer.remaining=90;
   }else if(mode==='stopwatch'){
