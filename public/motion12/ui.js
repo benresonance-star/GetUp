@@ -1671,64 +1671,111 @@ function openDay(day,date=null){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
-function advanceCircuitTimerFromCheckedExercise(id){
+function circuitExerciseCards(){
+  return [...document.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
+}
+function circuitWorkPhaseIndex(plan,stationIndex,preferredRound=0){
+  if(!plan?.circuit||!Array.isArray(plan.phases)||stationIndex<0)return -1;
+  if(preferredRound>0){
+    const sameRound=plan.phases.findIndex(phase=>
+      phase?.phaseType==='work'&&
+      phase.stationIndex===stationIndex&&
+      Number(phase.round)===preferredRound
+    );
+    if(sameRound>=0)return sameRound;
+  }
+  const currentIndex=Math.max(0,Number(smartTimer.phaseIndex)||0);
+  const upcoming=plan.phases.findIndex((phase,index)=>
+    index>=currentIndex&&
+    phase?.phaseType==='work'&&
+    phase.stationIndex===stationIndex
+  );
+  if(upcoming>=0)return upcoming;
+  return plan.phases.findIndex(phase=>
+    phase?.phaseType==='work'&&phase.stationIndex===stationIndex
+  );
+}
+function setCircuitActiveExercise(id){
   const day=timerContextDay();
   if(![0,2,4].includes(day))return false;
-  const card=document.getElementById('ex-'+id);
-  if(!card||card.dataset.timerSupport==='1')return false;
 
-  const cards=[...document.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
-  const stationIndex=cards.findIndex(x=>x.dataset.timerId===id);
-  if(stationIndex<0)return false;
+  const cards=circuitExerciseCards();
+  const card=cards.find(x=>x.dataset.timerId===id);
+  const stationIndex=cards.indexOf(card);
+  if(!card||stationIndex<0||card.dataset.timerSupport==='1')return false;
 
   timerConfigure('session',false);
   const plan=timerSessionPlan();
   if(!plan?.circuit||!Array.isArray(plan.phases)||!plan.phases.length)return false;
 
-  const after=cards.slice(stationIndex+1).find(x=>!logs[x.dataset.timerId]?.done);
-  const before=cards.slice(0,stationIndex).find(x=>!logs[x.dataset.timerId]?.done);
-  const nextCard=after||before||null;
+  const currentPhase=plan.phases[Math.max(0,Math.min(plan.phases.length-1,Number(smartTimer.phaseIndex)||0))];
+  const preferredRound=Number(currentPhase?.round)||1;
+  const phaseIndex=circuitWorkPhaseIndex(plan,stationIndex,preferredRound);
+  if(phaseIndex<0)return false;
 
-  if(!nextCard){
-    smartTimer.phaseIndex=plan.phases.length;
-    smartTimer.running=false;
-    smartTimer.remaining=0;
-    smartTimer.duration=0;
-    smartTimer.endAt=0;
-    smartTimer.exerciseName='';
-    smartTimer.exerciseCategory='Circuit complete';
-    smartTimer.planSignature=timerPlanSignature(plan);
-    saveSmartTimer();
-    renderTimerPage();
-    return true;
-  }
-
-  const nextStationIndex=cards.indexOf(nextCard);
-  const currentPhaseIndex=Math.max(0,Number(smartTimer.phaseIndex)||0);
-  let nextPhaseIndex=plan.phases.findIndex((phase,index)=>
-    index>currentPhaseIndex&&
-    phase?.phaseType==='work'&&
-    phase.stationIndex===nextStationIndex
-  );
-
-  if(nextPhaseIndex<0){
-    nextPhaseIndex=plan.phases.findIndex(phase=>
-      phase?.phaseType==='work'&&phase.stationIndex===nextStationIndex
-    );
-  }
-  if(nextPhaseIndex<0)return false;
-
-  const nextPhase=plan.phases[nextPhaseIndex];
-  smartTimer.phaseIndex=nextPhaseIndex;
-  smartTimer.duration=nextPhase.seconds;
-  smartTimer.remaining=nextPhase.seconds;
+  const phase=plan.phases[phaseIndex];
+  smartTimer.phaseIndex=phaseIndex;
+  smartTimer.duration=phase.seconds;
+  smartTimer.remaining=phase.seconds;
   smartTimer.running=false;
   smartTimer.endAt=0;
   smartTimer.planSignature=timerPlanSignature(plan);
-  syncCircuitTimerExercise(plan);
+  smartTimer.exerciseName=card.dataset.timerName?decodeURIComponent(card.dataset.timerName):phase.label;
+  smartTimer.exerciseCategory='Circuit station';
+
+  const key=timerContextDate()+'-'+day;
+  logs[key]=logs[key]||{};
+  logs[key].selectedExerciseId=id;
+  logs[key].resumeExerciseId=id;
+
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
   saveSmartTimer();
   renderTimerPage();
   return true;
+}
+function setCircuitComplete(){
+  const day=timerContextDay();
+  if(![0,2,4].includes(day))return false;
+  timerConfigure('session',false);
+  const plan=timerSessionPlan();
+  if(!plan?.circuit)return false;
+
+  smartTimer.phaseIndex=plan.phases.length;
+  smartTimer.running=false;
+  smartTimer.remaining=0;
+  smartTimer.duration=0;
+  smartTimer.endAt=0;
+  smartTimer.exerciseName='';
+  smartTimer.exerciseCategory='Circuit complete';
+  smartTimer.planSignature=timerPlanSignature(plan);
+
+  const key=timerContextDate()+'-'+day;
+  logs[key]=logs[key]||{};
+  logs[key].selectedExerciseId='';
+  logs[key].resumeExerciseId='';
+
+  motion12SetItem('motion12.logs',JSON.stringify(logs));
+  saveSmartTimer();
+  renderTimerPage();
+  return true;
+}
+function reconcileCircuitExerciseToggle(id,completed){
+  const day=timerContextDay();
+  if(![0,2,4].includes(day))return false;
+  const cards=circuitExerciseCards();
+  const index=cards.findIndex(x=>x.dataset.timerId===id);
+  if(index<0)return false;
+
+  if(!completed){
+    // Unticking explicitly makes that exercise current again.
+    return setCircuitActiveExercise(id);
+  }
+
+  const next=
+    cards.slice(index+1).find(x=>!logs[x.dataset.timerId]?.done)||
+    cards.slice(0,index).find(x=>!logs[x.dataset.timerId]?.done);
+
+  return next?setCircuitActiveExercise(next.dataset.timerId):setCircuitComplete();
 }
 function toggleExercise(id){
   logs[id]=logs[id]||{};
@@ -1737,7 +1784,7 @@ function toggleExercise(id){
   motion12SetItem('motion12.logs',JSON.stringify(logs));
   document.getElementById('ex-'+id)?.classList.toggle('complete',completed);
 
-  if(completed&&advanceCircuitTimerFromCheckedExercise(id))return;
+  if(reconcileCircuitExerciseToggle(id,completed))return;
 
   const item=strengthSessionItemById(id);
   if(item){
