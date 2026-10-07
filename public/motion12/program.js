@@ -33,10 +33,10 @@ const program={
     ['Heavy calf raise isometric','4 × 5 sec / side · 20–30 sec between sides · 60–90 sec between rounds','After the primary lifts, rise to a strong mid-range single-leg calf position and hold without bouncing. Use a wall or frame only for balance. Build force smoothly for about 1 second, hold hard for 3–4 seconds, then release under control. Add kettlebell load until the hold is about 8–9/10 effort while remaining controlled.','Progress force rather than duration. Add the smallest practical load only when all four holds are steady and pain-free with no next-day tendon irritation.'],
     ['Split-squat isometric','2 × 5 sec / side · 20–30 sec between sides · 60 sec between rounds','Secondary patellar exposure: use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Build tension smoothly and hold hard without movement at about 8–9/10 effort.','Keep this secondary exposure crisp. Add load only when both rounds per side are stable, symmetrical and pain-free; do not extend the hold time.']
   ]},
-  4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: coordinate squat, leg drive and overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',work:[
+  4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: combine explosive hip drive, a clean rack and controlled overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',work:[
     ['2-hand kettlebell swing','20 sec work / 40 sec recovery','Aim for about 8–10 crisp swings, then stop even if time remains.','Power quality wins. If snap slows, reduce load or reps.','START: choose the heaviest bell you can swing for 10 technically crisp reps at RPE ≤6 with obvious speed left. If you do not yet have a calibrated swing load, start at 12 kg if learning the movement or 16 kg if your swing technique is already reliable. INCREASE: after 2 consecutive Thursday sessions completing every prescribed round with 8–10 crisp swings, no visible speed loss, final-session RPE ≤7 and no next-day low-back soreness, move to the next bell (+2–4 kg). If the jump is 4 kg, use 6–8 swings per work interval for the first 1–2 sessions. REDUCE immediately if snap, hinge position or breathing deteriorates.'],
     ['Push-up','20 sec work / 40 sec recovery','Use a variation that stays fast and technically clean.','Stop before reps grind.','BODYWEIGHT: do not add external load. Progress the variation only when all rounds remain fast at RPE ≤7.'],
-    ['Kettlebell squat → jerk → strict press','40 sec work / 60 sec recovery','Use one light kettlebell. Work one side, then the other: front-rack squat → drive into a crisp jerk → lower to rack → strict press. Move deliberately; do not race the sequence.','Begin with 1–2 clean complexes per side. Build to 2–3 per side without slowing or grinding, then increase the kettlebell one small step. The strict press governs the load.','START: choose a bell you could strict press for about 8–10 clean reps when fresh, but keep several reps in reserve here. INCREASE: only after 2 Thursday sessions where every complex stays crisp, both sides match, the strict press never grinds and final-session RPE stays ≤7. Move up one small bell (+2–4 kg) and return to 1–2 complexes per side. REDUCE immediately if the jerk becomes a press-out, the torso leans, or overhead control deteriorates.']
+    ['Single-kettlebell clean & press','40 sec work / 60 sec recovery','Use one kettlebell. Hinge and snap the bell into a soft rack, brace, then strict press overhead with no leg drive. Work both sides during the interval and keep every clean quiet at the forearm.','Aim for 2–3 crisp clean-and-press reps per side. Stop before either the clean gets loopy or the press slows. Build clean, matched reps before increasing load.','START: choose a bell you could strict press for about 8–10 clean reps when fresh; the press governs the load. INCREASE: only after 2 Thursday sessions where every clean lands softly, both sides match, every press stays smooth and final-session RPE stays ≤7. Move up one small bell (+2–4 kg) and return to about 2 reps per side. REDUCE immediately if the bell bangs the forearm, the clean arcs away from the body, the torso leans, or the press grinds.']
   ],support:[
     ['Band pull-apart','1 × 12–20','Smooth scapular movement; shoulders stay down and ribs quiet.','Quality only. Stop well before fatigue; do not turn this into extra pulling volume.'],
     ['Wall slide','1 × 8','Move slowly through the largest pain-free overhead range you can control.','Add range and control before adding repetitions.']
@@ -79,7 +79,7 @@ const conditioningRounds={
 function conditioningTarget(day,w){
   const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))];
   if(day===2)return rounds+' rounds · 30 sec work / 30 sec recovery · RPE 4–5';
-  if(day===4)return rounds+' rounds · complex 40/60 · swings + push-ups 20/40 · RPE 6–7';
+  if(day===4)return rounds+' rounds · clean + press 40/60 · swings + push-ups 20/40 · RPE 6–7';
   if(day===0)return rounds+' rounds · 40 sec work / 20 sec transition + 60 sec between rounds · RPE 5–6';
   return '';
 }
@@ -120,10 +120,7 @@ const videoLinks={
   'Sliding hamstring curl':[{label:'Form',url:'https://www.youtube.com/watch?v=UaecXxAgsKA'}],
   'Kettlebell woodchop':[{label:'Form',url:'https://www.youtube.com/watch?v=WaBz7DIcI5w'}],
   '2-hand kettlebell swing':[{label:'Form',url:'https://www.youtube.com/watch?v=1cVT3ee9mgU'}],
-  'Kettlebell squat → jerk → strict press':[
-    {label:'Jerk',url:'https://www.youtube.com/watch?v=i_VR2v07aWA'},
-    {label:'Press',url:'https://www.youtube.com/watch?v=WO2JPxGCsnU'}
-  ],
+  'Single-kettlebell clean & press':[{label:'Form',url:'https://www.youtube.com/watch?v=LfBaSjDt4QA'}],
   'Lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}],
   'Plank shoulder tap / kettlebell woodchop':[
     {label:'Shoulder tap',url:'https://www.youtube.com/watch?v=C6At19Q9i2Q'},
