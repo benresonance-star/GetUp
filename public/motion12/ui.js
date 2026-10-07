@@ -1685,36 +1685,38 @@ function advanceCircuitTimerFromCheckedExercise(id){
   const plan=timerSessionPlan();
   if(!plan?.circuit||!Array.isArray(plan.phases)||!plan.phases.length)return false;
 
-  const currentPhase=plan.phases[Math.max(0,Math.min(plan.phases.length-1,Number(smartTimer.phaseIndex)||0))];
-  const currentRound=Math.max(1,Number(currentPhase?.round)||1);
-  const nextStationIndex=(stationIndex+1)%Math.max(1,plan.stationCount||cards.length);
-  const nextRound=nextStationIndex===0?currentRound+1:currentRound;
+  const after=cards.slice(stationIndex+1).find(x=>!logs[x.dataset.timerId]?.done);
+  const before=cards.slice(0,stationIndex).find(x=>!logs[x.dataset.timerId]?.done);
+  const nextCard=after||before||null;
 
-  let nextPhaseIndex=plan.phases.findIndex((phase,index)=>
-    index>=(Number(smartTimer.phaseIndex)||0)&&
-    phase?.phaseType==='work'&&
-    phase.stationIndex===nextStationIndex&&
-    Number(phase.round)===nextRound
-  );
-
-  if(nextPhaseIndex<0){
-    nextPhaseIndex=plan.phases.findIndex(phase=>
-      phase?.phaseType==='work'&&
-      phase.stationIndex===nextStationIndex&&
-      Number(phase.round)===Math.min(nextRound,plan.rounds)
-    );
-  }
-
-  if(nextRound>plan.rounds||nextPhaseIndex<0){
+  if(!nextCard){
     smartTimer.phaseIndex=plan.phases.length;
     smartTimer.running=false;
     smartTimer.remaining=0;
     smartTimer.duration=0;
     smartTimer.endAt=0;
+    smartTimer.exerciseName='';
+    smartTimer.exerciseCategory='Circuit complete';
+    smartTimer.planSignature=timerPlanSignature(plan);
     saveSmartTimer();
     renderTimerPage();
     return true;
   }
+
+  const nextStationIndex=cards.indexOf(nextCard);
+  const currentPhaseIndex=Math.max(0,Number(smartTimer.phaseIndex)||0);
+  let nextPhaseIndex=plan.phases.findIndex((phase,index)=>
+    index>currentPhaseIndex&&
+    phase?.phaseType==='work'&&
+    phase.stationIndex===nextStationIndex
+  );
+
+  if(nextPhaseIndex<0){
+    nextPhaseIndex=plan.phases.findIndex(phase=>
+      phase?.phaseType==='work'&&phase.stationIndex===nextStationIndex
+    );
+  }
+  if(nextPhaseIndex<0)return false;
 
   const nextPhase=plan.phases[nextPhaseIndex];
   smartTimer.phaseIndex=nextPhaseIndex;
