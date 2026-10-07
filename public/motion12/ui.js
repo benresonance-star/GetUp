@@ -1671,11 +1671,72 @@ function openDay(day,date=null){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
+function advanceCircuitTimerFromCheckedExercise(id){
+  const day=timerContextDay();
+  if(![0,2,4].includes(day))return false;
+  const card=document.getElementById('ex-'+id);
+  if(!card||card.dataset.timerSupport==='1')return false;
+
+  const cards=[...document.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
+  const stationIndex=cards.findIndex(x=>x.dataset.timerId===id);
+  if(stationIndex<0)return false;
+
+  timerConfigure('session',false);
+  const plan=timerSessionPlan();
+  if(!plan?.circuit||!Array.isArray(plan.phases)||!plan.phases.length)return false;
+
+  const currentPhase=plan.phases[Math.max(0,Math.min(plan.phases.length-1,Number(smartTimer.phaseIndex)||0))];
+  const currentRound=Math.max(1,Number(currentPhase?.round)||1);
+  const nextStationIndex=(stationIndex+1)%Math.max(1,plan.stationCount||cards.length);
+  const nextRound=nextStationIndex===0?currentRound+1:currentRound;
+
+  let nextPhaseIndex=plan.phases.findIndex((phase,index)=>
+    index>=(Number(smartTimer.phaseIndex)||0)&&
+    phase?.phaseType==='work'&&
+    phase.stationIndex===nextStationIndex&&
+    Number(phase.round)===nextRound
+  );
+
+  if(nextPhaseIndex<0){
+    nextPhaseIndex=plan.phases.findIndex(phase=>
+      phase?.phaseType==='work'&&
+      phase.stationIndex===nextStationIndex&&
+      Number(phase.round)===Math.min(nextRound,plan.rounds)
+    );
+  }
+
+  if(nextRound>plan.rounds||nextPhaseIndex<0){
+    smartTimer.phaseIndex=plan.phases.length;
+    smartTimer.running=false;
+    smartTimer.remaining=0;
+    smartTimer.duration=0;
+    smartTimer.endAt=0;
+    saveSmartTimer();
+    renderTimerPage();
+    return true;
+  }
+
+  const nextPhase=plan.phases[nextPhaseIndex];
+  smartTimer.phaseIndex=nextPhaseIndex;
+  smartTimer.duration=nextPhase.seconds;
+  smartTimer.remaining=nextPhase.seconds;
+  smartTimer.running=false;
+  smartTimer.endAt=0;
+  smartTimer.planSignature=timerPlanSignature(plan);
+  syncCircuitTimerExercise(plan);
+  saveSmartTimer();
+  renderTimerPage();
+  return true;
+}
 function toggleExercise(id){
   logs[id]=logs[id]||{};
   logs[id].done=!logs[id].done;
+  const completed=!!logs[id].done;
   motion12SetItem('motion12.logs',JSON.stringify(logs));
-  document.getElementById('ex-'+id)?.classList.toggle('complete',logs[id].done);
+  document.getElementById('ex-'+id)?.classList.toggle('complete',completed);
+
+  if(completed&&advanceCircuitTimerFromCheckedExercise(id))return;
+
   const item=strengthSessionItemById(id);
   if(item){
     const firstIncomplete=strengthSessionSequence(item.day,item.date).find(step=>!logs[step.id]?.done);
