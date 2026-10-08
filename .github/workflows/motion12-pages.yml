@@ -1,6 +1,12 @@
 name: Motion 12 Preview Pages
 
 on:
+  push:
+    branches:
+      - motion12-preview
+    paths:
+      - 'public/motion12/**'
+      - '.github/workflows/motion12-pages.yml'
   workflow_dispatch:
 
 permissions:
