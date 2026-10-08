@@ -27,7 +27,7 @@ jobs:
       - name: Trigger Pages deployment from master
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run motion12-pages.yml --ref master
+        run: gh workflow run motion12-pages.yml --ref master --repo benresonance-star/GetUp
 
   deploy:
     if: github.ref == 'refs/heads/master'
