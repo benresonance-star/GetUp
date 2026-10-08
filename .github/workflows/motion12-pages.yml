@@ -1,4 +1,4 @@
-name: Motion 12 Preview Pages
+name: Motion 12 Pages
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
   pages: write
   id-token: write
 
@@ -19,14 +20,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  trigger-default-branch:
+    if: github.ref == 'refs/heads/motion12-preview'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Pages deployment from master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run motion12-pages.yml --ref master
+
   deploy:
+    if: github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout MOTION12 source
         uses: actions/checkout@v4
+        with:
+          ref: motion12-preview
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
