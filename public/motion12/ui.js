@@ -2092,7 +2092,7 @@ function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
   if(/isometric/i.test(name))return {category:'Tendon capacity',seconds:75,action:'rest',label:'1:15',note:'Recover 60–90 seconds between high-force rounds so force quality stays high.'};
   const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
   const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
-  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
+  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Jefferson curl','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
   if(name==='Aerobic intervals'||name==='Kettlebell + bodyweight 4×4'){
     const plan=timerSessionPlan(day,w);
     if(plan.kind==='intervals'){
