@@ -35,7 +35,9 @@ const program={
   ],support:[
     ['Jefferson curl','2 × 6–8 · 60 sec rest','Use bodyweight or a very light kettlebell. Move slowly from the head downward, allowing controlled segmental spinal flexion; pause briefly at your comfortable end range, then rebuild the spine from the bottom up. Keep the knees soft and never force depth.','First increase control and comfortable range. Add only the smallest practical load after 2 sessions where all reps are smooth, symmetrical and free of pain or next-day back irritation.']
   ]},
-  4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: combine explosive hip drive, a clean rack and controlled overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',work:[
+  4:{name:'Power Circuit',why:'Integrated kettlebell power plus crisp swings and pushing: combine explosive hip drive, a clean rack and controlled overhead strength without turning the session into a grind.',time:'16–24 min',tone:'orange',diet:'High-protein eating day',prep:[
+    ['Low pogo hops / calf pulses','2 × 15–20 sec · 30 sec recovery','Start with two-foot, low-amplitude, quiet springing; keep knees soft and land gently. Weeks 1–2 use 15 seconds, and progress to 20 seconds only after two comfortable sessions. If hopping is uncomfortable, keep both feet on the floor and perform light rhythmic calf raises. Stop if the Achilles, heel, foot or knee becomes painful.']
+  ],work:[
     ['2-hand kettlebell swing','20 sec work / 40 sec recovery','Aim for about 8–10 crisp swings, then stop even if time remains.','Power quality wins. If snap slows, reduce load or reps.','START: choose the heaviest bell you can swing for 10 technically crisp reps at RPE ≤6 with obvious speed left. If you do not yet have a calibrated swing load, start at 12 kg if learning the movement or 16 kg if your swing technique is already reliable. INCREASE: after 2 consecutive Thursday sessions completing every prescribed round with 8–10 crisp swings, no visible speed loss, final-session RPE ≤7 and no next-day low-back soreness, move to the next bell (+2–4 kg). If the jump is 4 kg, use 6–8 swings per work interval for the first 1–2 sessions. REDUCE immediately if snap, hinge position or breathing deteriorates.'],
     ['Push-up','20 sec work / 40 sec recovery','Use a variation that stays fast and technically clean.','Stop before reps grind.','BODYWEIGHT: do not add external load. Progress the variation only when all rounds remain fast at RPE ≤7.'],
     ['Single-kettlebell clean & press','40 sec work / 60 sec recovery','Use one kettlebell. Hinge and snap the bell into a soft rack, brace, then strict press overhead with no leg drive. Work both sides during the interval and keep every clean quiet at the forearm.','Aim for 2–3 crisp clean-and-press reps per side. Stop before either the clean gets loopy or the press slows. Build clean, matched reps before increasing load.','START: choose a bell you could strict press for about 8–10 clean reps when fresh; the press governs the load. INCREASE: only after 2 Thursday sessions where every clean lands softly, both sides match, every press stays smooth and final-session RPE stays ≤7. Move up one small bell (+2–4 kg) and return to about 2 reps per side. REDUCE immediately if the bell bangs the forearm, the clean arcs away from the body, the torso leans, or the press grinds.']
@@ -57,7 +59,9 @@ const program={
     ['Split-squat isometric','3 × 5 sec / side · 20–30 sec between sides · 60–90 sec between rounds','After the primary lifts, use a comfortable mid-range split squat with the front foot flat and roughly 60–90° knee flexion. Build force smoothly for about 1 second, hold hard for 3–4 seconds, then release under control at about 8–9/10 effort.','Progress force rather than duration. Add load only when all three rounds per side remain stable, symmetrical and pain-free with no next-day tendon irritation.'],
     ['Heavy calf raise isometric','3 × 5 sec / side · 20–30 sec between sides · 60–90 sec between rounds','Use a strong mid-range single-leg calf position without bouncing. Use a wall or frame only for balance. Build force smoothly, hold hard for 3–4 seconds, then release under control at about 8–9/10 effort.','Progress force rather than duration. Add the smallest practical load only when all three rounds are steady and pain-free with no next-day tendon irritation.']
   ]},
-  6:{name:'Aerobic Power',why:'Raise maximal aerobic power with repeatable high-quality work. Choose locomotion or kettlebell + bodyweight while keeping the same aerobic objective.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',work:[
+  6:{name:'Aerobic Power',why:'Raise maximal aerobic power with repeatable high-quality work. Choose locomotion or kettlebell + bodyweight while keeping the same aerobic objective.',time:'30–40 min',tone:'cyan',diet:'High-protein eating day',prep:[
+    ['Low pogo hops / calf pulses','2 × 15–20 sec · 30 sec recovery','Start with two-foot, low-amplitude, quiet springing; keep knees soft and land gently. Weeks 1–2 use 15 seconds, and progress to 20 seconds only after two comfortable sessions. If hopping is uncomfortable, keep both feet on the floor and perform light rhythmic calf raises. Stop if the Achilles, heel, foot or knee becomes painful.']
+  ],work:[
     ['Aerobic intervals','See weekly target','Uphill walk, jog, bike or stairs. Keep output repeatable.','Increase pace only if all intervals complete, <5% fade, ≤8.5/10 finish and recovery is adequate.']
   ]},
   0:{name:'Aerobic Base Circuit',why:'Build an easy aerobic base with continuous bodyweight and light kettlebell work while staying fresh for Monday.',time:'17–27 min',tone:'cyan',diet:'Normal eating day',work:[
@@ -72,7 +76,7 @@ const program={
   ]}
 };
 const mobility=[
- ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Bodyweight lateral lunge','5 / side']
+ ['Chin tuck','5 × 5 sec'],['Open-book rotation','5 / side'],['Band pull-apart','15'],['Wall slide','8'],['90/90 hip rotation','6 / side'],['Figure-four glute stretch','30 sec / side'],['Lateral lunge + cross-body reach','5 / side · step laterally, then reach across the body gently while keeping the movement comfortable']
 ];
 const conditioningRounds={
   2:[2,2,3,3,3,3,3,2,3,3,3,2],
@@ -135,6 +139,6 @@ const videoLinks={
   'Wall slide':[{label:'Form',url:'https://www.youtube.com/watch?v=Eaj_NG5_hIo'}],
   '90/90 hip rotation':[{label:'Form',url:'https://www.youtube.com/watch?v=t4Zz6-aG8Iw'}],
   'Figure-four glute stretch':[{label:'Form',url:'https://www.youtube.com/watch?v=-g0nuyTHMrI'}],
-  'Bodyweight lateral lunge':[{label:'Form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}]
+  'Lateral lunge + cross-body reach':[{label:'Lunge form',url:'https://www.youtube.com/watch?v=YCdVdzN0L_w'}]
 };
 function videosFor(name){return videoLinks[name]||[]}
