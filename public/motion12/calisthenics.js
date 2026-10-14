@@ -72,6 +72,8 @@ function setMode(mode){
  if(!['standard','calisthenics'].includes(mode))return;
  if(!writable()){renderHeader();return;}
  if(mode===settings.trainingSystem){renderHeader();return;}
+ if(isCal()&&activeSession){const r=record(activeSession.date,activeSession.day),t=r.timer||{};if(t.running)saveSession(activeSession.date,activeSession.day,{timer:{running:false,remaining:timerSeconds(activeSession.date,activeSession.day),endAt:0}});const it=r.interval||{};if(it.running)saveSession(activeSession.date,activeSession.day,{interval:{...it,running:false,remaining:intervalSeconds(it),endAt:0}});}
+ if(!isCal()&&typeof pauseSessionTimers==='function'&&((typeof smartTimer!=='undefined'&&smartTimer.running)||(typeof inlineTimer!=='undefined'&&inlineTimer.running)))pauseSessionTimers();
  stopTick();
  settings.trainingSystem=mode;
  if(mode==='calisthenics'&&!settings.calStartDate)settings.calStartDate=getMondayISO(new Date());
@@ -169,8 +171,35 @@ function pauseRest(date,day){
 function timerSeconds(date,day){const t=record(date,day).timer||{};return t.running?Math.max(0,Math.ceil((t.endAt-Date.now())/1000)):Math.max(0,t.remaining||0);}
 function clock(seconds){return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
 function stopTick(){if(timerTick){clearInterval(timerTick);timerTick=null;}}
+function intervalSegments(){return [240,180,240,180,240,180,240];}
+function intervalSeconds(t){return t.running?Math.max(0,Math.ceil((Number(t.endAt)-Date.now())/1000)):Math.max(0,Number(t.remaining)||0);}
+function updateInterval(date,day){
+ const r=record(date,day),t=r.interval||{};if(!t.running)return;
+ const segments=intervalSegments();let index=Math.min(segments.length-1,Math.max(0,Number(t.index)||0));let end=Number(t.endAt)||Date.now();
+ while(index<segments.length-1&&Date.now()>=end){index++;end+=segments[index]*1000;}
+ if(Date.now()>=end&&index===segments.length-1){
+  saveSession(date,day,{interval:{index:segments.length,running:false,remaining:0,endAt:0}});stopTick();return;
+ }
+ if(index!==t.index||end!==t.endAt)saveSession(date,day,{interval:{index,running:true,remaining:segments[index],endAt:end}});
+}
+function toggleInterval(date,day){
+ if(!writable())return;
+ const t=record(date,day).interval||{index:0,remaining:240,running:false,endAt:0};
+ if(Number(t.index)>=7){saveSession(date,day,{interval:{index:0,remaining:240,running:true,endAt:Date.now()+240000}});}
+ else if(t.running){saveSession(date,day,{interval:{...t,running:false,remaining:intervalSeconds(t),endAt:0}});}
+ else{const seconds=Number(t.remaining)||intervalSegments()[Number(t.index)||0];saveSession(date,day,{interval:{...t,running:true,remaining:seconds,endAt:Date.now()+seconds*1000}});}
+ renderSession(day,date);
+}
+function resetInterval(date,day){if(!writable())return;saveSession(date,day,{interval:{index:0,running:false,remaining:240,endAt:0}});stopTick();renderSession(day,date);}
+function intervalMarkup(date,day){
+ const r=record(date,day),t=r.interval||{index:0,remaining:240,running:false},index=Number(t.index)||0,finished=index>=7;
+ const phase=finished?'FINISHED':index%2===0?'WORK · ROUND '+(Math.floor(index/2)+1)+'/4':'RECOVER · ROUND '+(Math.floor(index/2)+1)+'/3';
+ const sec=finished?0:intervalSeconds(t);
+ return '<div class="card cal-session-timer"><span class="tag">AEROBIC POWER · 4 × 4 MIN / 3 MIN RECOVERY</span><h2 id="calPowerClock">'+clock(sec)+'</h2><p id="calPowerStatus">'+phase+'</p><div class="cal-actions"><button onclick="Motion12Cal.interval(\''+date+'\','+day+')">'+(finished?'Start again':t.running?'Pause':'Start / resume')+'</button><button onclick="Motion12Cal.resetInterval(\''+date+'\','+day+')">Reset intervals</button></div></div>';
+}
 function tick(date,day){
  if(!isCal()||!activeSession||activeSession.date!==date||activeSession.day!==day){stopTick();return;}
+ if(day===6){updateInterval(date,day);const state=record(date,day).interval||{},i=Number(state.index)||0;const el=document.getElementById('calPowerClock'),status=document.getElementById('calPowerStatus');if(el)el.textContent=clock(i>=7?0:intervalSeconds(state));if(status)status.textContent=i>=7?'FINISHED · COOL DOWN':i%2===0?'WORK · ROUND '+(Math.floor(i/2)+1)+'/4':'RECOVER · ROUND '+(Math.floor(i/2)+1)+'/3';return;}
  const sec=timerSeconds(date,day),el=document.getElementById('calRestClock');
  if(el)el.textContent=clock(sec);
  const t=record(date,day).timer||{};
@@ -210,11 +239,13 @@ function selector(ex,date,day,i){
 }
 function saveNote(date,day,id,value){setState(exkey(date,day,id),{note:String(value)});}
 function sessionControls(date,day){
+ if(day===6)return intervalMarkup(date,day)+endButtons(date,day);
  const s=timerSeconds(date,day),t=record(date,day).timer||{},r=record(date,day),resting=!!t.running||s>0;
  return '<div class="card cal-session-timer"><span class="tag">SESSION REST TIMER</span><h2 id="calRestClock">'+clock(s)+'</h2><p id="calRestStatus">'+(resting?(t.running?'Rest counting down':'Rest paused'):'Ready for the next set')+'</p><div class="cal-actions"><button onclick="Motion12Cal.rest(\''+date+'\','+day+',90)">Start 90s rest</button><button onclick="Motion12Cal.pauseRest(\''+date+'\','+day+')">'+(t.running?'Pause rest':'Resume rest')+'</button><button onclick="Motion12Cal.resetRest(\''+date+'\','+day+')">Reset rest</button></div></div>'+
- '<div class="cal-end-actions"><button type="button" onclick="Motion12Cal.pause(\''+date+'\','+day+')">'+(r.paused?'Reopen session':'Pause session')+'</button>'+
- '<button class="cal-finish" type="button" onclick="Motion12Cal.complete(\''+date+'\','+day+')">'+(r.completed?'✓ Session complete · undo':'Complete session')+'</button></div>';
+ endButtons(date,day);
 }
+function endButtons(date,day){const r=record(date,day);return '<div class="cal-end-actions"><button type="button" onclick="Motion12Cal.pause(\''+date+'\','+day+')">'+(r.paused?'Reopen session':'Pause session')+'</button>'+
+ '<button class="cal-finish" type="button" onclick="Motion12Cal.complete(\''+date+'\','+day+')">'+(r.completed?'✓ Session complete · undo':'Complete session')+'</button></div>';}
 function renderSession(day,date){
  const mount=document.getElementById('dayPage'),p=TYPES[day],r=record(date,day);
  const mobilityHTML='<div class="card cal-mobility"><h3>Daily mobility first</h3><p>'+clean(mobility.map(m=>m[0]+' '+m[1]).join(' · '))+'</p></div>';
@@ -226,7 +257,7 @@ function renderSession(day,date){
   '<div class="page-title"><div class="eyebrow">CALISTHENICS · '+WEEKDAYS[day]+' · WEEK '+weekNum()+'</div><h1>'+clean(p.name)+'</h1><p>'+clean(p.desc)+'</p><div class="hero-meta"><span class="pill">'+clean(p.time)+'</span>'+(r.paused?'<span class="pill">Session paused</span>':'')+'</div></div>'+
   '<section class="section"><div class="section-head"><h2>Movement preparation</h2><small>5–8 minutes</small></div>'+mobilityHTML+'</section>'+
   '<section class="section"><div class="section-head"><h2>'+((p.kind==='strength')?'Strength & capacity':'Session')+'</h2><small>Log each set</small></div><div class="cards">'+(all||summary)+'</div></section>'+support+sessionControls(date,day)+'</div>';
- if(r.timer?.running)startTick(date,day);
+ if(r.timer?.running||r.interval?.running)startTick(date,day);
 }
 function openCal(day,date){
  const d=Math.max(0,Math.min(6,Number(day)||0)),dayDate=/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:weeklyDate(d);
@@ -234,9 +265,9 @@ function openCal(day,date){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function applyModeRendering(){
- renderHome=function(){return isCal()?renderCalHome():STANDARD.renderHome();};
- renderDays=function(){return isCal()?renderCalDays():STANDARD.renderDays();};
- renderProgress=function(){return isCal()?renderCalProgress():STANDARD.renderProgress();};
+ renderHome=function(){renderHeader();return isCal()?renderCalHome():STANDARD.renderHome();};
+ renderDays=function(){renderHeader();return isCal()?renderCalDays():STANDARD.renderDays();};
+ renderProgress=function(){renderHeader();return isCal()?renderCalProgress():STANDARD.renderProgress();};
  openDay=function(day,date){return isCal()?openCal(day,date):STANDARD.openDay(day,date);};
 }
 function addStyles(){
@@ -271,7 +302,7 @@ function addStyles(){
 }
 window.Motion12Cal={
  switch:setMode,open:openCal,goal:saveGoal,saveSet:saveSet,finishSet:stepSet,note:saveNote,
- rest:startRest,pauseRest:pauseRest,resetRest:resetRest,pause:setPaused,complete:complete
+ rest:startRest,pauseRest:pauseRest,resetRest:resetRest,interval:toggleInterval,resetInterval:resetInterval,pause:setPaused,complete:complete
 };
 addStyles();headerHtml();applyModeRendering();
 if(isCal()){renderHome();renderDays();renderProgress();}
