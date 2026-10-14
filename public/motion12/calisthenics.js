@@ -146,7 +146,7 @@ function stepSet(date,day,id,index){
   const session=record(date,day),ix=exs.findIndex(x=>x[0]===id);
   if(sets.slice(0,required).every(x=>x&&x.done)){
     saveSession(date,day,{activeIndex:Math.min(exs.length-1,ix+1)});
-    resetRest(date,day);
+    if(day!==6)resetRest(date,day);
   }else{
     saveSession(date,day,{activeIndex:ix});
     const rest=all?all[4]:0;if(rest>0)startRest(date,day,rest);
@@ -210,6 +210,7 @@ function setPaused(date,day){
  const r=record(date,day);if(!writable())return;
  if(!r.paused){
   const t=r.timer||{};if(t.running)saveSession(date,day,{timer:{running:false,remaining:timerSeconds(date,day),endAt:0}});
+  const it=r.interval||{};if(it.running)saveSession(date,day,{interval:{...it,running:false,remaining:intervalSeconds(it),endAt:0}});
   saveSession(date,day,{paused:true,pausedAt:new Date().toISOString()});
   stopTick();
  }else saveSession(date,day,{paused:false,resumedAt:new Date().toISOString()});
@@ -219,7 +220,7 @@ function complete(date,day){
  if(!writable())return;
  const done=!!record(date,day).completed;
  saveSession(date,day,{completed:!done,completedAt:!done?new Date().toISOString():null,paused:false});
- resetRest(date,day);renderSession(day,date);renderDays();renderProgress();
+ if(day===6){saveSession(date,day,{interval:{index:0,running:false,remaining:240,endAt:0}});stopTick();}else resetRest(date,day);renderSession(day,date);renderDays();renderProgress();
 }
 function selector(ex,date,day,i){
  const id=ex[0],n=prescription(ex),d=logs[exkey(date,day,id)]||{},sets=d.sets||[];
