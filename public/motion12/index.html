@@ -251,7 +251,7 @@
           loadScript('calisthenics.js'),
           new Promise(function(_,reject){setTimeout(function(){reject(new Error('Calisthenics module timed out after 12 seconds'))},12000)})
         ]);
-        if(!window.Motion12Cal||typeof window.Motion12Cal.switch!=='function'){
+        if(!window.Motion12Cal||window.Motion12Cal.ready!==true||typeof window.Motion12Cal.switch!=='function'||document.getElementById('calModeSelect')?.disabled){
           throw new Error('Calisthenics module loaded but failed to initialise');
         }
       } catch(err) {
