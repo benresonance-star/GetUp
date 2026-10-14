@@ -84,10 +84,17 @@ function setMode(mode){
  renderHome();renderDays();renderProgress();
 }
 function headerHtml(){
- const el=document.createElement('div');el.className='cal-global-header';
- el.innerHTML='<label for="calModeSelect">TRAINING SYSTEM</label><select id="calModeSelect" aria-label="Training system"><option value="standard">Standard</option><option value="calisthenics">Calisthenics</option></select><span id="calVideoTop" hidden></span>';
- const hdr=document.querySelector('header.top');if(hdr)hdr.insertAdjacentElement('afterend',el);
- document.getElementById('calModeSelect').addEventListener('change',function(e){setMode(e.target.value);});
+ let select=document.getElementById('calModeSelect');
+ if(!select){
+   const el=document.createElement('div');el.className='cal-global-header';
+   el.innerHTML='<label for="calModeSelect">TRAINING SYSTEM</label><select id="calModeSelect" aria-label="Training system"><option value="standard">Standard</option><option value="calisthenics">Calisthenics</option></select><span id="calVideoTop" hidden></span>';
+   const hdr=document.querySelector('header.top');if(hdr)hdr.insertAdjacentElement('afterend',el);
+   select=document.getElementById('calModeSelect');
+ }
+ if(!select)throw new Error('Training system selector missing');
+ select.disabled=false;
+ const status=document.getElementById('calModeStatus');if(status)status.hidden=true;
+ select.addEventListener('change',function(e){setMode(e.target.value);});
  renderHeader();
 }
 function dayLine(day,date,expanded){
