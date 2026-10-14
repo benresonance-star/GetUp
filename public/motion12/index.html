@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r76-20261015" />
+  <meta name="motion12-build" content="canonical-r77-20261015" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -65,12 +65,17 @@
       font-weight:950;
       cursor:pointer;
     }
-    .cal-global-header{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 14px 10px;border-bottom:1px solid rgba(150,150,150,.16)}
+    .cal-global-header{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;margin:0 0 14px;border:1px solid var(--line,rgba(150,150,150,.22));border-radius:14px;background:var(--surface,#17191d);position:relative;z-index:1;min-height:62px}
     .cal-global-header label{font-weight:850;font-size:10px;letter-spacing:.08em;color:var(--muted,#aaa)}
     .cal-global-header select{flex:0 1 170px;min-height:42px;border:1px solid rgba(150,150,150,.32);border-radius:10px;background:var(--surface,#222);color:var(--ink,#fff);font-size:13px;font-weight:800;padding:8px 11px}
     .cal-global-header select:disabled{opacity:.55}
     .cal-global-header .cal-mode-status{font-size:10px;color:var(--muted,#aaa)}
     #calVideoTop:not([hidden]){display:block;flex:1 1 100%}
+    .cal-global-header select{flex:1 1 170px;max-width:230px;min-width:145px;min-height:44px;border:1px solid rgba(150,150,150,.42);border-radius:10px;background:#24272b;color:#fff;font-size:14px;font-weight:800;padding:8px 12px}
+    .cal-global-header label{display:block;flex:0 0 auto;color:var(--muted,#bbb);font-weight:850;font-size:11px;letter-spacing:.075em}
+    .cal-global-header .cal-mode-status{flex:1 1 100%;font-size:11px;line-height:1.4;color:var(--muted,#aaa)}
+    .cal-global-header .cal-mode-status[hidden],#calVideoTop[hidden]{display:none!important}
+    @media(max-width:520px){.cal-global-header{margin-top:8px}}
   </style>
 </head>
 <body>
@@ -86,6 +91,7 @@
       </div>
     </div>
   </header>
+  <main>
   <div class="cal-global-header" role="group" aria-label="Training system selector">
     <label for="calModeSelect">TRAINING SYSTEM</label>
     <select id="calModeSelect" aria-label="Training system" disabled>
@@ -95,7 +101,6 @@
     <span class="cal-mode-status" id="calModeStatus" aria-live="polite">Loading training options…</span>
     <span id="calVideoTop" hidden></span>
   </div>
-  <main>
     <section id="homePage" class="page active"></section>
     <section id="daysPage" class="page"></section>
     <section id="dayPage" class="page"></section>
@@ -227,7 +232,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src='./'+src+'?v=r75';
+        s.src='./'+src+'?v=r77';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);
@@ -242,11 +247,22 @@
       await loadScript('state.js');
       await loadScript('ui.js');
       try {
-        await loadScript('calisthenics.js');
+        await Promise.race([
+          loadScript('calisthenics.js'),
+          new Promise(function(_,reject){setTimeout(function(){reject(new Error('Calisthenics module timed out after 12 seconds'))},12000)})
+        ]);
+        if(!window.Motion12Cal||typeof window.Motion12Cal.switch!=='function'){
+          throw new Error('Calisthenics module loaded but failed to initialise');
+        }
       } catch(err) {
         console.error('Calisthenics training mode failed to load',err);
         var modeStatus=document.getElementById('calModeStatus');
-        if(modeStatus)modeStatus.textContent='New training mode unavailable — select Force app update in Settings.';
+        var modeSelect=document.getElementById('calModeSelect');
+        if(modeSelect)modeSelect.disabled=true;
+        if(modeStatus){
+          modeStatus.hidden=false;
+          modeStatus.textContent='Calisthenics unavailable: '+String(err&&err.message||err)+'. Try Settings → Force app update.';
+        }
       }
       scriptsLoaded=true;
       applyReadOnlyShell();
