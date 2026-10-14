@@ -1,0 +1,83 @@
+/* MOTION12 r16 — workout surfaces follow the selected app palette.
+   Workout identity is conveyed by labels/content; colour comes from the active theme. */
+
+/* Main Home workout card — full view */
+.hero{
+  background:linear-gradient(135deg,var(--volt) 0%,var(--orange) 100%);
+}
+
+/* Main Home workout card — compact view */
+.compact-session{
+  border-color:rgba(var(--accent-rgb),.48);
+  background:linear-gradient(135deg,var(--volt) 0%,var(--orange) 100%);
+  box-shadow:0 10px 30px rgba(var(--accent-rgb),.12);
+}
+
+/* Session launch buttons previously kept day-specific hard-coded colours.
+   They now inherit the active palette in all workout types. */
+.day-session-btn,
+.day-session-btn.cyan,
+.day-session-btn.pink,
+.day-session-btn.orange{
+  border-color:rgba(var(--accent-rgb),.42);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.12),rgba(var(--accent2-rgb),.07));
+}
+.day-session-btn:hover,
+.day-session-btn:focus-visible{
+  border-color:rgba(var(--accent-rgb),.70);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.18),rgba(var(--accent2-rgb),.10));
+}
+
+/* Workout/session focus and active states */
+.session-mode-badge{
+  border-color:rgba(var(--accent-rgb),.35);
+  color:var(--volt);
+  background:rgba(var(--accent-rgb),.07);
+}
+.workout-primary-timer{
+  border-color:rgba(var(--accent-rgb),.18);
+}
+.timer-context span,
+.timer-next-stage b{
+  color:var(--volt);
+}
+.timer-next{
+  border-color:rgba(var(--accent2-rgb),.24);
+  background:rgba(var(--accent2-rgb),.06);
+}
+.smart-timer-controls .timer-primary,
+.workout-primary-timer .smart-timer-controls .timer-primary{
+  background:var(--volt);
+  border-color:var(--volt);
+}
+
+/* Exercise/session state */
+.exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current,
+.strength-session-slice.session-current{
+  border-color:rgba(var(--accent-rgb),.64);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.075),var(--surface) 40%);
+  box-shadow:inset 3px 0 0 rgba(var(--accent-rgb),.86);
+}
+.strength-set-row.active{
+  border-color:rgba(var(--accent-rgb),.56);
+  background:rgba(var(--accent-rgb),.06);
+}
+.strength-set-row.active input:focus{
+  border-color:rgba(var(--accent-rgb),.72);
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb),.10);
+}
+
+/* Progress belongs to the selected theme as well. */
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.18),0 0 12px rgba(var(--accent-rgb),.14);
+}
+
+/* Preserve the dark high-contrast START pill on bright workout cards. */
+.compact-session-right span,
+.hero .cta{
+  background:#0b0c0e;
+  color:white;
+}

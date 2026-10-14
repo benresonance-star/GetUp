@@ -1,0 +1,103 @@
+/* MOTION12 r11
+   Keep workout timer actions visibly attached beneath the dial in every view. */
+
+.workout-primary-timer,
+.workout-timer-block,
+.session-stage-timer{
+  overflow:visible !important;
+}
+
+.workout-timer-footer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative;
+  z-index:4;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+
+.workout-primary-timer .smart-timer-controls{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative;
+  z-index:5;
+  width:100%;
+  min-height:44px;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.workout-primary-timer .smart-timer-controls button{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  min-width:84px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--ink);
+  font-size:11px;
+  line-height:1;
+  font-weight:900;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.workout-primary-timer .smart-timer-controls .timer-primary{
+  min-width:112px;
+  background:var(--volt);
+  border-color:var(--volt);
+  color:#0b0c0e;
+}
+
+.workout-primary-timer .smart-timer-controls .timer-reset{
+  background:#101215;
+  color:var(--ink);
+}
+
+/* Compact changes spacing around the workout, not the visibility of its controls. */
+#dayPage.compact-active .workout-timer-footer{
+  display:block !important;
+  margin-top:12px;
+  padding-top:12px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls{
+  display:flex !important;
+  gap:8px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+  display:inline-flex !important;
+  min-height:44px;
+  padding:10px 14px;
+  font-size:11px;
+}
+
+@media(max-width:390px){
+  .workout-timer-footer{
+    margin-top:10px;
+    padding-top:10px;
+  }
+  .workout-primary-timer .smart-timer-controls{
+    gap:7px;
+  }
+  .workout-primary-timer .smart-timer-controls button,
+  #dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+    min-height:42px;
+    min-width:78px;
+    padding:9px 12px;
+    font-size:10.5px;
+  }
+  .workout-primary-timer .smart-timer-controls .timer-primary{
+    min-width:104px;
+  }
+}

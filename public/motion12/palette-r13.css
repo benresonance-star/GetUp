@@ -1,0 +1,233 @@
+/* MOTION12 r13 — app colour palettes selected in Settings.
+   Ember is the original red/orange MOTION12 palette. */
+
+:root,
+html[data-app-palette="ember"]{
+  --volt:#ff4d2e;
+  --orange:#ff7a1a;
+  --cyan:#3be7e1;
+  --pink:#ff4fa3;
+  --accent-rgb:255,77,46;
+  --accent2-rgb:255,122,26;
+}
+html[data-app-palette="ocean"]{
+  --volt:#38a6ff;
+  --orange:#20d6c7;
+  --cyan:#69e7ff;
+  --pink:#8f7cff;
+  --accent-rgb:56,166,255;
+  --accent2-rgb:32,214,199;
+}
+html[data-app-palette="forest"]{
+  --volt:#4fd270;
+  --orange:#b4df45;
+  --cyan:#42d9b7;
+  --pink:#efb451;
+  --accent-rgb:79,210,112;
+  --accent2-rgb:180,223,69;
+}
+html[data-app-palette="violet"]{
+  --volt:#8c72ff;
+  --orange:#d45cff;
+  --cyan:#63dcff;
+  --pink:#ff71b3;
+  --accent-rgb:140,114,255;
+  --accent2-rgb:212,92,255;
+}
+html[data-app-palette="gold"]{
+  --volt:#ffb62e;
+  --orange:#ff7a1a;
+  --cyan:#54d9c7;
+  --pink:#ff786e;
+  --accent-rgb:255,182,46;
+  --accent2-rgb:255,122,26;
+}
+html[data-app-palette="rose"]{
+  --volt:#ff5f8f;
+  --orange:#ff8c51;
+  --cyan:#62dce7;
+  --pink:#bc79ff;
+  --accent-rgb:255,95,143;
+  --accent2-rgb:255,140,81;
+}
+
+/* Replace legacy hard-coded ember glows with the selected palette. */
+.app{
+  background:
+    radial-gradient(circle at 90% -5%,rgba(var(--accent-rgb),.12),transparent 26%),
+    var(--bg);
+}
+.accent,
+.fast-card{
+  border-color:rgba(var(--accent-rgb),.28);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),var(--surface) 42%);
+}
+.progress-rule{
+  border-left-color:var(--volt);
+  background:rgba(var(--accent-rgb),.05);
+}
+.day-list .todaycard{
+  border-color:var(--volt);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.15) inset;
+}
+.day-session-btn{
+  border-color:rgba(var(--accent-rgb),.45);
+  background:rgba(var(--accent-rgb),.11);
+}
+.day-session-btn.orange{
+  border-color:rgba(var(--accent2-rgb),.42);
+  background:rgba(var(--accent2-rgb),.09);
+}
+.video-link{
+  border-color:rgba(var(--accent-rgb),.35);
+}
+.video-link:hover{
+  background:rgba(var(--accent-rgb),.10);
+}
+.session-mode-badge,
+.session-timer-link{
+  border-color:rgba(var(--accent-rgb),.35);
+  background:rgba(var(--accent-rgb),.07);
+}
+.exercise.active-timer,
+#dayPage.compact-active .workout-exercises-section>.exercise.compact-current{
+  border-color:rgba(var(--accent-rgb),.62);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.07),var(--surface) 40%);
+  box-shadow:inset 3px 0 0 rgba(var(--accent-rgb),.82);
+}
+.strength-session-slice,
+.strength-set-flow,
+.strength-flow-status,
+.strength-set-row.active,
+.strength-session-cue{
+  border-color:rgba(var(--accent-rgb),.30);
+}
+.strength-set-row.active,
+.strength-session-cue{
+  background:rgba(var(--accent-rgb),.055);
+}
+.strength-set-flow.resting .strength-flow-status,
+.strength-next.ready{
+  border-color:rgba(var(--accent2-rgb),.34);
+  background:rgba(var(--accent2-rgb),.07);
+}
+.timer-ring{
+  --timer-red:var(--volt);
+  --timer-orange:var(--orange);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.018),
+    0 0 26px rgba(var(--accent-rgb),.065);
+}
+.timer-next{
+  border-color:rgba(var(--accent2-rgb),.24);
+  background:rgba(var(--accent2-rgb),.06);
+}
+.timer-progress-segment.current,
+.strength-progress-segment.current{
+  background:linear-gradient(90deg,var(--orange),var(--volt));
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.18),0 0 12px rgba(var(--accent-rgb),.12);
+}
+.meal-swap-button,
+.compact-meal-swap,
+.meal-component-swap,
+.meal-match-toggle,
+.meal-swap-all{
+  border-color:rgba(var(--accent-rgb),.30);
+  background-color:rgba(var(--accent-rgb),.06);
+}
+.meal-match-toggle{
+  background:rgba(var(--accent-rgb),.055);
+}
+
+/* Settings swatch picker */
+.app-colour-field{
+  margin-top:18px!important;
+}
+.app-colour-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.app-colour-head label{
+  margin:0!important;
+}
+.app-colour-head b{
+  color:var(--volt);
+  font-size:11px;
+  font-weight:950;
+}
+.palette-picker{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:7px;
+}
+.palette-swatch{
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#111316;
+  padding:6px 4px 7px;
+  display:grid;
+  place-items:center;
+  gap:5px;
+  color:var(--muted);
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.palette-swatch-preview{
+  width:100%;
+  max-width:42px;
+  aspect-ratio:1.45;
+  border-radius:9px;
+  background:
+    linear-gradient(135deg,var(--sw1) 0 52%,var(--sw2) 52% 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.palette-swatch small{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:7px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.palette-swatch.selected{
+  border-color:var(--volt);
+  color:var(--ink);
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb),.12);
+}
+.palette-swatch.selected .palette-swatch-preview{
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    0 0 0 2px rgba(var(--accent-rgb),.24);
+}
+.palette-picker-note{
+  margin:8px 2px 0!important;
+}
+body.motion12-readonly .palette-swatch{
+  pointer-events:none!important;
+  opacity:.45!important;
+}
+
+@media(max-width:420px){
+  .palette-picker{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .palette-swatch{
+    grid-template-columns:34px minmax(0,1fr);
+    justify-items:start;
+    padding:6px 7px;
+  }
+  .palette-swatch-preview{
+    width:34px;
+    max-width:none;
+  }
+  .palette-swatch small{
+    font-size:8px;
+  }
+}

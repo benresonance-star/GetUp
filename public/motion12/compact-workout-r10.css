@@ -1,0 +1,94 @@
+/* MOTION12 r10
+   Canonical session contract:
+   mobility → prep → progress → timer → main → support → complete.
+   Compact mode is presentation-only and must not remove or reorder a stage. */
+
+.workout-session{
+  display:block;
+}
+.workout-session>.session-stage{
+  display:block;
+  position:relative;
+}
+.workout-session>.session-stage:empty{
+  display:none;
+}
+
+/* Guardrail: compact mode cannot hide canonical stages. */
+#dayPage.compact-active .workout-session>.session-stage{
+  display:block;
+}
+#dayPage.compact-active .workout-session>.session-stage:empty{
+  display:none;
+}
+
+/* Movement-specific prep remains part of Compact mode.
+   It is visually condensed, but the actual prep movements remain present. */
+#dayPage.compact-active .prep-section{
+  display:block;
+  margin:0 0 10px;
+}
+#dayPage.compact-active .prep-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .prep-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .prep-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .num{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:9px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .check{
+  width:28px;
+  height:28px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .ex-name h3{
+  margin:0 0 1px;
+  font-size:13px;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .ex-name p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .prep-section>.prep-exercise .video-link{
+  display:none;
+}
+#dayPage.compact-active .prep-section>.prep-exercise>.tip{
+  display:none;
+}
+
+/* Keep canonical stage spacing predictable in both views. */
+.session-stage-mobility{margin-top:0}
+.session-stage-prep,
+.session-stage-progress,
+.session-stage-timer,
+.session-stage-main,
+.session-stage-support,
+.session-stage-complete{
+  margin-top:0;
+}
+
+/* Complete is always the final actionable stage. */
+.session-stage-complete .complete-session{
+  margin-top:10px;
+}
+#dayPage.compact-active .session-stage-complete .complete-session{
+  margin-top:7px;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .prep-section>.prep-exercise{
+    padding:8px 9px;
+  }
+}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e10">
+  <title>MOTION12 Update</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0d0e10;color:#f4f5f6;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;padding:24px}
+    .card{width:min(430px,100%);border:1px solid #2b3036;border-radius:24px;background:#15181b;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+    .brand{font-size:22px;font-weight:950;letter-spacing:-.05em}.brand i{font-style:normal;color:#38a6ff}
+    h1{font-size:28px;line-height:1.05;margin:26px 0 10px}
+    p{color:#b8bbc1;line-height:1.5;margin:0}
+    .status{margin-top:20px;padding:13px 14px;border:1px solid #2b3036;border-radius:14px;background:#0f1113;font-size:13px;line-height:1.45}
+    .status.ok{border-color:rgba(56,166,255,.42);color:#dbeeff}
+    .status.error{border-color:rgba(255,95,143,.42);color:#ffdce7}
+    button{width:100%;min-height:50px;margin-top:16px;border:0;border-radius:14px;background:#38a6ff;color:#071019;font-size:15px;font-weight:950}
+    small{display:block;margin-top:16px;color:#7f858c;line-height:1.45}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">MOTION<i>12</i></div>
+    <h1>Updating the app</h1>
+    <p>This page updates MOTION12 without clearing IndexedDB, settings, session logs, or the recovery shadow.</p>
+    <div class="status" id="status">Checking the installed app…</div>
+    <button id="continueBtn" type="button" hidden>Open MOTION12</button>
+    <small>If the update fails, your training data is left untouched.</small>
+  </main>
+<script>
+(function(){
+  var status=document.getElementById('status');
+  var btn=document.getElementById('continueBtn');
+  var finished=false;
+
+  function setStatus(text,type){
+    status.textContent=text;
+    status.className='status '+(type||'');
+  }
+  function go(){
+    if(finished)return;
+    finished=true;
+    location.replace('./index.html');
+  }
+  function waitForInstalled(worker){
+    return new Promise(function(resolve,reject){
+      if(!worker)return resolve(null);
+      if(worker.state==='installed')return resolve(worker);
+      if(worker.state==='activated')return resolve(worker);
+      var timer=setTimeout(function(){resolve(worker)},12000);
+      worker.addEventListener('statechange',function(){
+        if(worker.state==='installed'||worker.state==='activated'){
+          clearTimeout(timer);resolve(worker);
+        }else if(worker.state==='redundant'){
+          clearTimeout(timer);reject(new Error('Update worker became redundant'));
+        }
+      });
+    });
+  }
+  async function run(){
+    if(!('serviceWorker' in navigator)){
+      setStatus('Service workers are unavailable here. Opening MOTION12 from the network…','error');
+      btn.hidden=false;btn.onclick=go;
+      return;
+    }
+    try{
+      var reg=await navigator.serviceWorker.getRegistration('./');
+      if(!reg){
+        setStatus('Installing the current MOTION12 app…');
+        reg=await navigator.serviceWorker.register('./service-worker.js',{scope:'./',updateViaCache:'none'});
+      }else{
+        setStatus('Checking for the newest MOTION12 build…');
+        await reg.update();
+      }
+
+      var worker=reg.waiting;
+      if(!worker&&reg.installing)worker=await waitForInstalled(reg.installing);
+
+      if(worker&&worker.state!=='activated'){
+        setStatus('Activating the newest MOTION12 build…');
+        navigator.serviceWorker.addEventListener('controllerchange',function(){
+          setStatus('Update complete. Opening MOTION12…','ok');
+          setTimeout(go,250);
+        },{once:true});
+        worker.postMessage({type:'SKIP_WAITING'});
+        setTimeout(function(){
+          setStatus('Update complete. Opening MOTION12…','ok');
+          go();
+        },4000);
+        return;
+      }
+
+      setStatus('MOTION12 is current. Opening the app…','ok');
+      setTimeout(go,500);
+    }catch(err){
+      setStatus('Could not complete the update: '+String(err&&err.message||err),'error');
+      btn.hidden=false;btn.onclick=go;
+    }
+  }
+  btn.onclick=go;
+  run();
+})();
+</script>
+</body>
+</html>
