@@ -144,13 +144,15 @@ function stepSet(date,day,id,index){
  const required=all?prescription(all):sets.length;
  if(nextDone){
   const session=record(date,day),ix=exs.findIndex(x=>x[0]===id);
-  if(sets.slice(0,required).every(x=>x&&x.done)){
+  if(Array.from({length:required},(_,i)=>!!sets[i]?.done).every(Boolean)){
     saveSession(date,day,{activeIndex:Math.min(exs.length-1,ix+1)});
     if(day!==6)resetRest(date,day);
   }else{
     saveSession(date,day,{activeIndex:ix});
     const rest=all?all[4]:0;if(rest>0)startRest(date,day,rest);
   }
+ }else{
+  const ix=exs.findIndex(x=>x[0]===id);saveSession(date,day,{activeIndex:ix});if(day!==6)resetRest(date,day);
  }
  renderSession(day,date);
 }
@@ -225,7 +227,8 @@ function complete(date,day){
 function selector(ex,date,day,i){
  const id=ex[0],n=prescription(ex),d=logs[exkey(date,day,id)]||{},sets=d.sets||[];
  const g=goal(id),prior=previousSet(id,date,0);
- return '<div class="card cal-exercise" id="calExercise'+i+'"><div class="cal-exercise-top"><span class="cal-day-index">'+String(i+1).padStart(2,'0')+'</span><div class="cal-grow"><h3>'+clean(ex[1])+'</h3><p>'+clean(ex[2])+' · '+clean(ex[3])+'</p></div></div>'+
+ return '<div class="card cal-exercise '+(Number(record(date,day).activeIndex||0)===i?'cal-current':'')+'" id="calExercise'+i+'"><div class="cal-exercise-top"><span class="cal-day-index">'+String(i+1).padStart(2,'0')+'</span><div class="cal-grow"><h3>'+clean(ex[1])+'</h3><p>'+clean(ex[2])+' · '+clean(ex[3])+'</p></div></div>'+
+  (weekNum()<=2&&n<Number(String(ex[2]).match(/^\d+/)?.[0]||n)?'<p class="cal-progress-hint">Foundation phase: '+n+' working sets; build towards '+clean(ex[2])+'.</p>':'')+
   (g.baseline>0?'<p class="cal-progress-hint">Baseline '+g.baseline+' · personal target '+g.target+' · '+clean(g.variation||'Choose suitable variation')+'</p>':'<p class="cal-progress-hint">Set a baseline in Progress to personalise targets.</p>')+
   (prior?'<p class="cal-last">Previous matching set: '+clean(prior.reps||'—')+' reps'+(prior.load?' · '+clean(prior.load)+' kg':'')+'</p>':'')+
   '<div class="cal-sets">'+Array.from({length:n},(_,j)=>{
@@ -289,7 +292,7 @@ function addStyles(){
  '.cal-goal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:13px 0}',
  '.cal-goal label,.cal-set label,.cal-notes{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:750;color:var(--muted,#aaa)}',
  '.cal-goal input,.cal-set input,.cal-notes textarea{width:100%;min-width:0;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid rgba(150,150,150,.3);background:var(--surface,#202020);color:var(--ink,#fff);font-size:14px}',
- '.cal-exercise{margin-bottom:12px}.cal-exercise-top{display:flex;gap:10px;align-items:flex-start}.cal-exercise-top h3{margin:0 0 6px}',
+ '.cal-exercise{margin-bottom:12px}.cal-current{border-color:rgba(var(--accent-rgb,255,77,46),.55)!important}.cal-exercise-top{display:flex;gap:10px;align-items:flex-start}.cal-exercise-top h3{margin:0 0 6px}',
  '.cal-progress-hint,.cal-last{font-size:12px;color:var(--muted,#aaa);line-height:1.5;margin:12px 0 5px}',
  '.cal-sets{display:flex;flex-direction:column;gap:7px;margin:12px 0}.cal-set{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,.9fr) minmax(0,.65fr) 36px;gap:7px;align-items:end;padding:8px;border:1px solid rgba(150,150,150,.15);border-radius:10px}',
  '.cal-set>span{align-self:center;font-size:11px;font-weight:850}.cal-set-done{border-color:rgba(25,180,145,.45);background:rgba(25,180,145,.07)}',
