@@ -317,4 +317,5 @@ window.Motion12Cal={
 };
 addStyles();headerHtml();applyModeRendering();
 if(isCal()){renderHome();renderDays();renderProgress();}
+window.Motion12Cal.ready=true;
 })();
