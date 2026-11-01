@@ -12,7 +12,20 @@ body:has(#homePage.active) main { padding-top:4px; }
 }
 html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area-inset-top,0px) + 104px); }
 
-.motion-sector-stack { display:grid; gap:9px; max-width:600px; margin:0 auto; }
+/* Home typography contract: one scale for all four cards.
+   Content and copy remain in JS; visual roles live here. */
+.motion-sector-stack {
+  --m12-type-section:17px;
+  --m12-type-display:28px;
+  --m12-type-feature:23px;
+  --m12-type-stat:18px;
+  --m12-type-target:15px;
+  --m12-type-body:10px;
+  --m12-type-label:9.5px;
+  --m12-type-action:10px;
+  display:grid; gap:9px; max-width:600px; margin:0 auto;
+  font-variant-numeric:tabular-nums;
+}
 .motion-sector {
   min-width:0; padding:13px 15px 12px; border:1px solid var(--line);
   border-radius:20px; background:var(--surface); overflow:hidden;
@@ -20,42 +33,42 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-sector-title { display:flex; align-items:center; min-height:22px; gap:9px; margin-bottom:11px; }
 .motion-sector-number { display:grid; place-items:center; width:25px; height:25px; flex:none;
   border-radius:8px; background:rgba(var(--accent-rgb,255,77,46),.12);
-  color:var(--volt); font-size:10px; font-weight:950; letter-spacing:-.02em; }
-.motion-sector-title h2 { flex:1; min-width:0; margin:0; font-size:17px; line-height:1.13; font-weight:900; letter-spacing:-.04em; }
-.motion-sector-side { color:var(--muted); font-size:9px; font-weight:900; letter-spacing:.055em; text-align:right; white-space:nowrap; }
+  color:var(--volt); font-size:var(--m12-type-body); font-weight:900; letter-spacing:-.02em; }
+.motion-sector-title h2 { flex:1; min-width:0; margin:0; font-size:var(--m12-type-section); line-height:1.13; font-weight:900; letter-spacing:-.035em; }
+.motion-sector-side { color:var(--muted); font-size:var(--m12-type-label); font-weight:850; letter-spacing:.055em; text-align:right; white-space:nowrap; }
 
 .motion-goals { background:#392320; }
 .motion-goal-row { display:grid; grid-template-columns:1.06fr .94fr; gap:14px; }
 .motion-key-figure { display:flex; flex-direction:column; min-width:0; }
-.motion-key-figure strong { color:var(--ink); font-size:25px; line-height:1.04; letter-spacing:-.055em; font-weight:950; white-space:nowrap; }
+.motion-key-figure strong { color:var(--ink); font-size:var(--m12-type-display); line-height:1.04; letter-spacing:-.05em; font-weight:950; white-space:nowrap; }
 .motion-key-figure em { font-style:normal; font-size:12px; letter-spacing:-.025em; }
-.motion-key-figure small { margin-top:3px; color:var(--muted); font-size:10px; font-weight:650; }
+.motion-key-figure small { margin-top:3px; color:var(--muted); font-size:var(--m12-type-body); font-weight:650; }
 .motion-progress-line,.motion-calorie-track { height:4px; border-radius:99px; overflow:hidden; background:rgba(255,255,255,.09); }
 .motion-progress-line { margin-top:12px; }
 .motion-progress-line span { display:block; height:100%; background:var(--volt); border-radius:inherit; }
 .motion-sector-foot { margin-top:7px; display:flex; align-items:center; gap:7px; justify-content:space-between; }
-.motion-sector-foot>span { min-width:0; color:var(--muted); font-size:9px; line-height:1.25; }
-.motion-sector-foot button { flex:none; padding:3px 0 3px 6px; border:0; background:none; color:var(--volt); font-size:9px; font-weight:950; cursor:pointer; }
+.motion-sector-foot>span { min-width:0; color:var(--muted); font-size:var(--m12-type-label); line-height:1.25; }
+.motion-sector-foot button { flex:none; padding:3px 0 3px 6px; border:0; background:none; color:var(--volt); font-size:var(--m12-type-action); font-weight:900; cursor:pointer; }
 .motion-fitness-goal-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:10px; }
 .motion-fitness-goal-strip>div { min-width:0; padding:7px 6px 6px; border-radius:9px; background:rgba(255,255,255,.045); text-align:center; }
-.motion-fitness-goal-strip strong { display:block; font-size:17px; line-height:1; font-weight:950; color:var(--ink); font-variant-numeric:tabular-nums; }
-.motion-fitness-goal-strip small { display:block; margin-top:4px; font-size:8px; line-height:1.15; color:var(--muted); font-weight:800; }
+.motion-fitness-goal-strip strong { display:block; font-size:var(--m12-type-target); line-height:1; font-weight:950; color:var(--ink); }
+.motion-fitness-goal-strip small { display:block; margin-top:4px; font-size:var(--m12-type-label); line-height:1.15; color:var(--muted); font-weight:750; }
 
 .motion-nutrition { background:#372c20; }
 .motion-calorie-row { display:grid; grid-template-columns:.9fr 1.25fr; align-items:end; gap:8px; }
-.motion-calorie-total strong { display:block; font-size:33px; line-height:.97; letter-spacing:-.06em; font-weight:950; color:var(--ink); }
-.motion-calorie-total>span { display:block; margin-top:4px; color:var(--muted); font-size:10px; font-weight:650; }
+.motion-calorie-total strong { display:block; font-size:var(--m12-type-display); line-height:1.04; letter-spacing:-.05em; font-weight:950; color:var(--ink); }
+.motion-calorie-total>span { display:block; margin-top:4px; color:var(--muted); font-size:var(--m12-type-body); font-weight:650; }
 .motion-macro-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
 .motion-macro-grid>div { min-width:0; padding:7px 3px 5px; background:rgba(255,255,255,.035); border-radius:9px; text-align:center; }
-.motion-macro-grid b { display:block; font-size:17px; font-weight:950; letter-spacing:-.045em; white-space:nowrap; }
+.motion-macro-grid b { display:block; font-size:var(--m12-type-stat); font-weight:950; letter-spacing:-.04em; white-space:nowrap; }
 .motion-macro-grid b small { font-size:9px; color:var(--muted); font-weight:800; }
-.motion-macro-grid span { display:block; margin-top:2px; font-size:7.5px; letter-spacing:.045em; color:var(--muted); font-weight:900; }
+.motion-macro-grid span { display:block; margin-top:2px; font-size:var(--m12-type-label); letter-spacing:.045em; color:var(--muted); font-weight:850; }
 .motion-calorie-track { margin-top:9px; }
 .motion-calorie-track span { display:block; height:100%; border-radius:inherit; background:var(--cyan); }
 
 .motion-sector-details { margin-top:8px; border-top:1px solid var(--line); }
 .motion-sector-details summary { display:flex; align-items:center; justify-content:space-between; list-style:none; cursor:pointer;
-  padding:8px 0 0; color:var(--muted); font-size:9px; font-weight:950; letter-spacing:.075em; }
+  padding:8px 0 0; color:var(--muted); font-size:var(--m12-type-label); font-weight:900; letter-spacing:.075em; }
 .motion-sector-details summary::-webkit-details-marker { display:none; }
 .motion-sector-details summary span { font-size:15px; font-weight:700; line-height:.65; transition:transform .15s; }
 .motion-sector-details[open] summary span { transform:rotate(180deg); }
@@ -67,9 +80,9 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 
 .motion-bodycomp-details { margin-top:5px; }
 .motion-bodycomp-details summary { gap:7px; justify-content:initial; min-width:0; }
-.motion-bodycomp-details summary .motion-bodycomp-summary-label { flex:none; font-size:8px; transform:none; }
-.motion-bodycomp-details summary b { flex:1; min-width:0; text-align:right; font-size:9px; font-weight:850; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
-.motion-bodycomp-details summary .motion-bodycomp-edit { flex:none; color:var(--volt); font-size:9px; transform:none; }
+.motion-bodycomp-details summary .motion-bodycomp-summary-label { flex:none; font-size:var(--m12-type-label); transform:none; }
+.motion-bodycomp-details summary b { flex:1; min-width:0; text-align:right; font-size:var(--m12-type-body); font-weight:850; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
+.motion-bodycomp-details summary .motion-bodycomp-edit { flex:none; color:var(--volt); font-size:var(--m12-type-action); transform:none; }
 .motion-bodycomp-details[open] summary .motion-bodycomp-summary-label,
 .motion-bodycomp-details[open] summary .motion-bodycomp-edit { transform:none; }
 .motion-bodycomp-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-items:end; padding-top:11px; }
@@ -80,9 +93,9 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-bodycomp-form p:empty { display:none; }
 .motion-fitness-details { margin-top:7px; }
 .motion-fitness-details summary { gap:7px; justify-content:initial; }
-.motion-fitness-details summary>span:first-child { flex:none; font-size:8px; line-height:1.3; transform:none; }
+.motion-fitness-details summary>span:first-child { flex:none; font-size:var(--m12-type-label); line-height:1.3; transform:none; }
 .motion-fitness-details summary b { flex:1; min-width:0; text-align:right; font-size:9px; font-weight:650; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--muted); }
-.motion-fitness-details summary .motion-fitness-edit { flex:none; font-size:9px; font-weight:950; color:var(--volt); line-height:1.3; transform:none; }
+.motion-fitness-details summary .motion-fitness-edit { flex:none; font-size:var(--m12-type-action); font-weight:900; color:var(--volt); line-height:1.3; transform:none; }
 .motion-fitness-details[open] summary>span:first-child,
 .motion-fitness-details[open] summary .motion-fitness-edit { transform:none; }
 .motion-fitness-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; align-items:start; padding-top:11px; }
@@ -107,13 +120,13 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 
 .motion-training { border-color:rgba(var(--accent-rgb,255,77,46),.40); background:#2b273b; }
 .motion-system-select { max-width:135px; min-width:0; padding:6px 7px; border:1px solid var(--line); border-radius:9px;
-  background:var(--surface2); color:var(--muted); font-size:9px; font-weight:950; cursor:pointer; }
+  background:var(--surface2); color:var(--muted); font-size:var(--m12-type-label); font-weight:900; cursor:pointer; }
 .motion-training-row { display:flex; align-items:center; gap:10px; justify-content:space-between; }
 .motion-training-row>div { min-width:0; }
-.motion-training-row strong { display:block; font-size:24px; font-weight:950; letter-spacing:-.055em; line-height:1.05; }
-.motion-training-row>div>span { display:block; color:var(--muted); font-size:10px; line-height:1.3; margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.motion-training-row strong { display:block; font-size:var(--m12-type-feature); font-weight:950; letter-spacing:-.05em; line-height:1.05; }
+.motion-training-row>div>span { display:block; color:var(--muted); font-size:var(--m12-type-body); line-height:1.3; margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .motion-training-launch { flex:none; min-width:88px; min-height:39px; padding:7px 11px; border:0; border-radius:12px; background:var(--volt); color:#111;
-  font-size:10px; font-weight:950; display:flex; justify-content:center; align-items:center; gap:8px; cursor:pointer; }
+  font-size:var(--m12-type-action); font-weight:950; display:flex; justify-content:center; align-items:center; gap:8px; cursor:pointer; }
 .motion-training-launch span { font-size:17px; line-height:.6; }
 .motion-cal-video-link { display:block; color:var(--volt); padding:6px 0; font-size:11px; font-weight:850; text-decoration:none; }
 
@@ -121,42 +134,34 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-recovery .motion-sector-number { color:var(--cyan); background:rgba(59,231,225,.1); }
 .motion-recovery-row { display:grid; grid-template-columns:.75fr 1fr auto; align-items:center; gap:11px; }
 .motion-recovery-row>div { min-width:0; }
-.motion-recovery-row strong { font-size:24px; font-weight:950; line-height:1.06; letter-spacing:-.055em; white-space:nowrap; }
+.motion-recovery-row strong { font-size:var(--m12-type-feature); font-weight:950; line-height:1.06; letter-spacing:-.05em; white-space:nowrap; }
 .motion-recovery-row em { font-size:11px; font-style:normal; letter-spacing:0; }
-.motion-recovery-row small { display:block; margin-top:3px; font-size:9px; line-height:1.2; color:var(--muted); }
+.motion-recovery-row small { display:block; margin-top:3px; font-size:var(--m12-type-body); line-height:1.2; color:var(--muted); }
 .motion-recovery-row button { min-height:37px; border-radius:12px; border:1px solid rgba(59,231,225,.35); background:rgba(59,231,225,.08); padding:6px 11px;
-  color:var(--cyan); font-size:10px; font-weight:950; cursor:pointer; white-space:nowrap; }
+  color:var(--cyan); font-size:var(--m12-type-action); font-weight:950; cursor:pointer; white-space:nowrap; }
 .motion-recovery-row button span { font-size:15px; }
-.motion-recovery-cue { margin:8px 0 0; font-size:10px; line-height:1.3; color:var(--muted); }
+.motion-recovery-cue { margin:8px 0 0; font-size:var(--m12-type-body); line-height:1.3; color:var(--muted); }
 
 @media(min-width:760px) {
-  .motion-sector-stack { max-width:660px; }
+  .motion-sector-stack { max-width:660px; --m12-type-section:20px; --m12-type-display:32px; --m12-type-feature:26px; --m12-type-stat:20px; }
   .motion-sector { padding:18px 20px; }
-  .motion-sector-title h2 { font-size:20px; }
 }
 @media(max-width:390px) {
+  .motion-sector-stack { --m12-type-section:16px; --m12-type-display:24px; --m12-type-feature:21px; --m12-type-stat:16px; --m12-type-target:14px; --m12-type-body:9.5px; --m12-type-label:9px; --m12-type-action:9.5px; }
   .motion-sector { padding:11px 12px 10px; border-radius:17px; }
   .motion-sector-title { gap:7px; margin-bottom:8px; }
-  .motion-sector-title h2 { font-size:16px; }
   .motion-sector-number { width:23px; height:23px; }
-  .motion-key-figure strong { font-size:22px; }
-  .motion-fitness-goal-strip strong { font-size:15px; }
-  .motion-fitness-goal-strip small { font-size:7.5px; }
-  .motion-calorie-total strong { font-size:29px; }
-  .motion-macro-grid b { font-size:15px; }
-  .motion-training-row strong { font-size:21px; }
   .motion-training-launch { min-width:76px; padding:6px 8px; }
   .motion-recovery-row { gap:6px; }
-  .motion-recovery-row strong { font-size:21px; }
   .motion-recovery-row button { padding:5px 8px; }
 }
 @media(max-height:740px) and (max-width:600px) {
+  .motion-sector-stack { --m12-type-display:24px; --m12-type-feature:21px; }
   body:has(#homePage.active) .top { padding-bottom:4px; }
   body:has(#homePage.active) .topline { min-height:44px; }
   .motion-sector-stack { gap:6px; }
   .motion-sector { padding-top:9px; padding-bottom:8px; }
   .motion-sector-title { margin-bottom:6px; }
-  .motion-key-figure strong { font-size:22px; }
   .motion-goal-row { gap:8px; }
   .motion-fitness-goal-strip { margin-top:6px; gap:4px; }
   .motion-fitness-goal-strip>div { padding:5px 4px; }
@@ -187,18 +192,17 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   background-image:none;
 }
 
-/* r84: four priorities fit above the iPhone navigation; Settings is tab four. */
+/* Compact layout: four priorities fit above the iPhone navigation; Settings is tab four. */
 .bottomnav { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .bottomnav .nav-settings { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
 .bottomnav .nav-settings .nav-icon { width:21px; height:21px; min-width:21px; min-height:21px; }
 .motion-goals { padding-top:10px; padding-bottom:9px; }
 .motion-goals .motion-sector-title { margin-bottom:6px; }
-.motion-goals .motion-key-figure strong { font-size:24px; }
-.motion-goals .motion-key-figure small { font-size:9px; line-height:1.2; }
+.motion-goals .motion-key-figure small { line-height:1.2; }
 .motion-goals .motion-fitness-goal-strip { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-top:7px; }
 .motion-goals .motion-fitness-goal-strip>div { min-width:0; padding:5px 3px 4px; }
-.motion-goals .motion-fitness-goal-strip strong { font-size:15px; line-height:1; }
-.motion-goals .motion-fitness-goal-strip small { font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.motion-goals .motion-fitness-goal-strip strong { line-height:1; }
+.motion-goals .motion-fitness-goal-strip small { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .motion-goals .motion-progress-line { margin-top:7px; }
 .motion-goals .motion-sector-foot { margin-top:5px; }
 .motion-goals .motion-sector-details { margin-top:4px; }
@@ -208,7 +212,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-training-tools { display:flex; align-items:flex-start; gap:7px; padding-top:7px; margin-top:8px; border-top:1px solid var(--line); }
 .motion-training-tools .motion-sector-details { margin:0; padding:0; border:0; flex:1; min-width:0; }
 .motion-training-tools .motion-sector-details summary { padding:5px 0; min-height:25px; }
-.motion-training-tools .motion-flow-tool { flex:none; border:1px solid rgba(255,255,255,.15); border-radius:8px; background:rgba(255,255,255,.04); color:var(--ink); padding:5px 7px; min-height:27px; font-size:9px; font-weight:900; letter-spacing:.03em; cursor:pointer; }
+.motion-training-tools .motion-flow-tool { flex:none; border:1px solid rgba(255,255,255,.15); border-radius:8px; background:rgba(255,255,255,.04); color:var(--ink); padding:5px 7px; min-height:27px; font-size:var(--m12-type-action); font-weight:900; letter-spacing:.03em; cursor:pointer; }
 .motion-training-tools .motion-flow-tool-primary { border-color:rgba(148,113,203,.55); color:#ddd0ff; }
 @media(max-width:520px) {
   body:has(#homePage.active) .top { padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 6px; }
@@ -220,18 +224,13 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-sector { padding:10px 12px; border-radius:17px; }
   .motion-sector-title { margin-bottom:8px; }
   .motion-goals .motion-sector-title { margin-bottom:5px; }
-  .motion-goals .motion-key-figure strong { font-size:24px; }
   .motion-goals .motion-fitness-goal-strip { margin-top:6px; }
-  .motion-goals .motion-fitness-goal-strip small { font-size:7.5px; }
   .motion-sector-details { margin-top:6px; }
-  .motion-training-row strong { font-size:21px; }
   .motion-recovery-cue { margin-top:5px; }
 }
 @media(max-width:390px) {
   .motion-training-tools { gap:4px; }
-  .motion-training-tools .motion-flow-tool { font-size:8px; padding:5px; }
-  .motion-goals .motion-key-figure strong { font-size:22px; }
-  .motion-goals .motion-fitness-goal-strip small { font-size:7px; }
+  .motion-training-tools .motion-flow-tool { padding:5px; }
 }
 
 /* Sound-free evening preview and one-movement-at-a-time Flow Mode. */
