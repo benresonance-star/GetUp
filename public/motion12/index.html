@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r77-20261015" />
+  <meta name="motion12-build" content="canonical-r78-20261101" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -27,6 +27,7 @@
   </script>
   <link rel="stylesheet" href="./theme.css?v=r70" />
   <link rel="stylesheet" href="./app.css?v=r70" />
+  <link rel="stylesheet" href="./home-sectors.css?v=r78" />
   <style>
     .brand-line{display:flex;align-items:baseline;gap:7px}
     .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
@@ -232,7 +233,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src='./'+src+'?v=r77';
+        s.src='./'+src+'?v=r78';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);
@@ -264,6 +265,8 @@
           modeStatus.textContent='Calisthenics unavailable: '+String(err&&err.message||err)+'. Try Settings → Force app update.';
         }
       }
+      try { await loadScript('home-sectors.js'); }
+      catch(err) { console.error('Four-sector Home could not load',err); }
       scriptsLoaded=true;
       applyReadOnlyShell();
     }
