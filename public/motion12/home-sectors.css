@@ -140,3 +140,34 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-sector-details { margin-top:5px; }
   .motion-recovery-cue { margin-top:5px; }
 }
+
+/* r81 · restrained colour washes distinguish the four daily sectors.
+   Gradients colour the surfaces only: text and controls keep their contrast. */
+.motion-goals {
+  border-color:rgba(var(--accent-rgb,255,77,46),.27);
+  background:
+    radial-gradient(ellipse 105% 135% at -12% -32%,rgba(var(--accent-rgb,255,77,46),.24) 0%,rgba(var(--accent-rgb,255,77,46),.09) 44%,transparent 75%),
+    radial-gradient(ellipse 85% 110% at 105% 115%,rgba(115,48,73,.12),transparent 75%),
+    #191b1e;
+}
+.motion-nutrition {
+  border-color:rgba(220,157,86,.27);
+  background:
+    radial-gradient(ellipse 110% 130% at -15% -28%,rgba(238,174,87,.21) 0%,rgba(190,126,61,.09) 45%,transparent 77%),
+    radial-gradient(ellipse 85% 115% at 112% 108%,rgba(130,83,48,.11),transparent 78%),
+    #1b1d20;
+}
+.motion-training {
+  border-color:rgba(var(--accent-rgb,255,77,46),.34);
+  background:
+    radial-gradient(ellipse 95% 145% at 110% -36%,rgba(133,104,211,.22) 0%,rgba(107,80,176,.09) 45%,transparent 75%),
+    radial-gradient(ellipse 85% 100% at -12% 112%,rgba(var(--accent-rgb,255,77,46),.14),transparent 76%),
+    #181b1e;
+}
+.motion-recovery {
+  border-color:rgba(53,188,183,.28);
+  background:
+    radial-gradient(ellipse 110% 130% at -14% -34%,rgba(38,193,181,.22) 0%,rgba(36,143,146,.09) 43%,transparent 76%),
+    radial-gradient(ellipse 95% 110% at 110% 108%,rgba(50,107,135,.13),transparent 78%),
+    #171c1e;
+}
