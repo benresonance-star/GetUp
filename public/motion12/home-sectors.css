@@ -2,6 +2,15 @@
 body:has(#homePage.active) .cal-global-header,
 body:has(#homePage.active) #homeModeToggle { display:none!important; }
 body:has(#homePage.active) main { padding-top:4px; }
+/* On iPhone the existing app header is fixed, not in normal flow.
+   Reserve its full height plus a gap so Goals cannot sit behind it. */
+@media(max-width:520px) {
+  body:has(#homePage.active) main { padding-top:calc(env(safe-area-inset-top,0px) + 100px); }
+}
+@media(display-mode:standalone) {
+  body:has(#homePage.active) main { padding-top:calc(env(safe-area-inset-top,0px) + 104px); }
+}
+html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area-inset-top,0px) + 104px); }
 
 .motion-sector-stack { display:grid; gap:9px; max-width:600px; margin:0 auto; }
 .motion-sector {
