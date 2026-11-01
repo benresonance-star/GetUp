@@ -97,6 +97,47 @@
     return false;
   };
 
+  function fitnessGoalTargets() {
+    const saved = settings.fitnessGoals && typeof settings.fitnessGoals === 'object' ? settings.fitnessGoals : {};
+    const target = (key, min, max, fallback = null) => {
+      const value = Number(saved[key]);
+      return Number.isFinite(value) && value >= min && value <= max ? value : fallback;
+    };
+    return {
+      weeklySessions: target('weeklySessions', 1, 7, 7),
+      pushups: target('pushups', 1, 200),
+      walk: target('walk', 5, 60),
+      rhr: target('rhr', 30, 120)
+    };
+  }
+  window.saveFitnessGoalTargets = function saveFitnessGoalTargets(event) {
+    if (event) event.preventDefault();
+    const status = document.getElementById('fitnessGoalSaveStatus');
+    if (window.Motion12Persistence?.isReadOnly()) {
+      if (status) status.textContent = 'Storage is read-only. Try again when it recovers.';
+      return false;
+    }
+    const raw = id => document.getElementById(id)?.value?.trim() || '';
+    const optional = id => raw(id) === '' ? null : Number(raw(id));
+    const weeklySessions = Number(raw('fitnessGoalSessions'));
+    const pushups = optional('fitnessGoalPushups');
+    const walk = optional('fitnessGoalWalk');
+    const rhr = optional('fitnessGoalRhr');
+    const inRange = (value, low, high, integer = false) => value === null ||
+      (Number.isFinite(value) && value >= low && value <= high && (!integer || Number.isInteger(value)));
+    if (!inRange(weeklySessions, 1, 7, true) || weeklySessions === 0 ||
+        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true)) {
+      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm.';
+      return false;
+    }
+    settings.fitnessGoals = { weeklySessions, pushups, walk, rhr };
+    motion12SetItem('motion12.settings', JSON.stringify(settings));
+    renderHome();
+    const savedStatus = document.getElementById('fitnessGoalSaveStatus');
+    if (savedStatus) savedStatus.textContent = '✓ Fitness targets saved';
+    return false;
+  };
+
   window.renderHome = function renderSectorHome() {
     updateHomeModeToggle();
     const day = programDay();
@@ -123,11 +164,14 @@
       return !!logs['cal:' + iso(dt) + ':' + dt.getDay()]?.completed;
     }).filter(Boolean).length : sessionsLastSevenDays();
     const composition = currentBodyComp();
+    const fitness = fitnessGoalTargets();
+    const currentMeasure = (id, unit) => Number(measurements[id]) > 0 ? Number(measurements[id]) + ' ' + unit : 'not recorded';
     const main = document.getElementById('homePage');
     if (!main) return;
 
     const detailsOpen = {
       body: !!main.querySelector('#motionBodyCompDetails[open]'),
+      fitness: !!main.querySelector('#motionFitnessDetails[open]'),
       food: !!main.querySelector('#motionFoodDetails[open]'),
       training: !!main.querySelector('#motionTrainingDetails[open]')
     };
@@ -177,10 +221,26 @@
           <div class="motion-sector-title"><span class="motion-sector-number">01</span><h2 id="motionGoalsTitle">Goals</h2><span class="motion-sector-side">WEEK ${week} / 12</span></div>
           <div class="motion-goal-row">
             <div class="motion-key-figure"><strong>${loss}</strong><small>planned loss / week</small></div>
-            <div class="motion-key-figure"><strong>${last7}<em> sessions</em></strong><small>in the last 7 days</small></div>
+            <div class="motion-key-figure"><strong>${last7}<em> / ${fitness.weeklySessions} sessions</em></strong><small>weekly fitness goal · last 7 days</small></div>
+          </div>
+          <div class="motion-fitness-goal-strip" aria-label="12-week fitness targets">
+            <div><strong>${fitness.pushups ?? '↑'}</strong><small>push-ups · reps</small></div>
+            <div><strong>${fitness.walk ?? '↓'}</strong><small>2 km walk · min</small></div>
+            <div><strong>${fitness.rhr ?? '↓'}</strong><small>resting HR · bpm</small></div>
           </div>
           <div class="motion-progress-line" aria-label="${completedRatio}% of program sessions complete"><span style="width:${completedRatio}%"></span></div>
           <div class="motion-sector-foot"><span>${progress.completed} / ${progress.programDays} sessions complete · ${lossDetail}</span><button type="button" onclick="showPage('progressPage')">DETAILS ↗</button></div>
+          <details id="motionFitnessDetails" class="motion-sector-details motion-fitness-details"><summary><span>FITNESS TARGETS</span><b>12-week strength, cardio &amp; recovery goals</b><span class="motion-fitness-edit">EDIT ⌄</span></summary>
+            <form class="motion-fitness-form" onsubmit="return saveFitnessGoalTargets(event)">
+              <label>Sessions / week<input id="fitnessGoalSessions" type="number" inputmode="numeric" min="1" max="7" step="1" required value="${fitness.weeklySessions}"><small>Current: ${last7} in last 7 days</small></label>
+              <label>Strict push-ups (reps)<input id="fitnessGoalPushups" type="number" inputmode="numeric" min="1" max="200" step="1" value="${fitness.pushups ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('pushups', 'reps')}</small></label>
+              <label>2 km walk (minutes)<input id="fitnessGoalWalk" type="number" inputmode="decimal" min="5" max="60" step="0.1" value="${fitness.walk ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('walk', 'min')}</small></label>
+              <label>Resting HR (bpm)<input id="fitnessGoalRhr" type="number" inputmode="numeric" min="30" max="120" step="1" value="${fitness.rhr ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('rhr', 'bpm')}</small></label>
+              <p>Set your personal 12-week targets here. Update current results in <button type="button" onclick="showPage('progressPage')">Progress ↗</button>.</p>
+              <button type="submit">SAVE FITNESS TARGETS</button>
+              <p id="fitnessGoalSaveStatus" role="status" aria-live="polite"></p>
+            </form>
+          </details>
           <details id="motionBodyCompDetails" class="motion-sector-details motion-bodycomp-details"><summary><span class="motion-bodycomp-summary-label">BODY COMPOSITION</span><b>${compNumber(composition.weight,' kg')} · ${compNumber(composition.bodyFat,'%')} fat · ${compNumber(composition.waist,' cm')} waist</b><span class="motion-bodycomp-edit">EDIT ⌄</span></summary>
             <form class="motion-bodycomp-form" onsubmit="return saveBodyComposition(event)">
               <label>Weight (kg)<input id="bodyCompWeight" type="number" inputmode="decimal" step="0.1" min="30" max="250" required value="${composition.weight || ''}"></label>
@@ -222,6 +282,7 @@
         </section>
       </div>`;
     if (detailsOpen.body) main.querySelector('#motionBodyCompDetails').open = true;
+    if (detailsOpen.fitness) main.querySelector('#motionFitnessDetails').open = true;
     if (detailsOpen.food) main.querySelector('#motionFoodDetails').open = true;
     if (detailsOpen.training) main.querySelector('#motionTrainingDetails').open = true;
   };
