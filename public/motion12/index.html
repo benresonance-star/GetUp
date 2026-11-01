@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r85-20261101" />
+  <meta name="motion12-build" content="canonical-r86-20261101" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="./theme.css?v=r70" />
   <link rel="stylesheet" href="./app.css?v=r70" />
   <link rel="stylesheet" href="./home-sectors.css?v=r85" />
+  <link rel="stylesheet" href="./notifications.css?v=r86" />
   <style>
     .brand-line{display:flex;align-items:baseline;gap:7px}
     .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
@@ -160,6 +161,14 @@
         <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
       </div>
     </details>
+    <details class="reminder-settings" id="flowReminderSettings">
+      <summary>Evening Flow reminder <span id="flowReminderBadge">OFF</span></summary>
+      <p class="settings-note">Get a lock-screen reminder to review tomorrow's exercises and choose a mental focus. Scheduled for the 7–8 pm Melbourne hour on Vercel's free tier. No audio is played by MOTION12.</p>
+      <p class="settings-note">On iPhone, open MOTION12 from its Home Screen icon to enable notifications.</p>
+      <div class="field"><label for="flowReminderCode">Reminder access code</label><input id="flowReminderCode" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your private code"><p class="settings-note">Enter the code provided during setup. It stays on this device, separate from your workout history.</p></div>
+      <div class="reminder-buttons"><button type="button" id="flowReminderEnable">Enable reminder</button><button type="button" id="flowReminderTest">Send test</button><button type="button" id="flowReminderDisable">Disable</button></div>
+      <p id="flowReminderStatus" class="reminder-status" aria-live="polite">Checking notification availability…</p>
+    </details>
     <details class="data-settings">
       <summary>Training data</summary>
       <p class="settings-note">MOTION12 stores live app and training data in IndexedDB and mirrors the latest validated state to a separate local shadow for recovery. Existing legacy localStorage migration keys are not modified.</p>
@@ -233,7 +242,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src='./'+src+'?v=r85';
+        s.src='./'+src+'?v=r86';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);
@@ -267,6 +276,8 @@
       }
       try { await loadScript('home-sectors.js'); }
       catch(err) { console.error('Four-sector Home could not load',err); }
+      try { await loadScript('notifications.js'); }
+      catch(err) { console.error('Evening reminder controls could not load',err); }
       scriptsLoaded=true;
       applyReadOnlyShell();
     }
@@ -397,7 +408,7 @@
             return reg.scope.indexOf('/public/motion12/')!==-1 ||
               reg.scope.indexOf('/motion12-preview/public/motion12/')!==-1;
           })
-          .map(function(reg){return reg.unregister()}));
+          .map(function(reg){return reg.update()}));
       }
       if('caches' in window){
         var keys=await caches.keys();
