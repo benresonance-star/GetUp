@@ -268,7 +268,11 @@
         <section class="motion-sector motion-training" aria-labelledby="motionTrainingTitle">
           <div class="motion-sector-title"><span class="motion-sector-number">03</span><h2 id="motionTrainingTitle">Training</h2>${window.Motion12Cal ? `<select class="motion-system-select" aria-label="Training system" onchange="Motion12Cal.switch(this.value)"><option value="standard" ${calMode ? '' : 'selected'}>STANDARD</option><option value="calisthenics" ${calMode ? 'selected' : ''}>CALISTHENICS</option></select>` : `<span class="motion-sector-side">TODAY</span>`}</div>
           <div class="motion-training-row"><div><strong>${session.name}</strong><span>${complete ? '✓ Complete · ' : paused ? 'Paused · ' : ''}${session.time} · ${calMode ? session.why : weeklyTarget(day, week)}</span></div><button type="button" class="motion-training-launch" onclick="${sessionAction}">${sessionLabel} <span>↗</span></button></div>
-          <details id="motionTrainingDetails" class="motion-sector-details"><summary>${calMode ? 'WEEK PLAN &amp; VIDEO' : 'WEEK PLAN &amp; PULL-UP PRACTICE'}<span>⌄</span></summary><div class="motion-sector-expand"><div class="compact-week">${weekStrip}</div>${trainingDetail}</div></details>
+          <div class="motion-training-tools">
+            <details id="motionTrainingDetails" class="motion-sector-details"><summary>${calMode ? 'PLAN &amp; VIDEO' : 'WEEK PLAN'}<span>⌄</span></summary><div class="motion-sector-expand"><div class="compact-week">${weekStrip}</div>${trainingDetail}</div></details>
+            <button type="button" class="motion-flow-tool" onclick="Motion12Flow.previewTomorrow()">PREVIEW</button>
+            <button type="button" class="motion-flow-tool motion-flow-tool-primary" onclick="Motion12Flow.startToday()">FLOW ↗</button>
+          </div>
         </section>
 
         <section class="motion-sector motion-recovery" aria-labelledby="motionRecoveryTitle">
@@ -286,6 +290,164 @@
     if (detailsOpen.food) main.querySelector('#motionFoodDetails').open = true;
     if (detailsOpen.training) main.querySelector('#motionTrainingDetails').open = true;
   };
+
+  /* Flow Mode is a focused layer over the existing workout. The underlying
+     day page remains responsible for timers, sets and session completion. */
+  const flowState = { mode:'', day:0, date:'', index:0, cue:'' };
+  const flowKey = date => 'motionflow:' + date;
+  const flowEscape = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const flowDefaultCues = [
+    'Move easily; arrive fresh for Monday.',
+    'Strong movement, quiet neck and shoulders.',
+    'Move steadily without rushing.',
+    'Smooth control before adding effort.',
+    'Explosive hips, relaxed jaw and neck.',
+    'Full range and a steady breath.',
+    'Strong intervals; recover deliberately.'
+  ];
+  function flowDay(date) { return new Date(date + 'T12:00:00').getDay(); }
+  function flowTomorrow() {
+    const date = new Date(todayISO() + 'T12:00:00');
+    date.setDate(date.getDate() + 1);
+    return iso(date);
+  }
+  function flowSession(day) {
+    return settings.trainingSystem === 'calisthenics' ? CAL_SESSIONS[day] : program[day];
+  }
+  function flowMount() {
+    let overlay = document.getElementById('motionFlowOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'motionFlowOverlay';
+      overlay.hidden = true;
+      document.body.appendChild(overlay);
+    }
+    if (!document.getElementById('motionFlowReturn')) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'motionFlowReturn';
+      button.textContent = '↗ RETURN TO FLOW';
+      button.onclick = () => window.Motion12Flow.resume();
+      document.body.appendChild(button);
+    }
+    return overlay;
+  }
+  function flowShow(kicker, title, content) {
+    const overlay = flowMount();
+    overlay.innerHTML = `<section class="motion-flow-card" role="dialog" aria-modal="true" aria-label="${flowEscape(title)}">
+      <header class="motion-flow-head"><span>${flowEscape(kicker)}</span><button type="button" onclick="Motion12Flow.close()" aria-label="Exit Flow Mode">✕</button></header>
+      <h2>${flowEscape(title)}</h2>${content}</section>`;
+    overlay.hidden = false;
+    document.body.classList.add('motion-flow-dialog-open');
+    overlay.querySelector('.motion-flow-head button')?.focus();
+  }
+  function flowHide() {
+    const overlay = document.getElementById('motionFlowOverlay');
+    if (overlay) overlay.hidden = true;
+    document.body.classList.remove('motion-flow-dialog-open');
+  }
+  function flowCollectSteps() {
+    const nodes = Array.from(document.querySelectorAll('#dayPage .exercise[id^="ex-"], #dayPage .cal-exercise'));
+    const steps = nodes.map(node => {
+      const title = node.querySelector('.ex-name h3,.cal-grow h3,h3')?.textContent?.trim() || 'Movement';
+      const target = node.querySelector('.ex-name p,.cal-grow p,.ex-top p')?.textContent?.trim() || 'Move with control';
+      const ticks = Array.from(node.querySelectorAll('.cal-tick'));
+      const complete = node.classList.contains('complete') || (ticks.length > 0 && ticks.every(tick => tick.textContent.trim() === '✓'));
+      return { id:node.id, title, target, complete };
+    });
+    if (!steps.length) {
+      const session = flowSession(flowState.day);
+      steps.push({ id:'mobilitySection', title:session?.name || 'Recovery & mobility', target:session?.why || 'Move easily today.', complete:false });
+    }
+    return steps;
+  }
+  function flowRenderFocus() {
+    const steps = flowCollectSteps();
+    flowState.index = Math.max(0, Math.min(flowState.index, steps.length - 1));
+    const current = steps[flowState.index];
+    const next = steps[flowState.index + 1];
+    flowState.mode = 'focus';
+    flowShow('FLOW MODE · ' + (flowState.index + 1) + ' / ' + steps.length,
+      current.title,
+      `<p class="motion-flow-target">${flowEscape(current.target)}</p>
+       <div class="motion-flow-cue"><small>ONE FOCUS</small><strong>${flowEscape(flowState.cue)}</strong></div>
+       <p class="motion-flow-next">${next ? 'NEXT · ' + flowEscape(next.title) : 'FINAL MOVEMENT · FINISH IN THE WORKOUT LOG'}</p>
+       <div class="motion-flow-actions">
+         <button type="button" class="motion-flow-secondary" onclick="Motion12Flow.previous()" ${flowState.index === 0 ? 'disabled' : ''}>← BACK</button>
+         <button type="button" class="motion-flow-primary" onclick="Motion12Flow.openLog()">LOG / TIMER ↗</button>
+         <button type="button" class="motion-flow-secondary" onclick="Motion12Flow.next()" ${flowState.index === steps.length - 1 ? 'disabled' : ''}>NEXT →</button>
+       </div><p class="motion-flow-note">Use the existing workout to record sets and control timers. Return to this focused view at any point.</p>`);
+  }
+  window.Motion12Flow = {
+    previewTomorrow() {
+      const date = flowTomorrow(), day = flowDay(date), session = flowSession(day);
+      const saved = logs[flowKey(date)] || {};
+      flowState.mode = 'preview'; flowState.day = day; flowState.date = date;
+      flowState.cue = saved.cue || flowDefaultCues[day];
+      const weekday = new Date(date + 'T12:00:00').toLocaleDateString('en-AU',{weekday:'long'});
+      flowShow('TONIGHT · PREPARE FOR ' + weekday.toUpperCase(), session.name,
+        `<p class="motion-flow-target">${flowEscape(session.time)} · ${flowEscape(session.why)}</p>
+         <div class="motion-flow-cue"><small>TOMORROW'S ONE FOCUS</small>
+           <label for="motionFlowCueInput">Choose a short intention you can remember during the session.</label>
+           <input id="motionFlowCueInput" maxlength="110" value="${flowEscape(flowState.cue)}"></div>
+         <div class="motion-flow-review"><span>01 · Know the first movement</span><span>02 · Prepare equipment tonight</span><span>03 · After your morning routine, begin the warm-up</span></div>
+         <button type="button" class="motion-flow-primary motion-flow-wide" onclick="Motion12Flow.savePreview()">READY FOR MORNING ✓</button>
+         <p class="motion-flow-note" id="motionFlowStatus">A brief mental rehearsal is enough. Tomorrow's focus is saved on this device.</p>`);
+    },
+    savePreview() {
+      const status = document.getElementById('motionFlowStatus');
+      if (window.Motion12Persistence?.isReadOnly()) {
+        if (status) status.textContent = 'Storage is read-only; the review cannot be saved.';
+        return;
+      }
+      flowState.cue = (document.getElementById('motionFlowCueInput')?.value || '').trim().slice(0,110) || flowDefaultCues[flowState.day];
+      logs[flowKey(flowState.date)] = { ready:true, cue:flowState.cue, at:new Date().toISOString() };
+      motion12SetItem('motion12.logs', JSON.stringify(logs));
+      flowHide();
+      if (document.getElementById('homePage')?.classList.contains('active')) renderHome();
+    },
+    startToday() {
+      const date = todayISO(), day = programDay(), session = flowSession(day);
+      flowState.mode = 'arrive'; flowState.date = date; flowState.day = day; flowState.index = 0;
+      flowState.cue = logs[flowKey(date)]?.cue || flowDefaultCues[day];
+      flowShow('ARRIVE · TODAY\'S SESSION', session.name,
+        `<p class="motion-flow-target">${flowEscape(session.time)} · ${flowEscape(session.why)}</p>
+         <div class="motion-flow-cue"><small>ONE FOCUS</small><strong>${flowEscape(flowState.cue)}</strong></div>
+         <div class="motion-flow-review"><span>Settle into a comfortable breath</span><span>Unclench the jaw and avoid unnecessary bracing</span><span>Begin your normal 5-minute movement warm-up</span></div>
+         <button type="button" class="motion-flow-primary motion-flow-wide" onclick="Motion12Flow.begin()">BEGIN FLOW ↗</button>`);
+    },
+    begin() {
+      flowState.mode = 'focus';
+      openDay(flowState.day,flowState.date);
+      document.body.classList.add('motion-flow-armed');
+      flowRenderFocus();
+    },
+    previous() { flowState.index = Math.max(0, flowState.index - 1); flowRenderFocus(); },
+    next() { flowState.index += 1; flowRenderFocus(); },
+    openLog() {
+      const step = flowCollectSteps()[flowState.index];
+      flowHide();
+      document.getElementById(step?.id)?.scrollIntoView({behavior:'smooth',block:'center'});
+    },
+    resume() {
+      if (!document.getElementById('dayPage')?.classList.contains('active')) return;
+      const steps = flowCollectSteps();
+      if (steps[flowState.index]?.complete) {
+        const next = steps.findIndex((step,i) => i > flowState.index && !step.complete);
+        if (next >= 0) flowState.index = next;
+      }
+      flowRenderFocus();
+    },
+    close() {
+      flowHide();
+      document.body.classList.remove('motion-flow-armed');
+      flowState.mode = '';
+    }
+  };
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !document.getElementById('motionFlowOverlay')?.hidden) window.Motion12Flow.close();
+  });
 
   installBodyCompSettings();
   window.renderHome();
