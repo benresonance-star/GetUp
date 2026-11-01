@@ -186,3 +186,83 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   background:#1c3838;
   background-image:none;
 }
+
+/* r84: four priorities fit above the iPhone navigation; Settings is tab four. */
+.bottomnav { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.bottomnav .nav-settings { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
+.bottomnav .nav-settings .nav-icon { width:21px; height:21px; min-width:21px; min-height:21px; }
+.motion-goals { padding-top:10px; padding-bottom:9px; }
+.motion-goals .motion-sector-title { margin-bottom:6px; }
+.motion-goals .motion-key-figure strong { font-size:24px; }
+.motion-goals .motion-key-figure small { font-size:9px; line-height:1.2; }
+.motion-goals .motion-fitness-goal-strip { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-top:7px; }
+.motion-goals .motion-fitness-goal-strip>div { min-width:0; padding:5px 3px 4px; }
+.motion-goals .motion-fitness-goal-strip strong { font-size:15px; line-height:1; }
+.motion-goals .motion-fitness-goal-strip small { font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.motion-goals .motion-progress-line { margin-top:7px; }
+.motion-goals .motion-sector-foot { margin-top:5px; }
+.motion-goals .motion-sector-details { margin-top:4px; }
+.motion-goals .motion-sector-details summary { padding-top:5px; min-height:19px; }
+.motion-goals .motion-fitness-details summary b { display:none; }
+.motion-goals .motion-fitness-details summary .motion-fitness-edit { margin-left:auto; }
+.motion-training-tools { display:flex; align-items:flex-start; gap:7px; padding-top:7px; margin-top:8px; border-top:1px solid var(--line); }
+.motion-training-tools .motion-sector-details { margin:0; padding:0; border:0; flex:1; min-width:0; }
+.motion-training-tools .motion-sector-details summary { padding:5px 0; min-height:25px; }
+.motion-training-tools .motion-flow-tool { flex:none; border:1px solid rgba(255,255,255,.15); border-radius:8px; background:rgba(255,255,255,.04); color:var(--ink); padding:5px 7px; min-height:27px; font-size:9px; font-weight:900; letter-spacing:.03em; cursor:pointer; }
+.motion-training-tools .motion-flow-tool-primary { border-color:rgba(148,113,203,.55); color:#ddd0ff; }
+@media(max-width:520px) {
+  body:has(#homePage.active) .top { padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 6px; }
+  body:has(#homePage.active) .topline { min-height:42px; }
+  body:has(#homePage.active) .brand { font-size:23px; }
+  body:has(#homePage.active) .date { font-size:11px; margin-top:3px; }
+  body:has(#homePage.active) main { padding-top:calc(env(safe-area-inset-top,0px) + 74px); }
+  .motion-sector-stack { gap:7px; }
+  .motion-sector { padding:10px 12px; border-radius:17px; }
+  .motion-sector-title { margin-bottom:8px; }
+  .motion-goals .motion-sector-title { margin-bottom:5px; }
+  .motion-goals .motion-key-figure strong { font-size:24px; }
+  .motion-goals .motion-fitness-goal-strip { margin-top:6px; }
+  .motion-goals .motion-fitness-goal-strip small { font-size:7.5px; }
+  .motion-sector-details { margin-top:6px; }
+  .motion-training-row strong { font-size:21px; }
+  .motion-recovery-cue { margin-top:5px; }
+}
+@media(max-width:390px) {
+  .motion-training-tools { gap:4px; }
+  .motion-training-tools .motion-flow-tool { font-size:8px; padding:5px; }
+  .motion-goals .motion-key-figure strong { font-size:22px; }
+  .motion-goals .motion-fitness-goal-strip small { font-size:7px; }
+}
+
+/* Sound-free evening preview and one-movement-at-a-time Flow Mode. */
+#motionFlowOverlay[hidden] { display:none!important; }
+#motionFlowOverlay { position:fixed; inset:0; z-index:320; overflow-y:auto; overscroll-behavior:contain; background:#0d1012; display:flex; align-items:center; justify-content:center; padding:calc(20px + env(safe-area-inset-top,0px)) 18px calc(20px + env(safe-area-inset-bottom,0px)); }
+body.motion-flow-dialog-open { overflow:hidden; }
+.motion-flow-card { width:100%; max-width:480px; max-height:100%; overflow-y:auto; border:1px solid rgba(87,205,195,.30); border-radius:24px; background:#1c292a; padding:23px; color:#f4f4f1; }
+.motion-flow-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.motion-flow-head span { color:#5dd2c9; font-size:10px; font-weight:900; letter-spacing:.08em; }
+.motion-flow-head button { border:1px solid rgba(255,255,255,.22); background:#293637; color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:17px; }
+.motion-flow-card h2 { margin:20px 0 8px; font-size:29px; line-height:1.04; letter-spacing:-.045em; }
+.motion-flow-target { color:#b6c1bf; font-size:13px; line-height:1.4; margin:0 0 18px; }
+.motion-flow-cue { border:1px solid rgba(93,210,201,.26); border-radius:15px; padding:14px 15px; background:#243939; }
+.motion-flow-cue small { display:block; color:#5dd2c9; font-weight:950; letter-spacing:.09em; font-size:10px; margin-bottom:7px; }
+.motion-flow-cue strong { display:block; color:#f7f8f6; font-size:18px; line-height:1.3; font-weight:800; }
+.motion-flow-cue label { display:block; color:#b6c1bf; font-size:12px; margin:0 0 8px; }
+.motion-flow-cue input { display:block; width:100%; min-height:43px; border:1px solid rgba(255,255,255,.2); border-radius:9px; background:#111b1d; color:#f7f8f6; font-size:15px; padding:9px 10px; }
+.motion-flow-review { margin:16px 0; display:grid; gap:8px; }
+.motion-flow-review span { color:#e2e7e5; font-size:12px; line-height:1.4; padding:9px 10px; border-radius:9px; background:rgba(255,255,255,.04); }
+.motion-flow-next { margin:16px 0; color:#a6b6b4; font-size:11px; font-weight:850; letter-spacing:.04em; }
+.motion-flow-actions { display:grid; grid-template-columns:auto 1fr auto; gap:7px; }
+.motion-flow-actions button, .motion-flow-wide { border-radius:11px; min-height:45px; padding:11px 12px; font-size:11px; font-weight:950; cursor:pointer; }
+.motion-flow-primary { background:#59d2c6; border:0; color:#0e1b1b; }
+.motion-flow-secondary { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.17); color:#f2f2ef; }
+.motion-flow-secondary:disabled { opacity:.3; cursor:default; }
+.motion-flow-wide { width:100%; margin-top:4px; }
+.motion-flow-note { color:#9bafac; font-size:11px; line-height:1.5; margin:14px 0 0; }
+#motionFlowReturn { display:none; position:fixed; right:16px; bottom:calc(82px + env(safe-area-inset-bottom,0px)); z-index:75; padding:10px 12px; border:1px solid #74dfd5; border-radius:999px; background:#1c4545; color:#8ff6e9; font-size:10px; font-weight:950; box-shadow:0 6px 22px rgba(0,0,0,.3); cursor:pointer; }
+body.motion-flow-armed:has(#dayPage.active) #motionFlowReturn { display:block; }
+@media(max-width:390px) {
+  .motion-flow-card { padding:17px; border-radius:19px; }
+  .motion-flow-card h2 { font-size:25px; }
+  .motion-flow-actions button { padding:9px 7px; font-size:10px; }
+}
