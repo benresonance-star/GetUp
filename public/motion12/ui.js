@@ -1640,7 +1640,7 @@ function openDay(day,date=null){
  const primaryWork=p.tendon?.length?sessionWork.slice(0,tendonAfter):sessionWork;
  const secondaryWork=p.tendon?.length?sessionWork.slice(tendonAfter):[];
  const aerobicVariant=day===6?aerobicPowerVariant(date):'';
- const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i,day===6?{id:aerobicPowerExerciseId(date,i,aerobicVariant),target:aerobicPowerSessionTarget(date,w)}:{})).join('');
+ const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i,day===6?{id:aerobicPowerExerciseId(date,i,aerobicVariant),target:window.Motion12Flow?.plannedTarget?.(day,date,'work',i)||aerobicPowerSessionTarget(date,w)}:{})).join('');
  const secondaryHtml=secondaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,tendonAfter+i)).join('');
  let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
  const prepHtml=prepBlockMarkup(day,date,p);

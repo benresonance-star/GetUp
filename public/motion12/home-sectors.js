@@ -293,7 +293,7 @@
 
   /* Flow Mode is a focused layer over the existing workout. The underlying
      day page remains responsible for timers, sets and session completion. */
-  const flowState = { mode:'', day:0, date:'', index:0, cue:'' };
+  const flowState = { mode:'', day:0, date:'', index:0, cue:'', system:'standard' };
   const flowKey = date => 'motionflow:' + date;
   const flowEscape = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -314,6 +314,77 @@
   }
   function flowSession(day) {
     return settings.trainingSystem === 'calisthenics' ? CAL_SESSIONS[day] : program[day];
+  }
+  /* Date-scoped edits leave the 12-week templates intact. The same edits are
+     applied to the normal workout before rendering, so logging and timers
+     retain their existing exercise identities. */
+  const flowOriginalRows = new WeakMap();
+  const flowTouchedRows = new Set();
+  const flowGroups = [
+    ['prep','WARM-UP'],['work','MAIN SESSION'],['tendon','TENDON CAPACITY'],['support','SUPPORT']
+  ];
+  const flowSystem = () => settings.trainingSystem === 'calisthenics' ? 'calisthenics' : 'standard';
+  const flowSafeText = value => String(value ?? '').replace(/[<>"']/g,'').trim().slice(0,140);
+  function flowOriginal(array) {
+    if (!flowOriginalRows.has(array)) flowOriginalRows.set(array,array.map(row => [...row]));
+    return flowOriginalRows.get(array);
+  }
+  function flowSessionGroups(day,date,system=flowSystem()) {
+    if (system === 'calisthenics') {
+      const rows = window.Motion12Cal?.getExercisePlan?.(day) || [];
+      return rows.length ? [{ key:'work', label:'MAIN SESSION', rows:rows.map(row => ({name:row[1],target:row[2]})) }] : [];
+    }
+    return flowGroups.map(([key,label]) => {
+      const array = key === 'work' && day === 6 && typeof aerobicPowerSessionWork === 'function'
+        ? aerobicPowerSessionWork(date) : program[day]?.[key];
+      return array?.length ? {key,label,rows:flowOriginal(array).map(row => ({name:row[0],target:row[1]}))} : null;
+    }).filter(Boolean);
+  }
+  function flowPlanEdits(date,system=flowSystem()) {
+    return logs[flowKey(date)]?.plans?.[system] || {};
+  }
+  function flowExerciseEditor(day,date,system) {
+    const edits = flowPlanEdits(date,system);
+    const groups = flowSessionGroups(day,date,system);
+    if (!groups.length) return '<p class="motion-flow-plan-empty">No prescribed exercises tomorrow. Keep the recovery session easy.</p>';
+    return `<div class="motion-flow-plan" aria-label="Tomorrow's editable exercise plan">
+      ${groups.map(group => `<section class="motion-flow-plan-group"><h3>${group.label} <span>${group.rows.length}</span></h3>
+        ${group.rows.map((row,i) => {
+          const saved = edits[group.key + ':' + i] || {};
+          return `<div class="motion-flow-exercise"><span class="motion-flow-ex-number">${String(i+1).padStart(2,'0')}</span>
+            <div class="motion-flow-ex-fields"><label>Exercise<input data-flow-group="${group.key}" data-flow-index="${i}" data-flow-field="name" maxlength="140" value="${flowEscape(saved.name ?? row.name)}"></label>
+            <label>Sets / reps / interval<input data-flow-group="${group.key}" data-flow-index="${i}" data-flow-field="target" maxlength="140" value="${flowEscape(saved.target ?? row.target)}"></label></div></div>`;
+        }).join('')}</section>`).join('')}</div>`;
+  }
+  function flowApplySession(day,date) {
+    for (const array of flowTouchedRows) array.splice(0,array.length,...flowOriginal(array).map(row => [...row]));
+    flowTouchedRows.clear();
+    const system=flowSystem(), edits=flowPlanEdits(date,system);
+    if (system === 'calisthenics') {
+      window.Motion12Cal?.applyExerciseEdits?.(day,edits);
+      return;
+    }
+    for (const [key] of flowGroups) {
+      const array = key === 'work' && day === 6 && typeof aerobicPowerSessionWork === 'function'
+        ? aerobicPowerSessionWork(date) : program[day]?.[key];
+      if (!array?.length) continue;
+      const base=flowOriginal(array);
+      array.splice(0,array.length,...base.map((row,i) => {
+        const item=edits[key + ':' + i] || {};
+        const copy=[...row];
+        if (item.name) copy[0]=flowSafeText(item.name) || row[0];
+        if (item.target) copy[1]=flowSafeText(item.target) || row[1];
+        return copy;
+      }));
+      flowTouchedRows.add(array);
+    }
+  }
+  const flowBaseOpenDay = window.openDay;
+  if (typeof flowBaseOpenDay === 'function') {
+    window.openDay = function(day,date) {
+      flowApplySession(Number(day),date || dateForProgramDay(Number(day)));
+      return flowBaseOpenDay(day,date);
+    };
   }
   function flowMount() {
     let overlay = document.getElementById('motionFlowOverlay');
@@ -380,20 +451,40 @@
        </div><p class="motion-flow-note">Use the existing workout to record sets and control timers. Return to this focused view at any point.</p>`);
   }
   window.Motion12Flow = {
+    applySession:flowApplySession,
+    plannedTarget(day,date,group,index) {
+      const source=group === 'work' && day === 6 ? aerobicPowerSessionWork(date) : program[day]?.[group];
+      const baseline=source ? flowOriginal(source)[index]?.[1] : null;
+      const edited=flowPlanEdits(date,'standard')[group+':'+index]?.target;
+      return edited && edited !== baseline ? flowSafeText(edited) : null;
+    },
     previewTomorrow() {
       const date = flowTomorrow(), day = flowDay(date), session = flowSession(day);
       const saved = logs[flowKey(date)] || {};
       flowState.mode = 'preview'; flowState.day = day; flowState.date = date;
       flowState.cue = saved.cue || flowDefaultCues[day];
+      const system = flowSystem(); flowState.system = system;
       const weekday = new Date(date + 'T12:00:00').toLocaleDateString('en-AU',{weekday:'long'});
       flowShow('TONIGHT · PREPARE FOR ' + weekday.toUpperCase(), session.name,
         `<p class="motion-flow-target">${flowEscape(session.time)} · ${flowEscape(session.why)}</p>
          <div class="motion-flow-cue"><small>TOMORROW'S ONE FOCUS</small>
            <label for="motionFlowCueInput">Choose a short intention you can remember during the session.</label>
            <input id="motionFlowCueInput" maxlength="110" value="${flowEscape(flowState.cue)}"></div>
-         <div class="motion-flow-review"><span>01 · Know the first movement</span><span>02 · Prepare equipment tonight</span><span>03 · After your morning routine, begin the warm-up</span></div>
+         <div class="motion-flow-plan-header"><div><small>YOUR EXERCISE PLAN</small><p>Review or change any exercise and prescription right here.</p></div><button type="button" class="motion-flow-reset" onclick="Motion12Flow.resetPreview()">RESET</button></div>
+         ${flowExerciseEditor(day,date,system)}
+         <p class="motion-flow-equipment">Set out the equipment for this plan tonight. Start with your usual warm-up tomorrow.</p>
          <button type="button" class="motion-flow-primary motion-flow-wide" onclick="Motion12Flow.savePreview()">READY FOR MORNING ✓</button>
-         <p class="motion-flow-note" id="motionFlowStatus">A brief mental rehearsal is enough. Tomorrow's focus is saved on this device.</p>`);
+         <p class="motion-flow-note" id="motionFlowStatus">Your focus and tomorrow's exercise edits will be saved together on this device.</p>`);
+    },
+    resetPreview() {
+      if (flowState.mode !== 'preview') return;
+      const groups=flowSessionGroups(flowState.day,flowState.date,flowState.system);
+      for (const group of groups) group.rows.forEach((row,i) => {
+        const selector=(field)=>`[data-flow-group="${group.key}"][data-flow-index="${i}"][data-flow-field="${field}"]`;
+        const name=document.querySelector(selector('name')),target=document.querySelector(selector('target'));
+        if (name) name.value=row.name;
+        if (target) target.value=row.target;
+      });
     },
     savePreview() {
       const status = document.getElementById('motionFlowStatus');
@@ -402,7 +493,18 @@
         return;
       }
       flowState.cue = (document.getElementById('motionFlowCueInput')?.value || '').trim().slice(0,110) || flowDefaultCues[flowState.day];
-      logs[flowKey(flowState.date)] = { ready:true, cue:flowState.cue, at:new Date().toISOString() };
+      const system=flowState.system, edits={};
+      document.querySelectorAll('#motionFlowOverlay [data-flow-field="name"]').forEach(input => {
+        const group=input.dataset.flowGroup,index=input.dataset.flowIndex;
+        const target=document.querySelector(`#motionFlowOverlay [data-flow-group="${group}"][data-flow-index="${index}"][data-flow-field="target"]`);
+        edits[group+':'+index]={name:flowSafeText(input.value),target:flowSafeText(target?.value)};
+      });
+      if (Object.values(edits).some(row => !row.name || !row.target)) {
+        if (status) status.textContent = 'Every exercise needs a name and sets / reps / interval.';
+        return;
+      }
+      const prior=logs[flowKey(flowState.date)] || {};
+      logs[flowKey(flowState.date)] = {...prior,ready:true,cue:flowState.cue,plans:{...prior.plans,[system]:edits},at:new Date().toISOString()};
       motion12SetItem('motion12.logs', JSON.stringify(logs));
       flowHide();
       if (document.getElementById('homePage')?.classList.contains('active')) renderHome();

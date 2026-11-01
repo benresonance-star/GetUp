@@ -58,7 +58,17 @@ function goals(){return logs[NS+'goals']||{};}
 function goal(id){const g=GOALS.find(x=>x[0]===id);return {...{baseline:0,target:g?g[3]:0,best:0,variation:''},...(goals()[id]||{})};}
 function saveGoal(id,field,value){if(!writable())return;const data=goals();const old=goal(id);data[id]={...old,[field]:field==='variation'?String(value):Math.min(9999,Math.max(0,Number(value)||0))};logs[NS+'goals']=data;persist();renderProgress();if(activeSession&&isCal())renderSession(activeSession.day,activeSession.date);}
 function prescription(x){const m=String(x[2]).match(/^(\d+)\s*×/);let count=m?Number(m[1]):1;if(weekNum()<=2&&count>2)count=Math.max(2,Math.ceil(count*0.6));return count;}
+const BASE_EXERCISES=TYPES.map(session=>session.work.map(row=>[...row]));
 function sessionExercises(day){return TYPES[day].work;}
+function getExercisePlan(day){return (BASE_EXERCISES[day]||[]).map(row=>[...row]);}
+function applyExerciseEdits(day,edits={}){
+ const base=BASE_EXERCISES[day]||[];
+ TYPES[day].work=base.map((row,index)=>{
+  const edit=edits['work:'+index]||{};
+  const cleanText=value=>String(value||'').replace(/[<>"']/g,'').trim().slice(0,140);
+  return [row[0],cleanText(edit.name)||row[1],cleanText(edit.target)||row[2],row[3],row[4]];
+ });
+}
 function previousSet(id,date,index){const prefix=NS;return Object.keys(logs).filter(k=>k.startsWith(prefix)&&k.endsWith(':'+id)&&k.indexOf(':goals')<0&&k.split(':')[1]<date).sort().reverse().map(k=>(logs[k]&&logs[k].sets||[])[index]).find(x=>x&&x.done)||null;}
 function saveSession(date,day,patch){if(!writable())return;const k=key(date,day);logs[k]={...record(date,day),...patch};persist();}
 function escapeJs(v){return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
@@ -272,6 +282,7 @@ function renderSession(day,date){
 }
 function openCal(day,date){
  const d=Math.max(0,Math.min(6,Number(day)||0)),dayDate=/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:weeklyDate(d);
+ window.Motion12Flow?.applySession?.(d,dayDate);
  showPage('dayPage');renderSession(d,dayDate);
  window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -313,7 +324,8 @@ function addStyles(){
 }
 window.Motion12Cal={
  switch:setMode,open:openCal,goal:saveGoal,saveSet:saveSet,finishSet:stepSet,note:saveNote,
- rest:startRest,pauseRest:pauseRest,resetRest:resetRest,interval:toggleInterval,resetInterval:resetInterval,pause:setPaused,complete:complete
+ rest:startRest,pauseRest:pauseRest,resetRest:resetRest,interval:toggleInterval,resetInterval:resetInterval,pause:setPaused,complete:complete,
+ getExercisePlan:getExercisePlan,applyExerciseEdits:applyExerciseEdits
 };
 addStyles();headerHtml();applyModeRendering();
 if(isCal()){renderHome();renderDays();renderProgress();}
