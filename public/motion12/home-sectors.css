@@ -24,7 +24,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-sector-title h2 { flex:1; min-width:0; margin:0; font-size:17px; line-height:1.13; font-weight:900; letter-spacing:-.04em; }
 .motion-sector-side { color:var(--muted); font-size:9px; font-weight:900; letter-spacing:.055em; text-align:right; white-space:nowrap; }
 
-.motion-goals { background:linear-gradient(125deg,rgba(var(--accent-rgb,255,77,46),.095),var(--surface) 58%); }
+.motion-goals { background:#392320; }
 .motion-goal-row { display:grid; grid-template-columns:1.06fr .94fr; gap:14px; }
 .motion-key-figure { display:flex; flex-direction:column; min-width:0; }
 .motion-key-figure strong { color:var(--ink); font-size:25px; line-height:1.04; letter-spacing:-.055em; font-weight:950; white-space:nowrap; }
@@ -37,7 +37,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-sector-foot>span { min-width:0; color:var(--muted); font-size:9px; line-height:1.25; }
 .motion-sector-foot button { flex:none; padding:3px 0 3px 6px; border:0; background:none; color:var(--volt); font-size:9px; font-weight:950; cursor:pointer; }
 
-.motion-nutrition { background:#1b1d21; }
+.motion-nutrition { background:#372c20; }
 .motion-calorie-row { display:grid; grid-template-columns:.9fr 1.25fr; align-items:end; gap:8px; }
 .motion-calorie-total strong { display:block; font-size:33px; line-height:.97; letter-spacing:-.06em; font-weight:950; color:var(--ink); }
 .motion-calorie-total>span { display:block; margin-top:4px; color:var(--muted); font-size:10px; font-weight:650; }
@@ -85,7 +85,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-history-entry span { display:block; margin-top:3px; color:var(--muted); font-size:10px; line-height:1.4; }
 .motion-history-empty { color:var(--muted); font-size:11px; line-height:1.4; }
 
-.motion-training { border-color:rgba(var(--accent-rgb,255,77,46),.30); }
+.motion-training { border-color:rgba(var(--accent-rgb,255,77,46),.40); background:#2b273b; }
 .motion-system-select { max-width:135px; min-width:0; padding:6px 7px; border:1px solid var(--line); border-radius:9px;
   background:var(--surface2); color:var(--muted); font-size:9px; font-weight:950; cursor:pointer; }
 .motion-training-row { display:flex; align-items:center; gap:10px; justify-content:space-between; }
@@ -97,7 +97,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-training-launch span { font-size:17px; line-height:.6; }
 .motion-cal-video-link { display:block; color:var(--volt); padding:6px 0; font-size:11px; font-weight:850; text-decoration:none; }
 
-.motion-recovery { background:linear-gradient(120deg,rgba(59,231,225,.045),var(--surface) 70%); }
+.motion-recovery { background:#1c3838; }
 .motion-recovery .motion-sector-number { color:var(--cyan); background:rgba(59,231,225,.1); }
 .motion-recovery-row { display:grid; grid-template-columns:.75fr 1fr auto; align-items:center; gap:11px; }
 .motion-recovery-row>div { min-width:0; }
@@ -141,33 +141,24 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-recovery-cue { margin-top:5px; }
 }
 
-/* r81 · restrained colour washes distinguish the four daily sectors.
-   Gradients colour the surfaces only: text and controls keep their contrast. */
+/* r82 · stronger, flat sector colours with no gradients. */
 .motion-goals {
-  border-color:rgba(var(--accent-rgb,255,77,46),.27);
-  background:
-    radial-gradient(ellipse 105% 135% at -12% -32%,rgba(var(--accent-rgb,255,77,46),.24) 0%,rgba(var(--accent-rgb,255,77,46),.09) 44%,transparent 75%),
-    radial-gradient(ellipse 85% 110% at 105% 115%,rgba(115,48,73,.12),transparent 75%),
-    #191b1e;
+  border-color:rgba(var(--accent-rgb,255,77,46),.42);
+  background:#392320;
+  background-image:none;
 }
 .motion-nutrition {
-  border-color:rgba(220,157,86,.27);
-  background:
-    radial-gradient(ellipse 110% 130% at -15% -28%,rgba(238,174,87,.21) 0%,rgba(190,126,61,.09) 45%,transparent 77%),
-    radial-gradient(ellipse 85% 115% at 112% 108%,rgba(130,83,48,.11),transparent 78%),
-    #1b1d20;
+  border-color:rgba(220,157,86,.45);
+  background:#372c20;
+  background-image:none;
 }
 .motion-training {
-  border-color:rgba(var(--accent-rgb,255,77,46),.34);
-  background:
-    radial-gradient(ellipse 95% 145% at 110% -36%,rgba(133,104,211,.22) 0%,rgba(107,80,176,.09) 45%,transparent 75%),
-    radial-gradient(ellipse 85% 100% at -12% 112%,rgba(var(--accent-rgb,255,77,46),.14),transparent 76%),
-    #181b1e;
+  border-color:rgba(148,113,203,.47);
+  background:#2b273b;
+  background-image:none;
 }
 .motion-recovery {
-  border-color:rgba(53,188,183,.28);
-  background:
-    radial-gradient(ellipse 110% 130% at -14% -34%,rgba(38,193,181,.22) 0%,rgba(36,143,146,.09) 43%,transparent 76%),
-    radial-gradient(ellipse 95% 110% at 110% 108%,rgba(50,107,135,.13),transparent 78%),
-    #171c1e;
+  border-color:rgba(53,188,183,.44);
+  background:#1c3838;
+  background-image:none;
 }
