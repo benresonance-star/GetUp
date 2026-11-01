@@ -1,0 +1,109 @@
+/* MOTION12 — all four Home priorities on one mobile view. */
+body:has(#homePage.active) .cal-global-header,
+body:has(#homePage.active) #homeModeToggle { display:none!important; }
+body:has(#homePage.active) main { padding-top:4px; }
+
+.motion-sector-stack { display:grid; gap:9px; max-width:600px; margin:0 auto; }
+.motion-sector {
+  min-width:0; padding:13px 15px 12px; border:1px solid var(--line);
+  border-radius:20px; background:var(--surface); overflow:hidden;
+}
+.motion-sector-title { display:flex; align-items:center; min-height:22px; gap:9px; margin-bottom:11px; }
+.motion-sector-number { display:grid; place-items:center; width:25px; height:25px; flex:none;
+  border-radius:8px; background:rgba(var(--accent-rgb,255,77,46),.12);
+  color:var(--volt); font-size:10px; font-weight:950; letter-spacing:-.02em; }
+.motion-sector-title h2 { flex:1; min-width:0; margin:0; font-size:17px; line-height:1.13; font-weight:900; letter-spacing:-.04em; }
+.motion-sector-side { color:var(--muted); font-size:9px; font-weight:900; letter-spacing:.055em; text-align:right; white-space:nowrap; }
+
+.motion-goals { background:linear-gradient(125deg,rgba(var(--accent-rgb,255,77,46),.095),var(--surface) 58%); }
+.motion-goal-row { display:grid; grid-template-columns:1.06fr .94fr; gap:14px; }
+.motion-key-figure { display:flex; flex-direction:column; min-width:0; }
+.motion-key-figure strong { color:var(--ink); font-size:25px; line-height:1.04; letter-spacing:-.055em; font-weight:950; white-space:nowrap; }
+.motion-key-figure em { font-style:normal; font-size:12px; letter-spacing:-.025em; }
+.motion-key-figure small { margin-top:3px; color:var(--muted); font-size:10px; font-weight:650; }
+.motion-progress-line,.motion-calorie-track { height:4px; border-radius:99px; overflow:hidden; background:rgba(255,255,255,.09); }
+.motion-progress-line { margin-top:12px; }
+.motion-progress-line span { display:block; height:100%; background:var(--volt); border-radius:inherit; }
+.motion-sector-foot { margin-top:7px; display:flex; align-items:center; gap:7px; justify-content:space-between; }
+.motion-sector-foot>span { min-width:0; color:var(--muted); font-size:9px; line-height:1.25; }
+.motion-sector-foot button { flex:none; padding:3px 0 3px 6px; border:0; background:none; color:var(--volt); font-size:9px; font-weight:950; cursor:pointer; }
+
+.motion-nutrition { background:#1b1d21; }
+.motion-calorie-row { display:grid; grid-template-columns:.9fr 1.25fr; align-items:end; gap:8px; }
+.motion-calorie-total strong { display:block; font-size:33px; line-height:.97; letter-spacing:-.06em; font-weight:950; color:var(--ink); }
+.motion-calorie-total>span { display:block; margin-top:4px; color:var(--muted); font-size:10px; font-weight:650; }
+.motion-macro-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
+.motion-macro-grid>div { min-width:0; padding:7px 3px 5px; background:rgba(255,255,255,.035); border-radius:9px; text-align:center; }
+.motion-macro-grid b { display:block; font-size:17px; font-weight:950; letter-spacing:-.045em; white-space:nowrap; }
+.motion-macro-grid b small { font-size:9px; color:var(--muted); font-weight:800; }
+.motion-macro-grid span { display:block; margin-top:2px; font-size:7.5px; letter-spacing:.045em; color:var(--muted); font-weight:900; }
+.motion-calorie-track { margin-top:9px; }
+.motion-calorie-track span { display:block; height:100%; border-radius:inherit; background:var(--cyan); }
+
+.motion-sector-details { margin-top:8px; border-top:1px solid var(--line); }
+.motion-sector-details summary { display:flex; align-items:center; justify-content:space-between; list-style:none; cursor:pointer;
+  padding:8px 0 0; color:var(--muted); font-size:9px; font-weight:950; letter-spacing:.075em; }
+.motion-sector-details summary::-webkit-details-marker { display:none; }
+.motion-sector-details summary span { font-size:15px; font-weight:700; line-height:.65; transition:transform .15s; }
+.motion-sector-details[open] summary span { transform:rotate(180deg); }
+.motion-sector-expand { margin-top:10px; }
+.motion-sector-expand .compact-practice-strip { margin-top:8px; }
+.motion-sector-expand .compact-week { margin-bottom:9px; }
+.motion-sector-expand .compact-meal-grid { gap:5px; }
+.motion-sector-expand .compact-meal { min-height:38px; }
+
+.motion-training { border-color:rgba(var(--accent-rgb,255,77,46),.30); }
+.motion-system-select { max-width:135px; min-width:0; padding:6px 7px; border:1px solid var(--line); border-radius:9px;
+  background:var(--surface2); color:var(--muted); font-size:9px; font-weight:950; cursor:pointer; }
+.motion-training-row { display:flex; align-items:center; gap:10px; justify-content:space-between; }
+.motion-training-row>div { min-width:0; }
+.motion-training-row strong { display:block; font-size:24px; font-weight:950; letter-spacing:-.055em; line-height:1.05; }
+.motion-training-row>div>span { display:block; color:var(--muted); font-size:10px; line-height:1.3; margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.motion-training-launch { flex:none; min-width:88px; min-height:39px; padding:7px 11px; border:0; border-radius:12px; background:var(--volt); color:#111;
+  font-size:10px; font-weight:950; display:flex; justify-content:center; align-items:center; gap:8px; cursor:pointer; }
+.motion-training-launch span { font-size:17px; line-height:.6; }
+.motion-cal-video-link { display:block; color:var(--volt); padding:6px 0; font-size:11px; font-weight:850; text-decoration:none; }
+
+.motion-recovery { background:linear-gradient(120deg,rgba(59,231,225,.045),var(--surface) 70%); }
+.motion-recovery .motion-sector-number { color:var(--cyan); background:rgba(59,231,225,.1); }
+.motion-recovery-row { display:grid; grid-template-columns:.75fr 1fr auto; align-items:center; gap:11px; }
+.motion-recovery-row>div { min-width:0; }
+.motion-recovery-row strong { font-size:24px; font-weight:950; line-height:1.06; letter-spacing:-.055em; white-space:nowrap; }
+.motion-recovery-row em { font-size:11px; font-style:normal; letter-spacing:0; }
+.motion-recovery-row small { display:block; margin-top:3px; font-size:9px; line-height:1.2; color:var(--muted); }
+.motion-recovery-row button { min-height:37px; border-radius:12px; border:1px solid rgba(59,231,225,.35); background:rgba(59,231,225,.08); padding:6px 11px;
+  color:var(--cyan); font-size:10px; font-weight:950; cursor:pointer; white-space:nowrap; }
+.motion-recovery-row button span { font-size:15px; }
+.motion-recovery-cue { margin:8px 0 0; font-size:10px; line-height:1.3; color:var(--muted); }
+
+@media(min-width:760px) {
+  .motion-sector-stack { max-width:660px; }
+  .motion-sector { padding:18px 20px; }
+  .motion-sector-title h2 { font-size:20px; }
+}
+@media(max-width:390px) {
+  .motion-sector { padding:11px 12px 10px; border-radius:17px; }
+  .motion-sector-title { gap:7px; margin-bottom:8px; }
+  .motion-sector-title h2 { font-size:16px; }
+  .motion-sector-number { width:23px; height:23px; }
+  .motion-key-figure strong { font-size:22px; }
+  .motion-calorie-total strong { font-size:29px; }
+  .motion-macro-grid b { font-size:15px; }
+  .motion-training-row strong { font-size:21px; }
+  .motion-training-launch { min-width:76px; padding:6px 8px; }
+  .motion-recovery-row { gap:6px; }
+  .motion-recovery-row strong { font-size:21px; }
+  .motion-recovery-row button { padding:5px 8px; }
+}
+@media(max-height:740px) and (max-width:600px) {
+  body:has(#homePage.active) .top { padding-bottom:4px; }
+  body:has(#homePage.active) .topline { min-height:44px; }
+  .motion-sector-stack { gap:6px; }
+  .motion-sector { padding-top:9px; padding-bottom:8px; }
+  .motion-sector-title { margin-bottom:6px; }
+  .motion-key-figure strong { font-size:22px; }
+  .motion-goal-row { gap:8px; }
+  .motion-progress-line { margin-top:8px; }
+  .motion-sector-details { margin-top:5px; }
+  .motion-recovery-cue { margin-top:5px; }
+}
