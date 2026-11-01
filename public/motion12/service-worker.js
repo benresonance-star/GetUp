@@ -1,5 +1,5 @@
-/* MOTION12 r86 push worker. No app-shell caching, no worker self-unregister. */
-const BUILD_ID='canonical-r86-20261101';
+/* MOTION12 r87 push worker. No app-shell caching, no worker self-unregister. */
+const BUILD_ID='canonical-r87-20261101';
 const CACHE_PREFIX='motion12-shell-';
 const APP_URL='https://benresonance-star.github.io/GetUp/public/motion12/?flow=tomorrow';
 
@@ -36,5 +36,5 @@ self.addEventListener('notificationclick',event=>{
 });
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
-  if(event.data?.type==='GET_BUILD'&&event.ports?.[0])event.ports[0].postMessage({build:BUILD_ID,cacheVersion:'push-r86'});
+  if(event.data?.type==='GET_BUILD'&&event.ports?.[0])event.ports[0].postMessage({build:BUILD_ID,cacheVersion:'push-r87'});
 });

@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r86-20261101" />
+  <meta name="motion12-build" content="canonical-r87-20261101" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="./theme.css?v=r70" />
   <link rel="stylesheet" href="./app.css?v=r70" />
   <link rel="stylesheet" href="./home-sectors.css?v=r85" />
-  <link rel="stylesheet" href="./notifications.css?v=r86" />
+  <link rel="stylesheet" href="./notifications.css?v=r87" />
   <style>
     .brand-line{display:flex;align-items:baseline;gap:7px}
     .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
@@ -117,6 +117,15 @@
 <div class="settings-overlay" id="settingsOverlay">
   <div class="sheet">
     <h2>Program settings</h2>
+    <details class="reminder-settings" id="flowReminderSettings">
+      <summary>Evening Flow reminder <span id="flowReminderBadge">OFF</span></summary>
+      <p class="settings-note">Get a lock-screen reminder to review tomorrow's exercises and choose a mental focus. Scheduled for the 7–8 pm Melbourne hour on Vercel's free tier. No audio is played by MOTION12.</p>
+      <p class="settings-note">On iPhone, open MOTION12 from its Home Screen icon to enable notifications.</p>
+      <div class="field"><label for="flowReminderCode">Reminder access code</label><input id="flowReminderCode" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your private code"><p class="settings-note">Enter the code provided during setup. It stays on this device, separate from your workout history.</p></div>
+      <div class="reminder-buttons"><button type="button" id="flowReminderEnable">Enable reminder</button><button type="button" id="flowReminderTest">Send test</button><button type="button" id="flowReminderDisable">Disable</button></div>
+      <p id="flowReminderStatus" class="reminder-status" aria-live="polite">Checking notification availability…</p>
+      <p class="settings-note">These notification buttons apply immediately; the main Save button is for program settings.</p>
+    </details>
     <div class="field"><label>12-week start date (Monday)</label><input type="date" id="startDateInput"></div>
     <div class="field"><label>Bodyweight (kg)</label><input type="number" id="bodyweightInput" step="0.1" min="30" max="250"></div>
     <div class="field"><label>Clean pull-up max · Practice</label><input type="number" id="pullupMaxInput" step="1" min="1" max="30" inputmode="numeric" placeholder="e.g. 6"><p class="settings-note practice-settings-note">Used only to set the submaximal Practice dose. Monday micro-sets are automatically disabled; re-test a clean maximum after four weeks.</p></div>
@@ -160,14 +169,6 @@
         <div class="field"><label>Protein powder (g)</label><input type="number" id="powderInput" step="5" min="0"></div>
         <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
       </div>
-    </details>
-    <details class="reminder-settings" id="flowReminderSettings">
-      <summary>Evening Flow reminder <span id="flowReminderBadge">OFF</span></summary>
-      <p class="settings-note">Get a lock-screen reminder to review tomorrow's exercises and choose a mental focus. Scheduled for the 7–8 pm Melbourne hour on Vercel's free tier. No audio is played by MOTION12.</p>
-      <p class="settings-note">On iPhone, open MOTION12 from its Home Screen icon to enable notifications.</p>
-      <div class="field"><label for="flowReminderCode">Reminder access code</label><input id="flowReminderCode" type="password" autocomplete="off" spellcheck="false" placeholder="Enter your private code"><p class="settings-note">Enter the code provided during setup. It stays on this device, separate from your workout history.</p></div>
-      <div class="reminder-buttons"><button type="button" id="flowReminderEnable">Enable reminder</button><button type="button" id="flowReminderTest">Send test</button><button type="button" id="flowReminderDisable">Disable</button></div>
-      <p id="flowReminderStatus" class="reminder-status" aria-live="polite">Checking notification availability…</p>
     </details>
     <details class="data-settings">
       <summary>Training data</summary>
@@ -242,7 +243,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src='./'+src+'?v=r86';
+        s.src='./'+src+'?v=r87';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);

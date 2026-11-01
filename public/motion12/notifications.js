@@ -1,4 +1,4 @@
-/* MOTION12 r86 - permission-based, night-before web push. The workout plan
+/* MOTION12 r87 - permission-based, night-before web push. The workout plan
    never leaves the device; the server only retains the push subscription. */
 (function(){
   'use strict';
@@ -60,7 +60,13 @@
     const buttons=['flowReminderEnable','flowReminderTest','flowReminderDisable'].map($).filter(Boolean);
     buttons.forEach(node=>node.disabled=true);
     try{await action();}catch(error){status(error.message||'Notification setup failed. Try again.','error');}
-    finally{busy=false;buttons.forEach(node=>node.disabled=false);}
+    finally{
+      busy=false;
+      buttons.forEach(node=>node.disabled=false);
+      const active=await activeSubscription().catch(()=>null);
+      $('flowReminderTest').disabled=!active;
+      $('flowReminderDisable').disabled=!active;
+    }
   }
   async function enable(){
     if(!supported())throw Error('Install MOTION12 to your Home Screen on a supported iPhone to receive notifications.');
