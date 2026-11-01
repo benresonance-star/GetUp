@@ -36,6 +36,10 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-sector-foot { margin-top:7px; display:flex; align-items:center; gap:7px; justify-content:space-between; }
 .motion-sector-foot>span { min-width:0; color:var(--muted); font-size:9px; line-height:1.25; }
 .motion-sector-foot button { flex:none; padding:3px 0 3px 6px; border:0; background:none; color:var(--volt); font-size:9px; font-weight:950; cursor:pointer; }
+.motion-fitness-goal-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:10px; }
+.motion-fitness-goal-strip>div { min-width:0; padding:7px 6px 6px; border-radius:9px; background:rgba(255,255,255,.045); text-align:center; }
+.motion-fitness-goal-strip strong { display:block; font-size:17px; line-height:1; font-weight:950; color:var(--ink); font-variant-numeric:tabular-nums; }
+.motion-fitness-goal-strip small { display:block; margin-top:4px; font-size:8px; line-height:1.15; color:var(--muted); font-weight:800; }
 
 .motion-nutrition { background:#372c20; }
 .motion-calorie-row { display:grid; grid-template-columns:.9fr 1.25fr; align-items:end; gap:8px; }
@@ -74,6 +78,22 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-bodycomp-form button { grid-column:1/-1; min-height:36px; padding:8px; border:0; border-radius:10px; background:var(--volt); color:#111; font-size:10px; font-weight:950; cursor:pointer; }
 .motion-bodycomp-form p { grid-column:1/-1; margin:0; color:var(--cyan); font-size:10px; }
 .motion-bodycomp-form p:empty { display:none; }
+.motion-fitness-details { margin-top:7px; }
+.motion-fitness-details summary { gap:7px; justify-content:initial; }
+.motion-fitness-details summary>span:first-child { flex:none; font-size:8px; line-height:1.3; transform:none; }
+.motion-fitness-details summary b { flex:1; min-width:0; text-align:right; font-size:9px; font-weight:650; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--muted); }
+.motion-fitness-details summary .motion-fitness-edit { flex:none; font-size:9px; font-weight:950; color:var(--volt); line-height:1.3; transform:none; }
+.motion-fitness-details[open] summary>span:first-child,
+.motion-fitness-details[open] summary .motion-fitness-edit { transform:none; }
+.motion-fitness-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; align-items:start; padding-top:11px; }
+.motion-fitness-form label { display:block; min-width:0; font-size:10px; font-weight:850; color:var(--ink); }
+.motion-fitness-form label input { display:block; min-width:0; width:100%; margin-top:5px; padding:9px 8px; border:1px solid var(--line); border-radius:9px; background:var(--surface2); color:var(--ink); font-size:14px; }
+.motion-fitness-form label small { display:block; margin-top:5px; color:var(--muted); font-size:9px; font-weight:600; }
+.motion-fitness-form>p { grid-column:1/-1; margin:0; color:var(--muted); font-size:10px; line-height:1.4; }
+.motion-fitness-form>p button { border:0; background:none; color:var(--volt); font:inherit; font-weight:900; padding:0; cursor:pointer; }
+.motion-fitness-form>button[type=submit] { grid-column:1/-1; min-height:36px; padding:9px; border:0; border-radius:10px; background:var(--volt); color:#111; font-size:10px; font-weight:950; cursor:pointer; }
+.motion-fitness-form>p[role=status] { color:var(--cyan); }
+.motion-fitness-form>p:empty { display:none; }
 .motion-bodycomp-history { border-top:1px solid var(--line); padding:13px 0; margin-top:12px; }
 .motion-bodycomp-history>summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; font-size:13px; font-weight:900; }
 .motion-bodycomp-history>summary::-webkit-details-marker { display:none; }
@@ -120,6 +140,8 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-sector-title h2 { font-size:16px; }
   .motion-sector-number { width:23px; height:23px; }
   .motion-key-figure strong { font-size:22px; }
+  .motion-fitness-goal-strip strong { font-size:15px; }
+  .motion-fitness-goal-strip small { font-size:7.5px; }
   .motion-calorie-total strong { font-size:29px; }
   .motion-macro-grid b { font-size:15px; }
   .motion-training-row strong { font-size:21px; }
@@ -136,6 +158,8 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-sector-title { margin-bottom:6px; }
   .motion-key-figure strong { font-size:22px; }
   .motion-goal-row { gap:8px; }
+  .motion-fitness-goal-strip { margin-top:6px; gap:4px; }
+  .motion-fitness-goal-strip>div { padding:5px 4px; }
   .motion-progress-line { margin-top:8px; }
   .motion-sector-details { margin-top:5px; }
   .motion-recovery-cue { margin-top:5px; }
