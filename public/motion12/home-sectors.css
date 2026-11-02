@@ -17,7 +17,6 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-sector-stack {
   --m12-type-section:var(--motion-type-card-title,17px);
   --m12-type-display:var(--motion-type-display,28px);
-  --m12-type-feature:var(--motion-type-feature,23px);
   --m12-type-stat:var(--motion-type-stat,18px);
   --m12-type-target:var(--motion-type-target,15px);
   --m12-type-body:var(--motion-type-compact-body,10px);
@@ -123,7 +122,9 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   background:var(--surface2); color:var(--muted); font-size:var(--m12-type-label); font-weight:900; cursor:pointer; }
 .motion-training-row { display:flex; align-items:center; gap:10px; justify-content:space-between; }
 .motion-training-row>div { min-width:0; }
-.motion-training-row strong { display:block; font-size:var(--m12-type-feature); font-weight:950; letter-spacing:-.05em; line-height:1.05; }
+/* The day's workout is a primary value, just like calories and weight loss.
+   Fit longer session names on narrow phones without changing their type role. */
+.motion-training-row strong { display:block; font-size:min(var(--m12-type-display),6.5vw); font-weight:950; letter-spacing:-.05em; line-height:1.04; }
 .motion-training-row>div>span { display:block; color:var(--muted); font-size:var(--m12-type-body); line-height:1.3; margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .motion-training-launch { flex:none; min-width:88px; min-height:39px; padding:7px 11px; border:0; border-radius:12px; background:var(--volt); color:#111;
   font-size:var(--m12-type-action); font-weight:950; display:flex; justify-content:center; align-items:center; gap:8px; cursor:pointer; }
@@ -134,7 +135,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-recovery .motion-sector-number { color:var(--cyan); background:rgba(59,231,225,.1); }
 .motion-recovery-row { display:grid; grid-template-columns:.75fr 1fr auto; align-items:center; gap:11px; }
 .motion-recovery-row>div { min-width:0; }
-.motion-recovery-row strong { font-size:var(--m12-type-feature); font-weight:950; line-height:1.06; letter-spacing:-.05em; white-space:nowrap; }
+.motion-recovery-row strong { font-size:var(--m12-type-display); font-weight:950; line-height:1.04; letter-spacing:-.05em; white-space:nowrap; }
 .motion-recovery-row em { font-size:11px; font-style:normal; letter-spacing:0; }
 .motion-recovery-row small { display:block; margin-top:3px; font-size:var(--m12-type-body); line-height:1.2; color:var(--muted); }
 .motion-recovery-row button { min-height:37px; border-radius:12px; border:1px solid rgba(59,231,225,.35); background:rgba(59,231,225,.08); padding:6px 11px;
@@ -143,11 +144,11 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 .motion-recovery-cue { margin:8px 0 0; font-size:var(--m12-type-body); line-height:1.3; color:var(--muted); }
 
 @media(min-width:760px) {
-  .motion-sector-stack { max-width:660px; --m12-type-section:20px; --m12-type-display:32px; --m12-type-feature:26px; --m12-type-stat:20px; }
+  .motion-sector-stack { max-width:660px; --m12-type-section:20px; --m12-type-display:32px; --m12-type-stat:20px; }
   .motion-sector { padding:18px 20px; }
 }
 @media(max-width:390px) {
-  .motion-sector-stack { --m12-type-section:16px; --m12-type-display:24px; --m12-type-feature:21px; --m12-type-stat:16px; --m12-type-target:14px; --m12-type-body:9.5px; --m12-type-label:9px; --m12-type-action:9.5px; }
+  .motion-sector-stack { --m12-type-section:16px; --m12-type-display:24px; --m12-type-stat:16px; --m12-type-target:14px; --m12-type-body:9.5px; --m12-type-label:9px; --m12-type-action:9.5px; }
   .motion-sector { padding:11px 12px 10px; border-radius:17px; }
   .motion-sector-title { gap:7px; margin-bottom:8px; }
   .motion-sector-number { width:23px; height:23px; }
@@ -156,7 +157,7 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-recovery-row button { padding:5px 8px; }
 }
 @media(max-height:740px) and (max-width:600px) {
-  .motion-sector-stack { --m12-type-display:24px; --m12-type-feature:21px; }
+  .motion-sector-stack { --m12-type-display:24px; }
   body:has(#homePage.active) .top { padding-bottom:4px; }
   body:has(#homePage.active) .topline { min-height:44px; }
   .motion-sector-stack { gap:6px; }
@@ -168,6 +169,9 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
   .motion-progress-line { margin-top:8px; }
   .motion-sector-details { margin-top:5px; }
   .motion-recovery-cue { margin-top:5px; }
+}
+@media(max-width:360px) {
+  .motion-sector-stack { --m12-type-display:21px; }
 }
 
 /* r82 · stronger, flat sector colours with no gradients. */
