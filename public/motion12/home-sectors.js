@@ -1,14 +1,9 @@
-/* MOTION12 — four-sector Home. Presentation-only; all data stays in existing stores. */
+/* MOTION12 — four-sector Home presentation and UI event handlers.
+   Derived values and programme copy live in home-model.js. */
 (function () {
-  const CAL_SESSIONS = [
-    { name: 'Recovery & Mobility', time: '10–20 min', why: 'Recover and move easily.' },
-    { name: 'A · Pull & Foundation', time: '30–40 min', why: 'Pull, push, legs and trunk.' },
-    { name: 'Easy Recovery', time: '10–25 min', why: 'Low-fatigue movement.' },
-    { name: 'B · Push & Dip', time: '30–40 min', why: 'Dips, pulling and squats.' },
-    { name: 'Aerobic Base', time: '30–40 min', why: 'Conversational aerobic work.' },
-    { name: 'C · Full-Body Capacity', time: '30–40 min', why: 'Full-body strength and carry.' },
-    { name: 'Aerobic Power', time: '30–40 min', why: 'Four controlled hard intervals.' }
-  ];
+  const homeModel = window.Motion12HomeModel;
+  if (!homeModel) throw new Error('Home model must load before its views');
+  const CAL_SESSIONS = homeModel.calSessions;
   const originalToggleMeal = window.toggleMeal;
   window.toggleMeal = function (date, id) {
     originalToggleMeal(date, id);
@@ -19,19 +14,8 @@
     }
   };
 
-  function bodyCompHistory() {
-    const entries = logs['bodycomp.history'];
-    return Array.isArray(entries) ? entries.filter(entry => entry && Number(entry.weight) > 0) : [];
-  }
-  function currentBodyComp() {
-    const history = bodyCompHistory();
-    const latest = history.length ? history[history.length - 1] : null;
-    return {
-      weight: Number(latest?.weight) || Number(settings.bodyweight) || null,
-      bodyFat: latest ? (Number(latest.bodyFat) || null) : (Number(measurements.bodyFat) || null),
-      waist: latest ? (Number(latest.waist) || null) : (Number(measurements.waist) || null)
-    };
-  }
+  const bodyCompHistory = () => homeModel.bodyCompHistory(logs);
+  const currentBodyComp = () => homeModel.currentBodyComp(bodyCompHistory(), settings, measurements);
   const compNumber = (value, unit, digits = 1) => value ? Number(value).toFixed(digits).replace(/\.0$/, '') + unit : '—';
   function bodyCompHistoryMarkup() {
     const rows = bodyCompHistory().slice().reverse();
@@ -97,19 +81,7 @@
     return false;
   };
 
-  function fitnessGoalTargets() {
-    const saved = settings.fitnessGoals && typeof settings.fitnessGoals === 'object' ? settings.fitnessGoals : {};
-    const target = (key, min, max, fallback = null) => {
-      const value = Number(saved[key]);
-      return Number.isFinite(value) && value >= min && value <= max ? value : fallback;
-    };
-    return {
-      weeklySessions: target('weeklySessions', 1, 7, 7),
-      pushups: target('pushups', 1, 200),
-      walk: target('walk', 5, 60),
-      rhr: target('rhr', 30, 120)
-    };
-  }
+  const fitnessGoalTargets = () => homeModel.fitnessGoalTargets(settings);
   window.saveFitnessGoalTargets = function saveFitnessGoalTargets(event) {
     if (event) event.preventDefault();
     const status = document.getElementById('fitnessGoalSaveStatus');
@@ -175,25 +147,10 @@
       food: !!main.querySelector('#motionFoodDetails[open]'),
       training: !!main.querySelector('#motionTrainingDetails[open]')
     };
-    const kcalLeft = fastDay ? 'FAST' : intake ? intake.remaining.kcal.toLocaleString() : '—';
-    const kcalUnit = fastDay ? '0 kcal planned' : intake ? 'kcal left today' : 'Set weight in Settings';
-    const consumed = intake?.consumed.kcal || 0;
-    const target = intake?.total.kcal || 0;
-    const caloriesProgress = target ? Math.min(100, Math.round(consumed / target * 100)) : 0;
-    const macros = fastDay ? { protein: 0, carbs: 0, fat: 0 } : (intake?.remaining || null);
+    const { kcalLeft, kcalUnit, consumed, target, caloriesProgress, macros } = homeModel.nutritionSummary(fastDay, intake);
     const mealCount = compactMealCount(day, date);
-    const completedRatio = Math.min(100, Math.round(progress.completed / Math.max(1, progress.programDays) * 100));
-    const loss = calories ? '~' + Number(calories.predictedLoss).toFixed(2) + ' kg' : '—';
-    const lossDetail = fatLoss ? 'target ' + fatLoss.low + '–' + fatLoss.high + ' kg/wk' : 'Set weight for a target';
-    const recoveryCue = {
-      0: 'Keep this circuit easy; arrive fresh for Monday.',
-      1: 'Prioritise fluids and an easy evening after training.',
-      2: 'Restore at RPE 4–5; avoid adding fatigue.',
-      3: 'Let the shoulders and posterior chain recover.',
-      4: 'Keep every power rep crisp; quality before volume.',
-      5: 'Allow the tendons to settle after strength work.',
-      6: 'Use the full recovery between aerobic intervals.'
-    }[day];
+    const { completedRatio, loss, lossDetail } = homeModel.goalsSummary(calories, fatLoss, progress);
+    const recoveryCue = homeModel.recoveryCues[day];
     const sessionAction = !calMode && paused ? `reopenSession('${date}-${day}')` : `openDay(${day},'${date}')`;
     const sessionLabel = complete ? 'REVIEW' : paused ? 'RESUME' : 'START';
     const weekStart = new Date((calMode ? settings.calStartDate : settings.startDate) + 'T00:00:00');
@@ -297,15 +254,7 @@
   const flowKey = date => 'motionflow:' + date;
   const flowEscape = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  const flowDefaultCues = [
-    'Move easily; arrive fresh for Monday.',
-    'Strong movement, quiet neck and shoulders.',
-    'Move steadily without rushing.',
-    'Smooth control before adding effort.',
-    'Explosive hips, relaxed jaw and neck.',
-    'Full range and a steady breath.',
-    'Strong intervals; recover deliberately.'
-  ];
+  const flowDefaultCues = homeModel.flowCues;
   function flowDay(date) { return new Date(date + 'T12:00:00').getDay(); }
   function flowTomorrow() {
     const date = new Date(todayISO() + 'T12:00:00');

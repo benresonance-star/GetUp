@@ -15,14 +15,14 @@ html.standalone body:has(#homePage.active) main { padding-top:calc(env(safe-area
 /* Home typography contract: one scale for all four cards.
    Content and copy remain in JS; visual roles live here. */
 .motion-sector-stack {
-  --m12-type-section:17px;
-  --m12-type-display:28px;
-  --m12-type-feature:23px;
-  --m12-type-stat:18px;
-  --m12-type-target:15px;
-  --m12-type-body:10px;
-  --m12-type-label:9.5px;
-  --m12-type-action:10px;
+  --m12-type-section:var(--motion-type-card-title,17px);
+  --m12-type-display:var(--motion-type-display,28px);
+  --m12-type-feature:var(--motion-type-feature,23px);
+  --m12-type-stat:var(--motion-type-stat,18px);
+  --m12-type-target:var(--motion-type-target,15px);
+  --m12-type-body:var(--motion-type-compact-body,10px);
+  --m12-type-label:var(--motion-type-compact-label,9.5px);
+  --m12-type-action:var(--motion-type-action,10px);
   display:grid; gap:9px; max-width:600px; margin:0 auto;
   font-variant-numeric:tabular-nums;
 }
