@@ -30,31 +30,13 @@ function toggleHomeMode(){
   if(document.getElementById('dayPage')?.classList.contains('active'))applySessionCompactMode();
 }
 function videoButtons(name){return videosFor(name).map(v=>`<a class="video-link" href="${v.url}" target="_blank" rel="noopener noreferrer">▶ ${v.label}</a>`).join('')}
-function mealKey(date,id){return 'meal:'+date+':'+id}
-function legacyMealIndex(id){return ({breakfast:0,latte1:1,lunch:2,latte2:3,dinner:4,shake:5})[id]}
-function mealDone(date,meal){
-  const key=mealKey(date,meal.id);
-  if(Object.prototype.hasOwnProperty.call(logs,key))return !!logs[key].done;
-  const legacy=legacyMealIndex(meal.id);
-  return legacy===undefined?false:!!logs['meal:'+date+':'+legacy]?.done;
-}
-function intakeTotals(day,date){
-  const plan=mealPlan(day,date);
-  if(!plan||!plan.meals.length)return null;
-  const consumed=plan.meals.reduce((acc,m)=>{
-    if(mealDone(date,m)){
-      acc.kcal+=m.kcal; acc.protein+=m.protein; acc.carbs+=m.carbs; acc.fat+=m.fat;
-    }
-    return acc;
-  },{kcal:0,protein:0,carbs:0,fat:0});
-  const remaining={
-    kcal:Math.max(0,(plan.target||plan.total)-consumed.kcal),
-    protein:Math.max(0,plan.macroTotals.protein-consumed.protein),
-    carbs:Math.max(0,plan.macroTotals.carbs-consumed.carbs),
-    fat:Math.max(0,plan.macroTotals.fat-consumed.fat)
-  };
-  return {consumed,remaining,total:{kcal:plan.target||plan.total,...plan.macroTotals},planKcal:plan.total,gap:plan.gap||0};
-}
+/* Stable public functions: existing screens still call these same names.
+   Only the calculations move to a tested, side-effect-free model. */
+const motionUiDomain=window.Motion12UiDomain;
+if(!motionUiDomain)throw new Error('MOTION12 UI domain must load before ui.js');
+function mealKey(date,id){return motionUiDomain.mealKey(date,id)}
+function mealDone(date,meal){return motionUiDomain.mealDone(logs,date,meal)}
+function intakeTotals(day,date){return motionUiDomain.intakeTotals(mealPlan(day,date),logs,date)}
 function intakeStripInner(day,date){
   const t=intakeTotals(day,date);
   if(!t)return '';
@@ -111,10 +93,7 @@ function compactMealChips(day,date){
   }).join('')+'</div>';
 }
 function compactMealCount(day,date){
-  const plan=mealPlan(day,date);
-  if(!plan||!plan.meals.length)return '';
-  const done=plan.meals.reduce((n,m)=>n+(mealDone(date,m)?1:0),0);
-  return done+' / '+plan.meals.length+' ✓';
+  return motionUiDomain.compactMealCount(mealPlan(day,date),logs,date);
 }
 
 let mealConfiguratorDraft=null;
@@ -294,13 +273,7 @@ function lucideTrophyMarkup(className='session-trophy-icon'){
 
 function practiceKey(date=todayISO()){return 'practice:'+date+':pull-up'}
 function practicePrescription(day=programDay()){
-  const max=Math.max(0,Math.round(Number(settings.pullupMax)||0));
-  const targetSets=3;
-  if(day===1)return {enabled:false,reason:'strength-day',max,targetSets,reps:0,assisted:false,label:'No micro-sets'};
-  if(max<=0)return {enabled:false,reason:'needs-max',max:0,targetSets,reps:0,assisted:false,label:'Set clean pull-up max'};
-  const assisted=max<5;
-  const reps=assisted?1:max===5?1:max===6?2:max<=8?3:max<=10?4:5;
-  return {enabled:true,reason:'',max,targetSets,reps,assisted,label:assisted?'1 assisted rep':reps+' clean rep'+(reps===1?'':'s')};
+  return motionUiDomain.practicePrescription(day,settings.pullupMax);
 }
 function practiceState(date=todayISO()){
   const raw=logs[practiceKey(date)]||{};
@@ -509,18 +482,7 @@ function renderHome(){updateHomeModeToggle();const d=programDay(),w=weekNo(),p=p
 }
 let expandedDayCard=null;
 function dayOverviewGroup(title,items,day,w,startIndex=1){
-  if(!items?.length)return '';
-  const rows=items.map((x,i)=>{
-    let target=x[1]||'';
-    if(day===6&&title==='Workout')target=aerobicTargets[w-1]||target;
-    if(title==='Support')target=supportTarget(x,w);
-    const num=title==='Workout'?String(startIndex+i).padStart(2,'0'):'';
-    return '<div class="day-overview-exercise">'+
-      (num?'<span class="day-overview-num">'+num+'</span>':'<span class="day-overview-dot">•</span>')+
-      '<div><b>'+x[0]+'</b><small>'+target+'</small></div>'+
-    '</div>';
-  }).join('');
-  return '<div class="day-overview-group"><div class="day-overview-group-title">'+title+'</div>'+rows+'</div>';
+  return window.Motion12UiViews.dayOverviewGroup(title,items,day,w,startIndex,{aerobicTargets,supportTarget});
 }
 function toggleDayCard(day){
   expandedDayCard=expandedDayCard===day?null:day;
@@ -528,37 +490,13 @@ function toggleDayCard(day){
   if(expandedDayCard!==null)setTimeout(()=>document.getElementById('day-card-'+day)?.scrollIntoView({behavior:'smooth',block:'nearest'}),20);
 }
 function dayOverviewMarkup(day,w,p){
-  const prep=dayOverviewGroup('Movement prep',p.prep,day,w);
-  const tendonAfter=Number.isInteger(p.tendonAfter)?p.tendonAfter:p.work.length;
-  const primary=p.tendon?.length?dayOverviewGroup('Primary strength',p.work.slice(0,tendonAfter),day,w,1):dayOverviewGroup('Workout',p.work,day,w,1);
-  const tendon=p.tendon?.length?dayOverviewGroup('Tendon capacity · '+(p.tendonFocus||'high force'),p.tendon,day,w):'';
-  const finishers=p.tendon?.length?dayOverviewGroup('Finishers / accessories',p.work.slice(tendonAfter),day,w,tendonAfter+1):'';
-  const support=dayOverviewGroup('Support',p.support,day,w);
-  const aerobicAlternate=day===6?'<div class="day-overview-note"><b>Alternate B:</b> kettlebell + bodyweight · 4:00 work / 3:00 recovery × 4 rounds.</div>':'';
-  return '<div class="day-overview">'+prep+primary+tendon+finishers+support+aerobicAlternate+
-    '<div class="day-overview-note">Daily mobility reset is available inside the session.</div>'+
-    '<button class="day-session-btn '+p.tone+'" type="button" onclick="event.stopPropagation();openDay('+day+')"><span>Go to session</span><span>→</span></button>'+
-  '</div>';
+  return window.Motion12UiViews.dayOverviewMarkup(day,w,p,{aerobicTargets,supportTarget});
 }
 function renderDays(){
-  const d=programDay(),w=weekNo();
-  let html=`<div class="page-title"><div class="eyebrow">Week ${w}</div><h1>Your week</h1><p>Tap a day to preview its exercises. Open the full session when you are ready to train.</p></div><div class="section day-list cards">`;
-  [1,2,3,4,5,6,0].forEach(day=>{
-    const p=program[day],expanded=expandedDayCard===day;
-    html+=`<div id="day-card-${day}" class="card day-card ${day===d?'todaycard':''} ${expanded?'expanded':''}" role="button" tabindex="0" aria-expanded="${expanded}" onclick="toggleDayCard(${day})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDayCard(${day})}">
-      <div class="day-card-head">
-        <div class="day-card-copy">
-          <div class="label">${DAYS[day]} · ${p.time}</div>
-          <h3>${p.name}</h3>
-          <p>${day===6?weeklyTarget(day,w)+' · A / B available':weeklyTarget(day,w)}</p>
-        </div>
-        <div class="day-chevron ${p.tone}" aria-hidden="true">⌄</div>
-      </div>
-      ${expanded?dayOverviewMarkup(day,w,p):''}
-    </div>`;
+  document.getElementById('daysPage').innerHTML=window.Motion12UiViews.daysPage({
+    todayDay:programDay(),week:weekNo(),program,days:DAYS,expandedDay:expandedDayCard,
+    aerobicTargets,weeklyTarget,supportTarget
   });
-  html+='</div>';
-  document.getElementById('daysPage').innerHTML=html;
 }
 function exId(day,i,date){return `${date}-${day}-${i}`}
 function dateForProgramDay(day){const s=new Date(settings.startDate+'T00:00:00');const w=weekNo();const monday=new Date(s);monday.setDate(s.getDate()+(w-1)*7);const offset=day===0?6:day-1;const d=new Date(monday);d.setDate(monday.getDate()+offset);return iso(d)}
@@ -936,117 +874,8 @@ function strengthSessionItemById(id){
 function strengthFlowDayLabel(id){
   return DAYS[strengthFlowDayFromId(id)]||'Next session';
 }
-function strengthTimedWorkConfig(target){
-  const text=String(target||'');
-  let m=text.match(/×\s*(\d+)\s*sec(\s*\/\s*side)?/i);
-  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:!!m[2]};
-  m=text.match(/(\d+)\s*[–-]\s*(\d+)\s*sec(\s*\/\s*side)?/i);
-  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[2]),perSide:!!m[3]};
-  m=text.match(/(\d+)\s*sec(\s*\/\s*side)?/i);
-  if(m)return {enabled:true,min:Number(m[1]),max:Number(m[1]),perSide:!!m[2]};
-  return {enabled:false,min:0,max:0,perSide:false};
-}
-function strengthFlowConfig(name,target){
-  const parsed=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
-  const range=String(target||'').match(/(\d+)\s*[–-]\s*(\d+)/);
-  const timedWork=strengthTimedWorkConfig(target);
-  const isIsometric=/isometric/i.test(name);
-  const base={
-    sets:parsed?Number(parsed[1]):3,
-    targetText:parsed?parsed[2]:'6–10',
-    low:range?Number(range[1]):6,
-    top:range?Number(range[2]):10,
-    loadPlaceholder:'kg',
-    loadInputMode:'decimal',
-    repsPlaceholder:range?(range[1]+'–'+range[2]):'reps',
-    noun:'load',
-    timedWork:timedWork.enabled,
-    workSeconds:timedWork.min,
-    workMaxSeconds:timedWork.max,
-    workPerSide:timedWork.perSide,
-    advanceTitle:'Increase load',
-    advanceText:'Increase the working load one step and return toward the lower end of the prescribed range.'
-  };
-  if(isIsometric)return {...base,
-    targetText:(timedWork.workSeconds||timedWork.min||5)+' sec'+(timedWork.perSide?' / side':''),
-    low:timedWork.min||5,
-    top:timedWork.max||timedWork.min||5,
-    loadPlaceholder:'BW / kg',
-    loadInputMode:'text',
-    repsPlaceholder:(timedWork.min||5)+' sec',
-    noun:'load',
-    timedWork:true,
-    workSeconds:timedWork.min||5,
-    workMaxSeconds:timedWork.max||timedWork.min||5,
-    workPerSide:timedWork.perSide,
-    effortLabel:'Effort',
-    effortPlaceholder:'8–9',
-    effortMax:10,
-    advanceTitle:'Increase tendon load',
-    advanceText:'Increase external load by the smallest practical step while keeping the same short hold duration and controlled position.'
-  };
-  if(name==='Goblet squat')return {...base,
-    advanceText:'Move to the next available kettlebell and return toward the lower end of the '+base.low+'–'+base.top+' rep range.'
-  };
-  if(name==='Pull-up / assisted pull-up')return {...base,
-    loadPlaceholder:'BW / +kg / assist',loadInputMode:'text',noun:'load / assistance',
-    advanceTitle:'Progress the pull-up',
-    advanceText:'If weighted, add 1–2 kg. If assisted, reduce assistance one step and return toward the lower end of the rep range.'
-  };
-  if(name==='Kettlebell Romanian deadlift')return {...base,
-    advanceText:'Increase the working load one step and return toward the lower end of the '+base.low+'–'+base.top+' rep range.'
-  };
-  if(name==='1-arm kettlebell press')return {...base,
-    advanceText:'Move to the next kettlebell if available, then return toward the lower end of the rep range per side. Let the weaker arm govern.'
-  };
-  if(name==='Suitcase carry')return {...base,
-    low:45,top:60,repsPlaceholder:'45–60 sec',noun:'load',
-    advanceText:'Move to the next kettlebell and reset the carry toward 30–45 seconds per side before building back to 60.'
-  };
-  if(name==='Plank shoulder tap')return {...base,
-    loadPlaceholder:'BW / stance',loadInputMode:'text',noun:'variation',
-    advanceTitle:'Progress the variation',
-    advanceText:'Keep bodyweight and make the movement harder by narrowing the stance slightly or slowing the tempo while keeping the hips quiet.'
-  };
-  if(name==='Reverse lunge')return {...base,
-    advanceText:'Increase the kettlebell one step and return toward the lower end of the rep range per leg.'
-  };
-  if(name==='Push-up')return {...base,
-    loadPlaceholder:'variation',loadInputMode:'text',noun:'variation',
-    advanceTitle:'Progress the push-up variation',
-    advanceText:'Move to a harder variation: lower the incline, progress to floor, elevate the feet, or use rings while preserving the same depth and control.'
-  };
-  if(name==='1-arm kettlebell row')return {...base,
-    advanceText:'Move to the next kettlebell and return toward the lower end of the rep range per side.'
-  };
-  if(name==='Back extension')return {...base,
-    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'load / variation',
-    advanceTitle:'Progress the back extension',
-    advanceText:'If bodyweight is controlled, add a light kettlebell held at the chest; otherwise increase the existing load only slightly.'
-  };
-  if(name==='Single-leg calf raise')return {...base,
-    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'load / variation',
-    advanceTitle:'Progress the calf raise',
-    advanceText:'Add a kettlebell or increase the existing load while keeping the full stretch and top pause.'
-  };
-  if(name==='Kettlebell woodchop')return {...base,
-    advanceText:'Increase the kettlebell slightly while keeping crisp control through the feet, hips and trunk.'
-  };
-  if(name==='Lateral lunge')return {...base,
-    advanceText:'Add or increase the goblet load while maintaining the same depth and frontal-plane control.'
-  };
-  if(name==='Ring row')return {...base,
-    loadPlaceholder:'foot position',loadInputMode:'text',noun:'variation',
-    advanceTitle:'Progress the ring row',
-    advanceText:'Move the feet 10–15 cm forward or elevate them slightly while preserving rigid-body control.'
-  };
-  if(name==='Plank shoulder tap / kettlebell woodchop')return {...base,
-    loadPlaceholder:'BW / kg',loadInputMode:'text',noun:'variation',
-    advanceTitle:'Progress the current variation',
-    advanceText:'For shoulder taps, narrow the stance or slow the tempo. For woodchops, increase the kettlebell slightly while keeping crisp control.'
-  };
-  return base;
-}
+function strengthTimedWorkConfig(target){return motionUiDomain.strengthTimedWorkConfig(target)}
+function strengthFlowConfig(name,target){return motionUiDomain.strengthFlowConfig(name,target)}
 function strengthSetLogEntries(id,total){
   logs[id]=logs[id]||{};
   const current=Array.isArray(logs[id].sets)?logs[id].sets:[];
@@ -1123,71 +952,16 @@ function strengthPreviousCompletedSession(id,total){
     .sort((a,b)=>b.item.date.localeCompare(a.item.date));
   return matches.length?{id:matches[0].key,sets:logs[matches[0].key].sets.slice(0,total)}:null;
 }
-function strengthNormalizeLoad(v){return String(v??'').trim().toLowerCase()}
-function strengthFormatLoad(v){
-  const raw=String(v??'').trim();
-  if(!raw)return '—';
-  return /^[-+]?\d+(?:\.\d+)?$/.test(raw)?raw+' kg':raw;
-}
-function strengthQualifiesForProgression(sets,top){
-  if(!Array.isArray(sets)||!sets.length)return false;
-  const firstLoad=strengthNormalizeLoad(sets[0]?.load);
-  if(!firstLoad)return false;
-  return sets.every(s=>
-    s?.complete&&
-    strengthNormalizeLoad(s.load)===firstLoad&&
-    Number(s.reps)>=top&&
-    Number(s.rir)>=2
-  );
-}
+function strengthNormalizeLoad(v){return motionUiDomain.strengthNormalizeLoad(v)}
+function strengthFormatLoad(v){return motionUiDomain.strengthFormatLoad(v)}
+function strengthQualifiesForProgression(sets,top){return motionUiDomain.strengthQualifiesForProgression(sets,top)}
 function strengthCompletionSummary(id,name,target,entries){
   if(!entries?.length||!entries.every(s=>s?.complete))return null;
   const cfg=strengthFlowConfig(name,target);
-  const reps=entries.map(s=>Number(s.reps)||0);
-  const rirs=entries.map(s=>Number(s.rir)||0);
-  const rawLoads=entries.map(s=>String(s.load??'').trim());
-  const normalized=rawLoads.map(strengthNormalizeLoad);
-  const sameLoad=normalized.length===entries.length&&normalized[0]&&normalized.every(x=>x===normalized[0]);
-  const loadText=sameLoad?strengthFormatLoad(rawLoads[0]):rawLoads.map(strengthFormatLoad).join(' / ');
-  const qualifies=strengthQualifiesForProgression(entries,cfg.top);
   const previous=strengthPreviousCompletedSession(id,cfg.sets);
-  const previousQualifies=previous&&sameLoad&&
-    strengthNormalizeLoad(previous.sets[0]?.load)===normalized[0]&&
-    strengthQualifiesForProgression(previous.sets,cfg.top);
-  const targetPattern=entries.map(()=>cfg.top).join('/');
-  const dayLabel=strengthFlowDayLabel(id);
-  let title=name==='Suitcase carry'?'Build carry time at this load':'Build reps at this '+cfg.noun;
-  let text=name==='Suitcase carry'
-    ?'Keep the current load next '+dayLabel+' and build toward 60 seconds per side while keeping posture and grip controlled.'
-    :'Keep the current '+cfg.noun+' next '+dayLabel+' and aim to add 1 total rep while keeping about 2 reps in reserve.';
-  let tone='hold';
-  if(qualifies&&previousQualifies){
-    title=cfg.advanceTitle;
-    text='You have now hit '+targetPattern+' with at least 2 reps in reserve twice at the same '+cfg.noun+'. '+cfg.advanceText;
-    tone='up';
-  }else if(qualifies){
-    title='Repeat once more';
-    text='This is the first '+targetPattern+' session at this '+cfg.noun+' with at least 2 reps in reserve. Repeat it once more before progressing.';
-    tone='ready';
-  }else if(reps.some(r=>r<cfg.low)||rirs.some(r=>r<1)){
-    title='Hold the '+cfg.noun;
-    text=name==='Suitcase carry'
-      ?'Do not progress yet. Bring both carries back into the 45–60 second range with upright posture and cleaner reserve before increasing load.'
-      :'Do not progress yet. Bring every set back into the prescribed range with cleaner reserve before making it harder.';
-  }else if(rirs.some(r=>r<2)){
-    title='Hold the '+cfg.noun;
-    text='At least one set finished below 2 reps in reserve. Keep the '+cfg.noun+' stable and make the same work feel easier next '+dayLabel+'.';
-  }else if(!sameLoad){
-    title='Standardise the '+cfg.noun;
-    text='The '+cfg.noun+' changed across sets. Next Monday use one sustainable working level across all sets before judging progression.';
-  }
-  return {
-    loadText,
-    repsText:reps.join(' / '),
-    rirText:rirs.join(' / '),
-    title,text,tone,
-    previous:previous?.id||''
-  };
+  return motionUiDomain.strengthCompletionSummary({
+    name,entries,cfg,previous,dayLabel:strengthFlowDayLabel(id)
+  });
 }
 function strengthSessionProgressState(day,date){
   const sequence=strengthSessionSequence(day,date);
@@ -1960,10 +1734,11 @@ function completeSession(key){
   openDay(Number(key.split('-').pop()),key.slice(0,10));
 }
 function renderProgress(){
-  const fields=[['weight','Bodyweight','kg'],['waist','Waist','cm'],['bp','Blood pressure','mmHg'],['rhr','Resting heart rate','bpm'],['walk','2 km walk','min'],['pushups','Strict push-ups','reps']];
   const p=protein(),fat=fatLossTargets(),cal=calorieTargets(),ps=programProgressStats();
-  let cards=fields.map(([id,n,u])=>`<div class="card measure"><span class="tag">${u}</span><h3>${n}</h3><input id="measure-${id}" value="${measurements[id]||''}" placeholder="Enter current"></div>`).join('');
-  document.getElementById('progressPage').innerHTML=`<div class="page-title"><div class="eyebrow">12-week dashboard</div><h1>Progress</h1><p>Completed sessions, adherence and physical measures in one place.</p></div><section class="section"><div class="card adherence-card"><span class="tag">Program adherence</span><div class="adherence-grid"><div><b>${sessionsLastSevenDays()}</b><span>sessions · last 7 days</span></div><div><b>${ps.weekCompleted}</b><span>sessions · this program week</span></div><div><b>${ps.completed}/${ps.elapsed||0}</b><span>sessions complete / elapsed</span></div><div><b>${ps.adherence}%</b><span>completion to date</span></div></div><div class="adherence-track"><i style="width:${Math.min(100,Math.round(ps.completed/ps.programDays*100))}%"></i></div><small>${ps.completed} of 84 program days explicitly marked Session complete.</small></div></section><section class="section"><div class="card accent"><span class="tag">Nutrition targets</span><div class="target-grid"><div class="target-chip"><b>${p?`${p} g`:'Set weight'}</b><span>protein / eating day</span></div><div class="target-chip"><b>${cal?`${cal.eatingDay} kcal`:'Set details'}</b><span>eating-day target</span></div><div class="target-chip"><b>${cal?`${cal.predictedLoss} kg`:'—'}</b><span>planned loss / week</span></div><div class="target-chip"><b>${cal?`${cal.maintenance} kcal`:'—'}</b><span>estimated maintenance</span></div></div>${cal?`<div class="nutrition-strip">Target range ${fat.low}–${fat.high} kg/week · planned deficit ${cal.actualWeeklyDeficit} kcal/week · weekly intake ${cal.weeklyIntake} kcal. This math assumes Monday is truly 0 kcal.</div>`:''}</div><div class="measure-grid" style="margin-top:10px">${cards}</div><div class="savebar"><button class="complete-session" onclick="saveMeasurements()">Save measures</button></div></section><section class="section"><div class="card accent"><h3>Calorie adjustment rule</h3><p>${fat&&cal?`Use morning weights and compare 7-day averages across two full weeks. Only adjust if adherence was good. If loss is below ~${fat.low} kg/week for both weeks, remove ~100–150 kcal from eating days. If loss is above ~${fat.cap} kg/week, or strength/sleep/energy fall, add ~100–150 kcal. Keep protein steady; adjust rice and fats first.`:'Enter bodyweight to calculate the adjustment range.'}</p></div><div class="card" style="margin-top:10px"><h3>What success looks like</h3><p>Waist ↓ · strength maintained or ↑ · 2 km time ↓ · cardiovascular tolerance ↑ · blood pressure healthy · resting heart rate stable or ↓.</p></div></section>`;
+  document.getElementById('progressPage').innerHTML=window.Motion12UiViews.progressPage({
+    protein:p,fatLoss:fat,calories:cal,progressStats:ps,
+    last7:sessionsLastSevenDays(),measurements
+  });
 }
 function saveMeasurements(){['weight','waist','bp','rhr','walk','pushups'].forEach(id=>measurements[id]=document.getElementById('measure-'+id).value);const w=Number(measurements.weight);if(w>0){settings.bodyweight=w;motion12SetItem('motion12.settings',JSON.stringify(settings))}motion12SetItem('motion12.measurements',JSON.stringify(measurements));
 renderHome();renderDays();renderProgress();
@@ -1979,132 +1754,23 @@ function timerContextWeek(){return Number(activeSessionTimerContext?.week)||week
 function toggleSessionTimerDetails(){/* full workout timer is always visible */}
 function scrollToSessionRuntime(){/* no jump: timer remains in normal workout flow */}
 function circuitTimingFromTarget(target,fallbackWork=30,fallbackRest=30){
-  const m=String(target||'').match(/(\d+)\s*sec\s*work\s*\/\s*(\d+)\s*sec\s*(?:recovery|transition)/i);
-  return m?{work:Number(m[1]),rest:Number(m[2])}:{work:fallbackWork,rest:fallbackRest};
+  return window.Motion12UiPlans.circuitTimingFromTarget(target,fallbackWork,fallbackRest);
 }
 function conditioningCircuitPlan(day,w){
-  const rounds=(conditioningRounds[day]||[])[Math.max(0,Math.min(11,w-1))]||1;
-  const work=program[day]?.work||[];
-  let roundRest=0,title=conditioningTarget(day,w),note='';
-  const fallback=day===2?{work:30,rest:30}:day===0?{work:40,rest:20}:{work:20,rest:40};
-  const stations=work.map(ex=>{
-    const timing=circuitTimingFromTarget(ex?.[1],fallback.work,fallback.rest);
-    return {label:ex?.[0]||'Exercise',work:timing.work,rest:timing.rest};
-  });
-  if(!stations.length)return null;
-
-  if(day===2){
-    note='Recovery circuit: stay at RPE 4–5. Every work interval is followed by the recovery programmed on the exercise card.';
-  }else if(day===4){
-    note='Power circuit: follow the work/recovery timing shown on each exercise card. Keep every rep crisp; quality beats speed.';
-  }else if(day===0){
-    roundRest=60;
-    note='Aerobic-base circuit: RPE 5–6. Keep moving easily and use the full 60-second recovery between rounds.';
-  }else return null;
-
-  const phases=[];
-  for(let r=1;r<=rounds;r++){
-    stations.forEach((st,stationIndex)=>{
-      phases.push({
-        label:st.label,
-        seconds:st.work,
-        round:r,
-        phaseType:'work',
-        stationIndex,
-        stationName:st.label
-      });
-      phases.push({
-        label:'RECOVER',
-        seconds:st.rest,
-        round:r,
-        phaseType:'transition',
-        stationIndex,
-        stationName:st.label,
-        nextStationIndex:stationIndex+1<stations.length?stationIndex+1:(r<rounds?0:null)
-      });
-    });
-    if(roundRest&&r<rounds){
-      phases.push({
-        label:'ROUND REST',
-        seconds:roundRest,
-        round:r,
-        phaseType:'round-rest',
-        stationIndex:stations.length-1,
-        nextStationIndex:0
-      });
-    }
-  }
-  return {kind:'intervals',title,note,rounds,phases,circuit:true,stationCount:stations.length};
+  return window.Motion12UiPlans.conditioningCircuitPlan(day,w,motionUiPlanContext());
+}
+function motionUiPlanContext(){
+  return {program,conditioningRounds,conditioningTarget,aerobicTargets,
+    aerobicPowerVariant,timerContextDate,timerFormat};
 }
 function strengthExercisePlan(day=timerContextDay(),w=timerContextWeek(),preferredName=''){
-  const p=program[day];
-  if(!p?.work?.length)return null;
-  const exercise=(preferredName&&p.work.find(x=>x[0]===preferredName))||p.work[0];
-  if(!exercise)return null;
-  const target=day===6?(aerobicTargets[w-1]||exercise[1]):exercise[1];
-  const m=String(target||'').match(/^\s*(\d+)\s*×\s*(.+)$/i);
-  if(!m)return null;
-  const rest=exerciseRestPreset(exercise[0],day,w).seconds||90;
-  return {
-    kind:'strengthsets',
-    exerciseName:exercise[0],
-    sets:Number(m[1]),
-    target:m[2],
-    rest,
-    title:exercise[0]+' · '+target,
-    note:'Complete the lifting set, tap Set complete, then recovery starts automatically. The next set becomes ready when recovery ends.'
-  };
+  return window.Motion12UiPlans.strengthExercisePlan(day,w,preferredName,motionUiPlanContext());
 }
 function timerSessionPlan(day=timerContextDay(),w=timerContextWeek()){
-  if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w);
-  if(day===6){
-    if(aerobicPowerVariant(timerContextDate())==='B'){
-      const rounds=4,phases=[];
-      for(let r=1;r<=rounds;r++){
-        phases.push({label:'WORK',seconds:240,round:r,cue:'Swing → squat-to-calf-raise → reverse lunge → swing'});
-        phases.push({label:'RECOVER',seconds:180,round:r,cue:r===rounds?'Active recovery / cool down':'Easy walk or march'});
-      }
-      return {kind:'intervals',title:'Aerobic Power B · kettlebell + bodyweight',note:'4:00 work / 3:00 active recovery × 4. Keep the cardiovascular system—not grip or local muscle fatigue—as the limiter.',rounds,phases,aerobicAlternate:true};
-    }
-    const target=aerobicTargets[w-1]||'Aerobic session';
-    const m=target.match(/(\d+)\s*×\s*(\d+)\s*min hard\s*\/\s*(\d+)\s*min easy/i);
-    if(m){
-      const rounds=Number(m[1]),hard=Number(m[2])*60,easy=Number(m[3])*60,phases=[];
-      for(let r=1;r<=rounds;r++){
-        phases.push({label:'HARD',seconds:hard,round:r});
-        if(r<rounds)phases.push({label:'RECOVER',seconds:easy,round:r});
-      }
-      return {kind:'intervals',title:target,note:'Run the prescribed work/recovery sequence automatically.',rounds,phases};
-    }
-    return {kind:'stopwatch',title:target,note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
-  }
-  if(day===1||day===3||day===5)return strengthExercisePlan(day,w,smartTimer.exerciseName)||{kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
-  return {kind:'stopwatch',title:'Easy movement',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
+  return window.Motion12UiPlans.timerSessionPlan(day,w,smartTimer.exerciseName,motionUiPlanContext());
 }
 function exerciseRestPreset(name,day=timerContextDay(),w=timerContextWeek()){
-  if(day===2)return {category:'Recovery circuit',seconds:30,action:'session',label:'30s / 30s',note:'Use the complete Restore circuit timer.'};
-  if(day===4){
-    const exercise=program[day]?.work?.find(x=>x[0]===name);
-    const timing=circuitTimingFromTarget(exercise?.[1],20,40);
-    return {category:'Power circuit',seconds:timing.rest,action:'session',label:timing.work+'s / '+timing.rest+'s',note:'Use the complete Power circuit timer.'};
-  }
-  if(day===0)return {category:'Aerobic base',seconds:20,action:'session',label:'40s / 20s',note:'Use the complete Aerobic Base circuit timer.'};
-  if(/isometric/i.test(name))return {category:'Tendon capacity',seconds:75,action:'rest',label:'1:15',note:'Recover 60–90 seconds between high-force rounds so force quality stays high.'};
-  const strength120=new Set(['Goblet squat','Pull-up / assisted pull-up','Ring row','Ring row / pull-up','Reverse lunge','Kettlebell Romanian deadlift']);
-  const strength90=new Set(['1-arm kettlebell press','Push-up','1-arm kettlebell row','Lateral lunge']);
-  const accessory60=new Set(['Suitcase carry','Plank shoulder tap','Back extension','Jefferson curl','Single-leg calf raise','Kettlebell woodchop','Plank shoulder tap / kettlebell woodchop']);
-  if(name==='Aerobic intervals'||name==='Kettlebell + bodyweight 4×4'){
-    const plan=timerSessionPlan(day,w);
-    if(plan.kind==='intervals'){
-      const recover=plan.phases.find(x=>x.label==='RECOVER');
-      return {category:'Conditioning',seconds:recover?.seconds||180,action:'session',label:timerFormat(recover?.seconds||180)+' programmed',note:'Use the full programmed recovery so hard intervals stay repeatable.'};
-    }
-    return {category:'Conditioning',seconds:0,action:'session',label:'Continuous',note:'No fixed rest on today’s continuous aerobic session.'};
-  }
-  if(strength120.has(name))return {category:'Primary strength',seconds:120,action:'rest',label:'2:00',note:'Longer recovery protects force output and technique on demanding compound work.'};
-  if(strength90.has(name))return {category:'Strength',seconds:90,action:'rest',label:'1:30',note:'Enough recovery to keep reps crisp without unnecessarily stretching the session.'};
-  if(accessory60.has(name))return {category:'Accessory / core',seconds:60,action:'rest',label:'1:00',note:'Shorter recovery is usually sufficient for accessories, carries and trunk work.'};
-  return {category:'Strength',seconds:90,action:'rest',label:'1:30',note:'A balanced default for moderate strength work.'};
+  return window.Motion12UiPlans.exerciseRestPreset(name,day,w,motionUiPlanContext());
 }
 function timerUseExercisePreset(name){
   timerPrimeAudio();
