@@ -157,6 +157,25 @@ test('compact workout preparation folds without deleting stages or exercise stat
   assert.match(source,/function openMobilityToday\(\).*setSessionFoldOpen\('mobilitySection',true\)/);
 });
 
+test('flat mobility list retains every movement, dosage and long-form cue',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'ui.js'),'utf8');
+  const list=vm.runInContext('mobility',ctx);
+  assert.equal(list.length,7);
+  const rows=list.map((movement,i)=>{
+    const [dose,...notes]=String(movement[1]).split(' · ');
+    return {number:String(i+1).padStart(2,'0'),name:movement[0],dose,cue:notes.join(' · ')};
+  });
+  assert.equal(rows[0].dose,'5 × 5 sec');
+  assert.equal(rows[6].dose,'5 / side');
+  assert.match(rows[6].cue,/step laterally/);
+  assert.match(source,/class="card row mobility-move"/);
+  assert.match(source,/class="mobility-row-number"/);
+  assert.match(source,/class="mobility-row-dose"/);
+  const css=fs.readFileSync(path.join(__dirname,'app.css'),'utf8');
+  assert.match(css,/#dayPage\.compact-active \.mobility-warmup-section \.mobility-move/);
+  assert.match(css,/#dayPage\.compact-active \.session-fold \.session-fold-contents>\.prep-exercise/);
+});
+
 test('Days and Progress pages render from view models without DOM or persistence access',()=>{
   const daysHtml=views.daysPage({
     todayDay:1,week:1,program,days,expandedDay:1,aerobicTargets,
@@ -248,8 +267,8 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r98/);
-  assert.match(html,/canonical-r98/);
+  assert.match(html,/theme-braun\.css\?v=r99/);
+  assert.match(html,/canonical-r99/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }

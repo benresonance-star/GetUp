@@ -686,3 +686,49 @@ html[data-app-palette="braun"] #dayPage.compact-active .session-fold .prep-exerc
   background:#28423f;
   border-color:#4d7d72;
 }
+
+/* R99: only the active instrument receives a colour field; preparations are lines. */
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold{
+  background:transparent;
+  border:0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-trigger{
+  border-bottom-color:#46575f;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-index{
+  background:transparent;
+  border:0;
+  color:#76bbaf;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold:not(.collapsed) .session-fold-contents{
+  border:0;
+  padding:0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold .mobility-move,
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold .prep-exercise{
+  background:transparent;
+  border:0;
+  border-bottom:1px solid #34494b;
+  border-radius:0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-number{
+  color:#77b9af;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-dose{
+  color:#b6cdd1;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option,
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected{
+  background:transparent;
+  border:0;
+  border-bottom:3px solid transparent;
+  border-radius:0;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected{
+  border-bottom-color:#ff7045;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected > span{
+  background:#2a4354;
+  border-color:#7aa8bd;
+}

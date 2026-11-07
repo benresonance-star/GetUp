@@ -1435,7 +1435,10 @@ function openDay(day,date=null){
  const aerobicVariant=day===6?aerobicPowerVariant(date):'';
  const primaryHtml=primaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,i,day===6?{id:aerobicPowerExerciseId(date,i,aerobicVariant),target:window.Motion12Flow?.plannedTarget?.(day,date,'work',i)||aerobicPowerSessionTarget(date,w)}:{})).join('');
  const secondaryHtml=secondaryWork.map((x,i)=>exerciseCardMarkup(day,date,w,x,tendonAfter+i)).join('');
- let mob=mobility.map((m,i)=>`<div class="card row"><div><h3>${m[0]} ${videoButtons(m[0])}</h3><p>${m[1]}</p></div><span class="volt">${String(i+1).padStart(2,'0')}</span></div>`).join('');
+ const mob=mobility.map((m,i)=>{
+   const [dose,...notes]=String(m[1]).split(' · ');
+   return `<div class="card row mobility-move"><span class="mobility-row-number">${String(i+1).padStart(2,'0')}</span><div class="mobility-row-copy"><h3>${m[0]} ${videoButtons(m[0])}</h3>${notes.length?`<small>${notes.join(' · ')}</small>`:''}</div><span class="mobility-row-dose">${dose}</span></div>`;
+ }).join('');
  const prepHtml=prepBlockMarkup(day,date,p);
  const tendonHtml=tendonBlockMarkup(day,date,p);
  const supportHtml=supportBlockMarkup(day,date,w,p);
