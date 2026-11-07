@@ -5822,3 +5822,64 @@ html.motion-in-session main>.cal-global-header select{
 #dayPage.compact-active .aerobic-variant-option.selected{
   border-bottom-color:var(--volt);
 }
+
+/* R100: shared spacing and text rhythm for warm-up and movement prep. */
+#dayPage.compact-active .session-fold-trigger{
+  gap:9px;
+  min-height:50px;
+  padding:7px 2px;
+}
+#dayPage.compact-active .session-fold-index{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex:0 0 27px;
+  width:27px;
+  height:auto;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+}
+#dayPage.compact-active .session-fold-copy strong{
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
+}
+#dayPage.compact-active .session-fold-copy small{
+  font-size:10px;
+  line-height:1.25;
+}
+#dayPage.compact-active .mobility-warmup-section .mobility-move,
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise{
+  min-height:49px;
+  padding:9px 2px;
+}
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise .ex-top{
+  display:grid;
+  grid-template-columns:27px minmax(0,1fr) 28px;
+  align-items:center;
+  gap:9px;
+}
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise .num{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:27px;
+  height:auto;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+}
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise .ex-name h3{
+  margin:0 0 3px;
+}
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise .ex-name p{
+  font-size:11px;
+  line-height:1.25;
+}
+#dayPage.compact-active .session-fold .session-fold-contents>.prep-exercise .check{
+  width:28px;
+  height:28px;
+}
+@media(max-width:370px){
+  #dayPage.compact-active .session-fold-trigger{gap:9px;padding:7px 2px}
+  #dayPage.compact-active .session-fold-copy small{font-size:9px}
+}

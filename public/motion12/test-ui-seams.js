@@ -174,6 +174,11 @@ test('flat mobility list retains every movement, dosage and long-form cue',()=>{
   const css=fs.readFileSync(path.join(__dirname,'app.css'),'utf8');
   assert.match(css,/#dayPage\.compact-active \.mobility-warmup-section \.mobility-move/);
   assert.match(css,/#dayPage\.compact-active \.session-fold \.session-fold-contents>\.prep-exercise/);
+  assert.match(css,/grid-template-columns:27px minmax\(0,1fr\) 28px/);
+  const palette=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
+  assert.match(palette,/\.mobility-warmup-section\.session-fold \.session-fold-contents \.card\.row\.mobility-move/);
+  assert.match(palette,/\.prep-section\.session-fold \.session-fold-contents > \.exercise\.prep-exercise/);
+  assert.match(palette,/background:transparent;\s*background-image:none;\s*border:0;\s*border-bottom:1px solid #3b4b53/);
 });
 
 test('Days and Progress pages render from view models without DOM or persistence access',()=>{
@@ -267,8 +272,8 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r99/);
-  assert.match(html,/canonical-r99/);
+  assert.match(html,/theme-braun\.css\?v=r100/);
+  assert.match(html,/canonical-r100/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }

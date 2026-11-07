@@ -382,17 +382,17 @@ html[data-app-palette="braun"] #dayPage .section-head small {
 html[data-app-palette="braun"] #dayPage .prep-section > .exercise,
 html[data-app-palette="braun"] #dayPage .prep-section .session-fold-contents > .exercise,
 html[data-app-palette="braun"] #dayPage .mobility-warmup-section .card.row {
-  background:#24433f;
-  border-color:#4a8e82;
+  background:#222b31;
+  border-color:#46575f;
 }
 html[data-app-palette="braun"] #dayPage .support-section > .exercise {
-  background:#263936;
-  border-color:#477b71;
+  background:#222b31;
+  border-color:#46575f;
 }
 html[data-app-palette="braun"] #dayPage .tendon-capacity-section > .tendon-capacity {
-  background:#253b47;
+  background:#222d35;
   background-image:none;
-  border-color:#599c9d;
+  border-color:#465a68;
   box-shadow:none;
 }
 html[data-app-palette="braun"] #dayPage .exercise .ex-name p,
@@ -407,9 +407,9 @@ html[data-app-palette="braun"] #dayPage .exercise .num {
 html[data-app-palette="braun"] #dayPage .prep-section .num,
 html[data-app-palette="braun"] #dayPage .support-section .num,
 html[data-app-palette="braun"] #dayPage .tendon-capacity-section .num {
-  background:#285b57;
-  color:#c9f7ee;
-  border-color:#579f96;
+  background:#2a3e4b;
+  color:#adccdf;
+  border-color:#557387;
 }
 html[data-app-palette="braun"] #dayPage .exercise .check {
   border-color:#7fa7ba;
@@ -634,12 +634,12 @@ html[data-app-palette="braun"] #dayPage .aerobic-b-movement {
   border-color:#4b7d73;
 }
 html[data-app-palette="braun"] #dayPage .aerobic-b-order {
-  background:#376961;
-  color:#dafff6;
+  background:#314b5c;
+  color:#dbecf6;
 }
 html[data-app-palette="braun"] #dayPage .aerobic-b-recovery {
-  background:#2b5450;
-  border-color:#77b5a8;
+  background:#273640;
+  border-color:#597785;
 }
 html[data-app-palette="braun"] #dayPage .session-end-actions .complete-session,
 html[data-app-palette="braun"] #dayPage .complete-session:not(.done) {
@@ -660,62 +660,76 @@ html[data-app-palette="braun"] #dayPage .complete-session.done {
   }
 }
 
-/* R98: Warm-up and prep read as quiet folded instrument rows, not seafoam cards. */
+/* R100: one Braun instrument-list language across all preparation stages.
+   Charcoal surfaces; blue marks position, coral marks action, seafoam completion. */
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold{
-  background:#222b31;
-  border-color:#46575f;
+  background:transparent;
+  border:0;
 }
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold-trigger{
   color:#f5f5f0;
+  border-bottom-color:#43535b;
 }
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold-index{
-  background:#29483f;
-  border-color:#5d9389;
-  color:#a7ded4;
+  background:transparent;
+  border:0;
+  color:#94bdd1;
 }
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold-copy small,
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold-chevron{
-  color:#b8c9d0;
-}
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold:not(.collapsed) .session-fold-contents{
-  border-top:1px solid #3b4b51;
-  padding-top:9px;
-}
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold .card.row,
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold .prep-exercise{
-  background:#28423f;
-  border-color:#4d7d72;
-}
-
-/* R99: only the active instrument receives a colour field; preparations are lines. */
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold{
-  background:transparent;
-  border:0;
-}
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold-trigger{
-  border-bottom-color:#46575f;
-}
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold-index{
-  background:transparent;
-  border:0;
-  color:#76bbaf;
+  color:#b9c7cf;
 }
 html[data-app-palette="braun"] #dayPage.compact-active .session-fold:not(.collapsed) .session-fold-contents{
   border:0;
   padding:0;
 }
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold .mobility-move,
-html[data-app-palette="braun"] #dayPage.compact-active .session-fold .prep-exercise{
+/* Include .card.row / .exercise in the selectors to win against the older
+   section-specific colour rules regardless of their stylesheet position. */
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-warmup-section.session-fold .session-fold-contents .card.row.mobility-move,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section.session-fold .session-fold-contents > .exercise.prep-exercise{
+  background:transparent;
+  background-image:none;
+  border:0;
+  border-bottom:1px solid #3b4b53;
+  border-radius:0;
+  box-shadow:none;
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-number,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .num{
+  color:#94bdd1;
   background:transparent;
   border:0;
-  border-bottom:1px solid #34494b;
-  border-radius:0;
 }
-html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-number{
-  color:#77b9af;
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-copy h3,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .ex-name h3{
+  color:#f5f5f0;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
 }
-html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-dose{
-  color:#b6cdd1;
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-dose,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .ex-name p,
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-copy small{
+  color:#b6c4cc;
+  font-size:11px;
+  font-weight:600;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .check{
+  border-color:#718d9b;
+  background:#202c33;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise.complete .check{
+  border-color:#9ecfc3;
+  background:#9ecfc3;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .workout-progress-block .timer-session-progress,
+html[data-app-palette="braun"] #dayPage.compact-active .workout-progress-block .strength-session-progress{
+  background:#222b31;
+  background-image:none;
+  border:1px solid #43535c;
+  border-radius:11px;
+  box-shadow:none;
 }
 html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option,
 html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected{
