@@ -482,6 +482,19 @@ html[data-app-palette="braun"] #dayPage .timer-ring:before {
 html[data-app-palette="braun"] #dayPage .timer-ring-segment.elapsed {
   stroke:#5873a4;
 }
+html[data-app-palette="braun"] #dayPage .timer-ring[data-timer-kind="stopwatch"] .timer-ring-segment.elapsed {
+  stroke:#88a8d7;
+}
+html[data-app-palette="braun"] #dayPage .timer-ring[data-timer-kind="stopwatch"] .timer-ring-segment.remaining {
+  stroke:#ff7045;
+  stroke-width:5.5;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.continuous {
+  background:#43586b;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.continuous i {
+  background:#ff7045;
+}
 html[data-app-palette="braun"] #dayPage .timer-next {
   background:#1e3667;
   border-color:#5b7bb7;

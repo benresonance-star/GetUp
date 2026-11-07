@@ -100,6 +100,35 @@ test('session plans keep circuit phases and strength recovery policies',()=>{
   assert.equal(alternate.phases.length,8);
 });
 
+test('continuous sessions render a segmented elapsed dial against their time target',()=>{
+  assert.equal(plans.stopwatchTargetSeconds('40 min brisk / hills'),2400);
+  assert.equal(plans.stopwatchTargetSeconds('30–40 min easy'),2400);
+  assert.equal(plans.stopwatchTargetSeconds('2 km walk test'),0);
+  const stopwatchPlan=plans.timerSessionPlan(6,1,'',{...planCtx,aerobicPowerVariant:()=> 'A'});
+  assert.equal(stopwatchPlan.kind,'stopwatch');
+  assert.equal(stopwatchPlan.targetSeconds,2400);
+
+  const early=domain.stopwatchDial(3,stopwatchPlan.targetSeconds);
+  assert.equal(early.ringDuration,2400);
+  assert.equal(early.progress,3/2400);
+  assert.equal(domain.stopwatchDial(2700,2400).progress,1);
+  assert.equal(domain.stopwatchDial(63,0).ringDuration,60);
+  assert.equal(domain.stopwatchDial(63,0).progress,3/60);
+
+  // Exercise the actual SVG generator, including the regression where a
+  // duration-zero stopwatch used to draw a single malformed near-full arc.
+  const source=fs.readFileSync(path.join(__dirname,'ui.js'),'utf8');
+  const start=source.indexOf('function timerRingSegmentCount(vm){');
+  const end=source.indexOf('function updateTimerRingSegments(vm){',start);
+  assert.ok(start>=0&&end>start);
+  const render=vm.runInNewContext(source.slice(start,end)+'\ntimerRingSvgMarkup');
+  const svg=render({kind:'stopwatch',ringDuration:early.ringDuration,ringProgress:early.progress});
+  assert.match(svg,/data-segment-count="180"/);
+  assert.match(svg,/data-active-count="1"/);
+  assert.equal((svg.match(/class="timer-ring-segment /g)||[]).length,180);
+  assert.match(render({kind:'stopwatch',ringDuration:0,ringProgress:0}),/data-segment-count="60"/);
+});
+
 test('Days and Progress pages render from view models without DOM or persistence access',()=>{
   const daysHtml=views.daysPage({
     todayDay:1,week:1,program,days,expandedDay:1,aerobicTargets,
@@ -191,7 +220,7 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r96/);
+  assert.match(html,/theme-braun\.css\?v=r97/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }

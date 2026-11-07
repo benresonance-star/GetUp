@@ -33,6 +33,15 @@
     return done+' / '+plan.meals.length+' ✓';
   }
 
+  function stopwatchDial(elapsedSeconds,targetSeconds) {
+    const elapsed=Math.max(0,Number(elapsedSeconds)||0);
+    const target=Math.max(0,Number(targetSeconds)||0);
+    // Fixed goal: fill once and stay full while the stopwatch keeps running.
+    // No goal (e.g. a distance test): show a repeating one-minute lap instead.
+    const progress=target?Math.min(1,elapsed/target):(elapsed%60)/60;
+    return {elapsed,target,progress,ringDuration:target||60};
+  }
+
   function practicePrescription(day,pullupMax) {
     const max=Math.max(0,Math.round(Number(pullupMax)||0));
     const targetSets=3;
@@ -215,7 +224,7 @@
   }
 
   window.Motion12UiDomain=Object.freeze({
-    mealKey,mealDone,intakeTotals,compactMealCount,practicePrescription,
+    mealKey,mealDone,intakeTotals,compactMealCount,stopwatchDial,practicePrescription,
     strengthTimedWorkConfig,strengthFlowConfig,strengthNormalizeLoad,
     strengthFormatLoad,strengthQualifiesForProgression,strengthCompletionSummary
   });

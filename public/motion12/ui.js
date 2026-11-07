@@ -2186,7 +2186,10 @@ function timerViewModel(){
     progress=smartTimer.setIndex>=plan.sets?0:(smartTimer.running&&smartTimer.duration?sec/smartTimer.duration:1);
     detail=plan.title;
   }else if(kind==='stopwatch'){
-    label='ELAPSED';meta=plan.title;detail=plan.note;progress=0;
+    label='ELAPSED';meta=plan.title;detail=plan.note;
+    const dial=window.Motion12UiDomain.stopwatchDial(sec,plan.targetSeconds);
+    progress=dial.progress;
+    ringDurationOverride=dial.ringDuration;
   }else{
     label='REST';
     meta=smartTimer.mode==='session'?plan.title:(smartTimer.exerciseName||'Manual rest');
@@ -2335,14 +2338,17 @@ function timerSessionProgressData(vm){
   }
 
   if(plan?.kind==='stopwatch'){
+    const dial=window.Motion12UiDomain.stopwatchDial(vm?.sec,plan.targetSeconds);
     return {
       type:'continuous',
-      total:1,completedCount:0,remainingCount:0,currentIndex:0,
+      total:dial.target||60,completedCount:dial.target?Math.min(dial.target,dial.elapsed):dial.elapsed%60,
+      remainingCount:0,currentIndex:0,
       segments:[{name:plan.title,state:'current'}],
       eyebrow:'Session progress',
       currentName:plan.title,
       currentDetail:'Continuous session',
-      countText:'In progress'
+      countText:dial.target?timerFormat(dial.elapsed)+' / '+timerFormat(dial.target):timerFormat(dial.elapsed),
+      elapsedSeconds:dial.elapsed,targetSeconds:dial.target,progress:dial.progress
     };
   }
   return null;
@@ -2350,15 +2356,17 @@ function timerSessionProgressData(vm){
 function timerSessionProgressMarkup(vm){
   const s=timerSessionProgressData(vm);
   if(!s)return '';
-  const segments=s.segments.map(x=>
-    '<span class="timer-progress-segment '+x.state+'" title="'+x.name+'" aria-label="'+x.name+' · '+x.state+'"></span>'
-  ).join('');
+  const segments=s.type==='continuous'
+    ?'<span class="timer-progress-segment continuous"><i style="width:'+(100*s.progress).toFixed(2)+'%"></i></span>'
+    :s.segments.map(x=>
+      '<span class="timer-progress-segment '+x.state+'" title="'+x.name+'" aria-label="'+x.name+' · '+x.state+'"></span>'
+    ).join('');
   const footer=s.type==='continuous'
-    ?'<span class="current">Continuous session</span>'
+    ?'<span class="current">'+(s.targetSeconds?'Elapsed toward '+timerFormat(s.targetSeconds)+' target':'Continuous session · minute lap')+'</span>'
     :'<span class="done">'+s.completedCount+' complete</span><span class="current">'+s.currentDetail+'</span><span class="remain">'+s.remainingCount+' remaining</span>';
   return '<div class="timer-session-progress" id="timerSessionProgress">'+
     '<div class="timer-progress-head"><div><span>'+s.eyebrow+'</span><strong>'+s.currentName+'</strong></div><b>'+s.countText+'</b></div>'+
-    '<div class="timer-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+s.completedCount+' of '+s.total+' session steps complete">'+segments+'</div>'+
+    '<div class="timer-progress-track '+(s.type==='continuous'?'continuous':'')+'" role="progressbar" aria-valuemin="0" aria-valuemax="'+s.total+'" aria-valuenow="'+s.completedCount+'" aria-label="'+(s.type==='continuous'?'Elapsed time progress':s.completedCount+' of '+s.total+' session steps complete')+'">'+segments+'</div>'+
     '<div class="timer-progress-foot '+(s.type==='continuous'?'continuous':'')+'">'+footer+'</div>'+
   '</div>';
 }
@@ -2375,7 +2383,8 @@ function timerTopRightMeta(vm){
   return vm.kind==='intervals'?'':vm.meta;
 }
 function timerRingSegmentCount(vm){
-  const duration=Math.max(1,Math.round(Number(vm?.ringDuration??vm?.duration)||1));
+  const min=vm?.kind==='stopwatch'?60:1;
+  const duration=Math.max(min,Math.round(Number(vm?.ringDuration??vm?.duration)||min));
   return Math.min(180,duration);
 }
 function timerRingActiveCount(vm,count=timerRingSegmentCount(vm)){
@@ -2476,7 +2485,7 @@ function renderTimerPage(){
   timerMount.innerHTML=
     '<section class="smart-timer-card session-smart-timer workout-primary-timer">'+
       '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
-      '<div class="timer-ring" id="timerRing">'+timerRingSvgMarkup(vm)+'<div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      '<div class="timer-ring" id="timerRing" data-timer-kind="'+vm.kind+'">'+timerRingSvgMarkup(vm)+'<div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
       '<div class="mobile-smart-timer-controls smart-timer-controls" id="mobileSmartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+
       '<div class="workout-timer-footer" id="workoutTimerFooter"><div class="smart-timer-controls" id="smartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+presets+'</div>'+
     '</section>';

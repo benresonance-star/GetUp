@@ -55,6 +55,14 @@
       note:'Complete the lifting set, tap Set complete, then recovery starts automatically. The next set becomes ready when recovery ends.'
     };
   }
+  function stopwatchTargetSeconds(target) {
+    // A continuous session can have an optional time target. A range such as
+    // "30–40 min" uses its upper bound; a distance test has no fixed duration.
+    const matches=[...String(target||'').matchAll(/(\d+)\s*min(?:ute)?s?\b/gi)];
+    if(!matches.length)return 0;
+    const minutes=Number(matches[matches.length-1][1]);
+    return Number.isFinite(minutes)&&minutes>0?Math.min(12*3600,minutes*60):0;
+  }
   function timerSessionPlan(day,w,exerciseName,ctx) {
     if(day===0||day===2||day===4)return conditioningCircuitPlan(day,w,ctx);
     if(day===6){
@@ -76,7 +84,7 @@
         }
         return {kind:'intervals',title:target,note:'Run the prescribed work/recovery sequence automatically.',rounds,phases};
       }
-      return {kind:'stopwatch',title:target,note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
+      return {kind:'stopwatch',title:target,targetSeconds:stopwatchTargetSeconds(target),note:'Today is continuous aerobic work, so elapsed time matters more than fixed intervals.'};
     }
     if(day===1||day===3||day===5)return strengthExercisePlan(day,w,exerciseName,ctx)||{kind:'rest',title:'Strength · between working sets',note:'Start with 90 seconds. Take 120 seconds after a demanding compound set if quality needs it.',rest:90};
     return {kind:'stopwatch',title:'Easy movement',note:'No prescribed intervals today. Use elapsed time only if it helps.'};
@@ -108,6 +116,6 @@
   }
 
   window.Motion12UiPlans=Object.freeze({
-    circuitTimingFromTarget,conditioningCircuitPlan,strengthExercisePlan,timerSessionPlan,exerciseRestPreset
+    circuitTimingFromTarget,conditioningCircuitPlan,strengthExercisePlan,stopwatchTargetSeconds,timerSessionPlan,exerciseRestPreset
   });
 })();
