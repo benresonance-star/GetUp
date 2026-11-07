@@ -129,6 +129,29 @@ test('continuous sessions render a segmented elapsed dial against their time tar
   assert.match(render({kind:'stopwatch',ringDuration:0,ringProgress:0}),/data-segment-count="60"/);
 });
 
+test('timer keeps only the clock inside its dial and moves long cues into separate rows',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'ui.js'),'utf8');
+  const start=source.indexOf('function timerInstrumentMarkup(vm){');
+  const end=source.indexOf('function renderTimerPage(){',start);
+  assert.ok(start>=0&&end>start);
+  const instrument=vm.runInNewContext(source.slice(start,end)+'\ntimerInstrumentMarkup',{
+    timerRingSvgMarkup:()=>'<svg class="timer-ring-svg"></svg>',
+    timerTopRightMeta:()=>'',
+    timerFormat:()=> '01:00'
+  });
+  const markup=instrument({kind:'intervals',label:'WORK · SWING',clockText:'01:00',meta:'Round 1 of 4 · 2-hand kettlebell swing',nextText:'Squat-to-calf-raise · 1:00'});
+  assert.match(markup,/id="timerPhase"/);
+  assert.match(markup,/class="timer-ring-readout"><strong id="smartClock" role="timer">01:00<\/strong><\/div><\/div>/);
+  assert.match(markup,/class="timer-readout-details"/);
+  assert.ok(markup.indexOf('id="timerNext"')>markup.indexOf('class="timer-readout-details"'));
+  assert.ok(markup.indexOf('id="timerMeta"')>markup.indexOf('class="timer-readout-details"'));
+  assert.equal((markup.match(/WORK · SWING/g)||[]).length,1);
+  assert.match(markup,/Squat-to-calf-raise/);
+  const style=fs.readFileSync(path.join(__dirname,'app.css'),'utf8');
+  assert.match(style,/\.timer-ring > \.timer-ring-readout strong/);
+  assert.match(style,/\.timer-readout-details \.timer-next/);
+});
+
 test('compact workout preparation folds without deleting stages or exercise state',()=>{
   const source=fs.readFileSync(path.join(__dirname,'ui.js'),'utf8');
   const start=source.indexOf('function sessionFoldButtonMarkup(');
@@ -272,8 +295,8 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r100/);
-  assert.match(html,/canonical-r100/);
+  assert.match(html,/theme-braun\.css\?v=r101/);
+  assert.match(html,/canonical-r101/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }

@@ -2402,7 +2402,8 @@ function updateTimerSessionProgress(vm){
   if(html)mount.innerHTML=html;
 }
 function timerTopRightMeta(vm){
-  return vm.kind==='intervals'?'':vm.meta;
+  // The full cue is always shown below the dial; never duplicate it in its header.
+  return '';
 }
 function timerRingSegmentCount(vm){
   const min=vm?.kind==='stopwatch'?60:1;
@@ -2489,6 +2490,11 @@ function syncCompactSessionFocus(vm){
     if(compact)current.classList.add('compact-current');
   }
 }
+function timerInstrumentMarkup(vm){
+  return '<div class="timer-context"><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
+    '<div class="timer-ring" id="timerRing" data-timer-kind="'+vm.kind+'">'+timerRingSvgMarkup(vm)+'<div class="timer-ring-readout"><strong id="smartClock" role="timer">'+(vm.clockText||timerFormat(vm.sec))+'</strong></div></div>'+
+    '<div class="timer-readout-details"><small id="timerMeta" class="timer-stage-detail">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div>';
+}
 function renderTimerPage(){
   const progressMount=document.getElementById('sessionProgressMount');
   const timerMount=document.getElementById('sessionTimerMount');
@@ -2506,8 +2512,7 @@ function renderTimerPage(){
   progressMount.innerHTML=progress;
   timerMount.innerHTML=
     '<section class="smart-timer-card session-smart-timer workout-primary-timer">'+
-      '<div class="timer-context"><span>'+vm.label+'</span><b id="timerTopRightMeta">'+timerTopRightMeta(vm)+'</b></div>'+
-      '<div class="timer-ring" id="timerRing" data-timer-kind="'+vm.kind+'">'+timerRingSvgMarkup(vm)+'<div><span id="timerPhase" class="'+(String(vm.label).length>26?'long':'')+'">'+vm.label+'</span><strong id="smartClock">'+(vm.clockText||timerFormat(vm.sec))+'</strong><small id="timerMeta">'+vm.meta+'</small><div class="timer-next" id="timerNext">'+(vm.nextText?'<span class="timer-next-label">Next</span><span class="timer-next-stage">'+vm.nextText+'</span>':'')+'</div></div></div>'+
+      timerInstrumentMarkup(vm)+
       '<div class="mobile-smart-timer-controls smart-timer-controls" id="mobileSmartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+
       '<div class="workout-timer-footer" id="workoutTimerFooter"><div class="smart-timer-controls" id="smartTimerControls" aria-label="Timer controls">'+timerControls(vm)+'</div>'+presets+'</div>'+
     '</section>';

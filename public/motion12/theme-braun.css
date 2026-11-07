@@ -746,3 +746,27 @@ html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.s
   background:#2a4354;
   border-color:#7aa8bd;
 }
+
+/* R101: clear blue timing instrument with a quiet, full-width information strip. */
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-context #timerPhase{
+  color:#64b8f5;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-ring > .timer-ring-readout strong{
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details{
+  border-top-color:#5573a4;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-stage-detail{
+  color:#cfdbeb;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next{
+  background:transparent;
+  border:0;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next-label{
+  color:#91b3dc;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next-stage{
+  color:#f5f5f0;
+}
