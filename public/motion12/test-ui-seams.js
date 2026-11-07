@@ -191,8 +191,12 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r94/);
+  assert.match(html,/theme-braun\.css\?v=r95/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }
+  for(const className of ['week-table','week-today','level-easy','level-moderate','level-hard','day-session-btn']){
+    assert.ok(css.includes('html[data-app-palette="braun"] #daysPage .'+className));
+  }
+  assert.match(css,/#dayPage \.workout-primary-timer/);
 });

@@ -200,6 +200,168 @@ html[data-app-palette="braun"] #homePage .motion-training-tools .motion-flow-too
   color:#c4e3ff;
 }
 
+/* Days — a compact instrument-like week schedule. The row, not a large card,
+   carries the hierarchy; today uses the same blue as the Home training sector. */
+html[data-app-palette="braun"] #daysPage .week-page-heading .eyebrow {
+  color:#9bbfe5;
+  letter-spacing:.14em;
+}
+html[data-app-palette="braun"] #daysPage .week-page-heading h1 {
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #daysPage .week-page-hint {
+  color:#b9c7d0;
+}
+html[data-app-palette="braun"] #daysPage .week-table {
+  background:#212a31;
+  border-color:#485a66;
+  border-radius:17px;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #daysPage .week-table-head {
+  background:#2d3b45;
+  border-bottom-color:#50616d;
+  color:#c9d8e2;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #daysPage .week-row + .week-row {
+  border-top-color:#3a4853;
+}
+html[data-app-palette="braun"] #daysPage .week-row:nth-child(odd):not(.week-today):not(.week-expanded) .week-row-trigger {
+  background:#242f37;
+}
+html[data-app-palette="braun"] #daysPage .week-row-trigger {
+  background:#212a31;
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #daysPage .week-row-trigger:active {
+  background:#344958;
+}
+html[data-app-palette="braun"] #daysPage .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-expand-icon {
+  color:#b6c5cf;
+}
+html[data-app-palette="braun"] #daysPage .week-expanded:not(.week-today) .week-row-trigger {
+  background:#2e4a68;
+}
+html[data-app-palette="braun"] #daysPage .week-today .week-row-trigger,
+html[data-app-palette="braun"] #daysPage .week-today.week-expanded .week-row-trigger {
+  background:#294eb8;
+  color:#fff;
+}
+html[data-app-palette="braun"] #daysPage .week-today .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-today .week-expand-icon,
+html[data-app-palette="braun"] #daysPage .week-expanded .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-expanded .week-expand-icon {
+  color:#e0e9ff;
+}
+html[data-app-palette="braun"] #daysPage .week-today-dot {
+  width:6px;
+  height:6px;
+  background:#ff7045;
+}
+html[data-app-palette="braun"] #daysPage .week-level {
+  border-radius:5px;
+  font-weight:950;
+  letter-spacing:.01em;
+}
+html[data-app-palette="braun"] #daysPage .level-easy {
+  background:#9ecfc3;
+  color:#102620;
+}
+html[data-app-palette="braun"] #daysPage .level-moderate {
+  background:#96b9e5;
+  color:#14243c;
+}
+html[data-app-palette="braun"] #daysPage .level-hard {
+  background:#ffb49b;
+  color:#492318;
+}
+html[data-app-palette="braun"] #daysPage .week-row-detail {
+  background:#1d252b;
+  color:#f5f5f0;
+  padding-bottom:14px;
+}
+html[data-app-palette="braun"] #daysPage .week-detail-meta {
+  border-top-color:#496074;
+  color:#c4d4df;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-group-title {
+  color:#93c9e7;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-exercise {
+  border-top-color:#34424e;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-num,
+html[data-app-palette="braun"] #daysPage .day-overview-dot {
+  color:#83c8ec;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-exercise small,
+html[data-app-palette="braun"] #daysPage .day-overview-note {
+  color:#b5c7cf;
+}
+html[data-app-palette="braun"] #daysPage .day-session-btn,
+html[data-app-palette="braun"] #daysPage .day-session-btn.cyan,
+html[data-app-palette="braun"] #daysPage .day-session-btn.pink,
+html[data-app-palette="braun"] #daysPage .day-session-btn.orange {
+  background:#ff7045;
+  border-color:#ff7045;
+  color:#182027;
+  border-radius:11px;
+}
+html[data-app-palette="braun"] #daysPage .day-session-btn:active {
+  background:#f15c36;
+}
+
+/* Open day / workout session — visually continuous with the Days tab. */
+html[data-app-palette="braun"] #dayPage .back {
+  color:#9fc8ee;
+}
+html[data-app-palette="braun"] #dayPage .page-title .eyebrow {
+  color:#9fc8ee;
+}
+html[data-app-palette="braun"] #dayPage .page-title h1 {
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage .session-summary .mini,
+html[data-app-palette="braun"] #dayPage .exercise,
+html[data-app-palette="braun"] #dayPage .workout-progress-block .timer-session-progress,
+html[data-app-palette="braun"] #dayPage .workout-progress-block .strength-session-progress {
+  background:#222d35;
+  background-image:none;
+  border-color:#455a68;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer {
+  background:#263f7b;
+  background-image:none;
+  border-color:#6284cb;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .workout-exercises-section > .exercise.compact-current,
+html[data-app-palette="braun"] #dayPage .workout-exercises-section > .exercise.session-current {
+  background:#293f63;
+  background-image:none;
+  border-color:#7596d6;
+  box-shadow:inset 4px 0 0 #ff7045;
+}
+html[data-app-palette="braun"] #dayPage .exercise .num {
+  background:#324b60;
+  color:#a5dafb;
+}
+html[data-app-palette="braun"] #dayPage .session-mode-badge {
+  background:#4b2f30;
+  color:#ffc3aa;
+  border-color:#da8467;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .smart-timer-controls .timer-primary,
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .mobile-smart-timer-controls .timer-primary {
+  background:#ff7045;
+  color:#182027;
+  border-color:#ff7045;
+}
+
 /* Long sessions, opened meal logs and small devices must remain scrollable. */
 @media(max-width:520px) {
   html[data-app-palette="braun"] #homePage.compact-active.minimal-home-active {
