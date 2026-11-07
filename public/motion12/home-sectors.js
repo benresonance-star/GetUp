@@ -1,0 +1,529 @@
+/* MOTION12 — four-sector Home presentation and UI event handlers.
+   Derived values and programme copy live in home-model.js. */
+(function () {
+  const homeModel = window.Motion12HomeModel;
+  if (!homeModel) throw new Error('Home model must load before its views');
+  const minimalView = window.Motion12MinimalHomeView;
+  const CAL_SESSIONS = homeModel.calSessions;
+  window.setMotionHomeView = function setMotionHomeView(view) {
+    if (view !== 'minimal' && view !== 'detailed') return;
+    if ((settings.homeView === 'detailed' ? 'detailed' : 'minimal') === view) return;
+    settings.homeView = view;
+    if (!window.Motion12Persistence?.isReadOnly()) {
+      motion12SetItem('motion12.settings', JSON.stringify(settings));
+    }
+    renderHome();
+  };
+  const originalToggleMeal = window.toggleMeal;
+  window.toggleMeal = function (date, id) {
+    originalToggleMeal(date, id);
+    // The older full Home only refreshed intake strips. Keep the new sector
+    // summary and macros in sync with the meal checkboxes.
+    if (settings.homeMode !== 'compact' && document.getElementById('homePage')?.classList.contains('active')) {
+      window.renderHome();
+    }
+  };
+
+  const bodyCompHistory = () => homeModel.bodyCompHistory(logs);
+  const currentBodyComp = () => homeModel.currentBodyComp(bodyCompHistory(), settings, measurements);
+  const compNumber = (value, unit, digits = 1) => value ? Number(value).toFixed(digits).replace(/\.0$/, '') + unit : '—';
+  function bodyCompHistoryMarkup() {
+    const rows = bodyCompHistory().slice().reverse();
+    if (!rows.length) return '<p class="motion-history-empty">No snapshots yet. Add current values in Goals to begin the record.</p>';
+    return rows.map(entry => {
+      const stamp = new Date(entry.at);
+      const when = Number.isNaN(stamp.getTime()) ? 'Recorded snapshot' : stamp.toLocaleString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      const weight = Number(entry.weight);
+      const fat = Number(entry.bodyFat) || null;
+      const waist = Number(entry.waist) || null;
+      const lean = fat ? weight * (1 - fat / 100) : null;
+      return `<div class="motion-history-entry"><b>${when}</b><span>${compNumber(weight,' kg')} weight · ${compNumber(fat,'%')} fat · ${compNumber(waist,' cm')} waist${lean ? ' · ' + compNumber(lean,' kg') + ' lean' : ''}</span></div>`;
+    }).join('');
+  }
+  function renderBodyCompHistory() {
+    const list = document.getElementById('bodyCompHistoryList');
+    if (list) list.innerHTML = bodyCompHistoryMarkup();
+  }
+  function installBodyCompSettings() {
+    const sheet = document.querySelector('#settingsOverlay .sheet');
+    if (!sheet || document.getElementById('bodyCompHistoryDetails')) return;
+    const section = document.createElement('details');
+    section.id = 'bodyCompHistoryDetails';
+    section.className = 'motion-bodycomp-history';
+    section.innerHTML = '<summary>Body composition history <span>↗</span></summary><p>Each Goals entry is saved as a dated snapshot on this device and included in a data backup.</p><div id="bodyCompHistoryList" class="motion-history-list"></div>';
+    const before = sheet.querySelector('.data-settings');
+    if (before) before.before(section);
+    else sheet.appendChild(section);
+    document.getElementById('settingsBtn')?.addEventListener('click', renderBodyCompHistory);
+    renderBodyCompHistory();
+  }
+  window.saveBodyComposition = function saveBodyComposition(event) {
+    if (event) event.preventDefault();
+    const status = document.getElementById('bodyCompSaveStatus');
+    if (window.Motion12Persistence?.isReadOnly()) {
+      if (status) status.textContent = 'Storage is read-only. Try again when it recovers.';
+      return false;
+    }
+    const raw = id => document.getElementById(id)?.value?.trim() || '';
+    const weight = Number(raw('bodyCompWeight'));
+    const bodyFat = raw('bodyCompFat') === '' ? null : Number(raw('bodyCompFat'));
+    const waist = raw('bodyCompWaist') === '' ? null : Number(raw('bodyCompWaist'));
+    if (!Number.isFinite(weight) || weight < 30 || weight > 250 ||
+        (bodyFat !== null && (!Number.isFinite(bodyFat) || bodyFat < 2 || bodyFat > 65)) ||
+        (waist !== null && (!Number.isFinite(waist) || waist < 40 || waist > 200))) {
+      if (status) status.textContent = 'Check values: weight 30–250 kg, fat 2–65%, waist 40–200 cm.';
+      return false;
+    }
+    const snapshot = { at: new Date().toISOString(), weight, bodyFat, waist };
+    logs['bodycomp.history'] = [...bodyCompHistory(), snapshot];
+    settings.bodyweight = weight;
+    measurements.weight = String(weight);
+    if (bodyFat !== null) measurements.bodyFat = String(bodyFat);
+    if (waist !== null) measurements.waist = String(waist);
+    motion12SetItem('motion12.logs', JSON.stringify(logs));
+    motion12SetItem('motion12.settings', JSON.stringify(settings));
+    motion12SetItem('motion12.measurements', JSON.stringify(measurements));
+    renderHome();
+    renderProgress();
+    renderBodyCompHistory();
+    const savedStatus = document.getElementById('bodyCompSaveStatus');
+    if (savedStatus) savedStatus.textContent = '✓ Snapshot saved to history';
+    return false;
+  };
+
+  const fitnessGoalTargets = () => homeModel.fitnessGoalTargets(settings);
+  window.saveFitnessGoalTargets = function saveFitnessGoalTargets(event) {
+    if (event) event.preventDefault();
+    const status = document.getElementById('fitnessGoalSaveStatus');
+    if (window.Motion12Persistence?.isReadOnly()) {
+      if (status) status.textContent = 'Storage is read-only. Try again when it recovers.';
+      return false;
+    }
+    const raw = id => document.getElementById(id)?.value?.trim() || '';
+    const optional = id => raw(id) === '' ? null : Number(raw(id));
+    const weeklySessions = Number(raw('fitnessGoalSessions'));
+    const pushups = optional('fitnessGoalPushups');
+    const walk = optional('fitnessGoalWalk');
+    const rhr = optional('fitnessGoalRhr');
+    const inRange = (value, low, high, integer = false) => value === null ||
+      (Number.isFinite(value) && value >= low && value <= high && (!integer || Number.isInteger(value)));
+    if (!inRange(weeklySessions, 1, 7, true) || weeklySessions === 0 ||
+        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true)) {
+      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm.';
+      return false;
+    }
+    settings.fitnessGoals = { weeklySessions, pushups, walk, rhr };
+    motion12SetItem('motion12.settings', JSON.stringify(settings));
+    renderHome();
+    const savedStatus = document.getElementById('fitnessGoalSaveStatus');
+    if (savedStatus) savedStatus.textContent = '✓ Fitness targets saved';
+    return false;
+  };
+
+  window.renderHome = function renderSectorHome() {
+    updateHomeModeToggle();
+    const day = programDay();
+    const calMode = settings.trainingSystem === 'calisthenics';
+    const calStart = new Date((settings.calStartDate || todayISO()) + 'T12:00:00');
+    const week = calMode ? Math.max(1, Math.min(12, Math.floor((new Date() - calStart) / 604800000) + 1)) : weekNo();
+    const date = todayISO();
+    const session = calMode ? CAL_SESSIONS[day] : program[day];
+    const calories = calorieTargets();
+    const fatLoss = fatLossTargets();
+    const plan = mealPlan(day, date);
+    const intake = intakeTotals(day, date);
+    const fastDay = day === 1;
+    if (!calMode) reconcileStrengthSessionCompletion(date, day);
+    const calLog = logs['cal:' + date + ':' + day] || {};
+    const complete = calMode ? !!calLog.completed : completedOn(date, day);
+    const paused = calMode ? !!calLog.paused : sessionPaused(date + '-' + day);
+    const progress = calMode ? {
+      completed: Object.keys(logs).filter(k => /^cal:\d{4}-\d{2}-\d{2}:\d$/.test(k) && logs[k]?.completed).length,
+      programDays: 84
+    } : programProgressStats();
+    const last7 = calMode ? Array.from({length:7}, (_,i) => {
+      const dt = new Date(date + 'T12:00:00'); dt.setDate(dt.getDate()-i);
+      return !!logs['cal:' + iso(dt) + ':' + dt.getDay()]?.completed;
+    }).filter(Boolean).length : sessionsLastSevenDays();
+    const composition = currentBodyComp();
+    const fitness = fitnessGoalTargets();
+    const currentMeasure = (id, unit) => Number(measurements[id]) > 0 ? Number(measurements[id]) + ' ' + unit : 'not recorded';
+    const main = document.getElementById('homePage');
+    if (!main) return;
+
+    const detailsOpen = {
+      body: !!main.querySelector('#motionBodyCompDetails[open]'),
+      fitness: !!main.querySelector('#motionFitnessDetails[open]'),
+      food: !!main.querySelector('#motionFoodDetails[open]'),
+      training: !!main.querySelector('#motionTrainingDetails[open]'),
+      minimalFood: !!main.querySelector('#motionMinimalFoodDetails[open]')
+    };
+    const { kcalLeft, kcalUnit, consumed, target, caloriesProgress, macros } = homeModel.nutritionSummary(fastDay, intake);
+    const mealCount = compactMealCount(day, date);
+    const { completedRatio, loss, lossDetail } = homeModel.goalsSummary(calories, fatLoss, progress);
+    const recoveryCue = homeModel.recoveryCues[day];
+    const sessionAction = !calMode && paused ? `reopenSession('${date}-${day}')` : `openDay(${day},'${date}')`;
+    const sessionLabel = complete ? 'REVIEW' : paused ? 'RESUME' : 'START';
+    const weekStart = new Date((calMode ? settings.calStartDate : settings.startDate) + 'T00:00:00');
+    weekStart.setDate(weekStart.getDate() + (week - 1) * 7);
+    let weekStrip = '';
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(weekStart);
+      dt.setDate(weekStart.getDate() + i);
+      const ds = iso(dt);
+      const dd = dt.getDay();
+      const done = calMode ? !!logs['cal:' + ds + ':' + dd]?.completed : completedOn(ds, dd);
+      weekStrip += `<button class="daydot ${ds === date ? 'today' : ''} ${done ? 'done' : ''}" type="button" aria-label="Open ${DAYS[dd]} training" onclick="openDay(${dd},'${ds}')"><b>${short[dd]}</b><span></span></button>`;
+    }
+    const trainingDetail = calMode
+      ? '<a class="motion-cal-video-link" target="_blank" rel="noopener noreferrer" href="https://youtu.be/lwR5_J1QFRE">BuiltSimple training video ↗</a>'
+      : practiceHomeMarkup(true);
+    const sunday = new Date(date + 'T12:00:00');
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const recoveryAction = calMode ? `openDay(0,'${iso(sunday)}')` : 'openMobilityToday()';
+
+    if (settings.homeView !== 'detailed' && minimalView) {
+      main.classList.add('compact-active','minimal-home-active');
+      main.classList.remove('sector-active');
+      main.innerHTML = minimalView.viewSwitch('minimal') + minimalView.renderMinimalHome({
+        week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
+        sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
+        last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,mealCount,
+        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue
+      });
+      if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
+      return;
+    }
+    main.classList.remove('minimal-home-active');
+    main.classList.add('compact-active', 'sector-active');
+    main.innerHTML = (minimalView?minimalView.viewSwitch('detailed'):'') + `
+      <div class="motion-sector-stack" aria-label="Today's four priorities">
+        <section class="motion-sector motion-goals" aria-labelledby="motionGoalsTitle">
+          <div class="motion-sector-title"><span class="motion-sector-number">01</span><h2 id="motionGoalsTitle">Goals</h2><span class="motion-sector-side">WEEK ${week} / 12</span></div>
+          <div class="motion-goal-row">
+            <div class="motion-key-figure"><strong>${loss}</strong><small>planned loss / week</small></div>
+            <div class="motion-key-figure"><strong>${last7}<em> / ${fitness.weeklySessions} sessions</em></strong><small>weekly fitness goal · last 7 days</small></div>
+          </div>
+          <div class="motion-fitness-goal-strip" aria-label="12-week fitness targets">
+            <div><strong>${fitness.pushups ?? '↑'}</strong><small>push-ups · reps</small></div>
+            <div><strong>${fitness.walk ?? '↓'}</strong><small>2 km walk · min</small></div>
+            <div><strong>${fitness.rhr ?? '↓'}</strong><small>resting HR · bpm</small></div>
+          </div>
+          <div class="motion-progress-line" aria-label="${completedRatio}% of program sessions complete"><span style="width:${completedRatio}%"></span></div>
+          <div class="motion-sector-foot"><span>${progress.completed} / ${progress.programDays} sessions complete · ${lossDetail}</span><button type="button" onclick="showPage('progressPage')">DETAILS ↗</button></div>
+          <details id="motionFitnessDetails" class="motion-sector-details motion-fitness-details"><summary><span>FITNESS TARGETS</span><b>12-week strength, cardio &amp; recovery goals</b><span class="motion-fitness-edit">EDIT ⌄</span></summary>
+            <form class="motion-fitness-form" onsubmit="return saveFitnessGoalTargets(event)">
+              <label>Sessions / week<input id="fitnessGoalSessions" type="number" inputmode="numeric" min="1" max="7" step="1" required value="${fitness.weeklySessions}"><small>Current: ${last7} in last 7 days</small></label>
+              <label>Strict push-ups (reps)<input id="fitnessGoalPushups" type="number" inputmode="numeric" min="1" max="200" step="1" value="${fitness.pushups ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('pushups', 'reps')}</small></label>
+              <label>2 km walk (minutes)<input id="fitnessGoalWalk" type="number" inputmode="decimal" min="5" max="60" step="0.1" value="${fitness.walk ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('walk', 'min')}</small></label>
+              <label>Resting HR (bpm)<input id="fitnessGoalRhr" type="number" inputmode="numeric" min="30" max="120" step="1" value="${fitness.rhr ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('rhr', 'bpm')}</small></label>
+              <p>Set your personal 12-week targets here. Update current results in <button type="button" onclick="showPage('progressPage')">Progress ↗</button>.</p>
+              <button type="submit">SAVE FITNESS TARGETS</button>
+              <p id="fitnessGoalSaveStatus" role="status" aria-live="polite"></p>
+            </form>
+          </details>
+          <details id="motionBodyCompDetails" class="motion-sector-details motion-bodycomp-details"><summary><span class="motion-bodycomp-summary-label">BODY COMPOSITION</span><b>${compNumber(composition.weight,' kg')} · ${compNumber(composition.bodyFat,'%')} fat · ${compNumber(composition.waist,' cm')} waist</b><span class="motion-bodycomp-edit">EDIT ⌄</span></summary>
+            <form class="motion-bodycomp-form" onsubmit="return saveBodyComposition(event)">
+              <label>Weight (kg)<input id="bodyCompWeight" type="number" inputmode="decimal" step="0.1" min="30" max="250" required value="${composition.weight || ''}"></label>
+              <label>Body fat (%)<input id="bodyCompFat" type="number" inputmode="decimal" step="0.1" min="2" max="65" value="${composition.bodyFat || ''}" placeholder="Optional"></label>
+              <label>Waist (cm)<input id="bodyCompWaist" type="number" inputmode="decimal" step="0.1" min="40" max="200" value="${composition.waist || ''}" placeholder="Optional"></label>
+              <button type="submit">SAVE SNAPSHOT</button>
+              <p id="bodyCompSaveStatus" role="status" aria-live="polite"></p>
+            </form>
+          </details>
+        </section>
+
+        <section class="motion-sector motion-nutrition" aria-labelledby="motionNutritionTitle">
+          <div class="motion-sector-title"><span class="motion-sector-number">02</span><h2 id="motionNutritionTitle">Calories &amp; macros</h2><span class="motion-sector-side">${fastDay ? 'FAST DAY' : 'TODAY'}</span></div>
+          <div class="motion-calorie-row"><div class="motion-calorie-total"><strong>${kcalLeft}</strong><span>${kcalUnit}</span></div>
+            <div class="motion-macro-grid" aria-label="Remaining macros">
+              <div><b>${macros ? macros.protein : '—'}<small>${macros ? 'g' : ''}</small></b><span>PROTEIN</span></div>
+              <div><b>${macros ? macros.carbs : '—'}<small>${macros ? 'g' : ''}</small></b><span>CARBS</span></div>
+              <div><b>${macros ? macros.fat : '—'}<small>${macros ? 'g' : ''}</small></b><span>FAT</span></div>
+            </div>
+          </div>
+          ${!fastDay && intake ? `<div class="motion-calorie-track" aria-label="${consumed} of ${target} calories logged"><span style="width:${caloriesProgress}%"></span></div>` : ''}
+          <details id="motionFoodDetails" class="motion-sector-details"><summary>${fastDay ? 'MONDAY WATER FAST · NO MEALS TO LOG' : plan ? 'LOG MEALS · ' + mealCount : 'SET BODYWEIGHT TO PLAN MEALS'}<span>⌄</span></summary><div class="motion-sector-expand">${compactMealChips(day, date)}</div></details>
+        </section>
+
+        <section class="motion-sector motion-training" aria-labelledby="motionTrainingTitle">
+          <div class="motion-sector-title"><span class="motion-sector-number">03</span><h2 id="motionTrainingTitle">Training</h2>${window.Motion12Cal ? `<select class="motion-system-select" aria-label="Training system" onchange="Motion12Cal.switch(this.value)"><option value="standard" ${calMode ? '' : 'selected'}>STANDARD</option><option value="calisthenics" ${calMode ? 'selected' : ''}>CALISTHENICS</option></select>` : `<span class="motion-sector-side">TODAY</span>`}</div>
+          <div class="motion-training-row"><div><strong>${session.name}</strong><span>${complete ? '✓ Complete · ' : paused ? 'Paused · ' : ''}${session.time} · ${calMode ? session.why : weeklyTarget(day, week)}</span></div><button type="button" class="motion-training-launch" onclick="${sessionAction}">${sessionLabel} <span>↗</span></button></div>
+          <div class="motion-training-tools">
+            <details id="motionTrainingDetails" class="motion-sector-details"><summary>${calMode ? 'PLAN &amp; VIDEO' : 'WEEK PLAN'}<span>⌄</span></summary><div class="motion-sector-expand"><div class="compact-week">${weekStrip}</div>${trainingDetail}</div></details>
+            <button type="button" class="motion-flow-tool" onclick="Motion12Flow.previewTomorrow()">PREVIEW</button>
+            <button type="button" class="motion-flow-tool motion-flow-tool-primary" onclick="Motion12Flow.startToday()">FLOW ↗</button>
+          </div>
+        </section>
+
+        <section class="motion-sector motion-recovery" aria-labelledby="motionRecoveryTitle">
+          <div class="motion-sector-title"><span class="motion-sector-number">04</span><h2 id="motionRecoveryTitle">Rest &amp; recovery</h2><span class="motion-sector-side">RESET</span></div>
+          <div class="motion-recovery-row">
+            <div><strong>8<em> h</em></strong><small>sleep aim · not tracked</small></div>
+            <div><strong>7<em> moves</em></strong><small>mobility · 6–8 min</small></div>
+            <button type="button" onclick="${recoveryAction}" aria-label="Open recovery and mobility">OPEN <span>↗</span></button>
+          </div>
+          <p class="motion-recovery-cue">${recoveryCue}</p>
+        </section>
+      </div>`;
+    if (detailsOpen.body) main.querySelector('#motionBodyCompDetails').open = true;
+    if (detailsOpen.fitness) main.querySelector('#motionFitnessDetails').open = true;
+    if (detailsOpen.food) main.querySelector('#motionFoodDetails').open = true;
+    if (detailsOpen.training) main.querySelector('#motionTrainingDetails').open = true;
+  };
+
+  /* Flow Mode is a focused layer over the existing workout. The underlying
+     day page remains responsible for timers, sets and session completion. */
+  const flowState = { mode:'', day:0, date:'', index:0, cue:'', system:'standard' };
+  const flowKey = date => 'motionflow:' + date;
+  const flowEscape = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const flowDefaultCues = homeModel.flowCues;
+  function flowDay(date) { return new Date(date + 'T12:00:00').getDay(); }
+  function flowTomorrow() {
+    const date = new Date(todayISO() + 'T12:00:00');
+    date.setDate(date.getDate() + 1);
+    return iso(date);
+  }
+  function flowSession(day) {
+    return settings.trainingSystem === 'calisthenics' ? CAL_SESSIONS[day] : program[day];
+  }
+  /* Date-scoped edits leave the 12-week templates intact. The same edits are
+     applied to the normal workout before rendering, so logging and timers
+     retain their existing exercise identities. */
+  const flowOriginalRows = new WeakMap();
+  const flowTouchedRows = new Set();
+  const flowGroups = [
+    ['prep','WARM-UP'],['work','MAIN SESSION'],['tendon','TENDON CAPACITY'],['support','SUPPORT']
+  ];
+  const flowSystem = () => settings.trainingSystem === 'calisthenics' ? 'calisthenics' : 'standard';
+  const flowSafeText = value => String(value ?? '').replace(/[<>"']/g,'').trim().slice(0,140);
+  function flowOriginal(array) {
+    if (!flowOriginalRows.has(array)) flowOriginalRows.set(array,array.map(row => [...row]));
+    return flowOriginalRows.get(array);
+  }
+  function flowSessionGroups(day,date,system=flowSystem()) {
+    if (system === 'calisthenics') {
+      const rows = window.Motion12Cal?.getExercisePlan?.(day) || [];
+      return rows.length ? [{ key:'work', label:'MAIN SESSION', rows:rows.map(row => ({name:row[1],target:row[2]})) }] : [];
+    }
+    return flowGroups.map(([key,label]) => {
+      const array = key === 'work' && day === 6 && typeof aerobicPowerSessionWork === 'function'
+        ? aerobicPowerSessionWork(date) : program[day]?.[key];
+      return array?.length ? {key,label,rows:flowOriginal(array).map(row => ({name:row[0],target:row[1]}))} : null;
+    }).filter(Boolean);
+  }
+  function flowPlanEdits(date,system=flowSystem()) {
+    return logs[flowKey(date)]?.plans?.[system] || {};
+  }
+  function flowExerciseEditor(day,date,system) {
+    const edits = flowPlanEdits(date,system);
+    const groups = flowSessionGroups(day,date,system);
+    if (!groups.length) return '<p class="motion-flow-plan-empty">No prescribed exercises tomorrow. Keep the recovery session easy.</p>';
+    return `<div class="motion-flow-plan" aria-label="Tomorrow's editable exercise plan">
+      ${groups.map(group => `<section class="motion-flow-plan-group"><h3>${group.label} <span>${group.rows.length}</span></h3>
+        ${group.rows.map((row,i) => {
+          const saved = edits[group.key + ':' + i] || {};
+          return `<div class="motion-flow-exercise"><span class="motion-flow-ex-number">${String(i+1).padStart(2,'0')}</span>
+            <div class="motion-flow-ex-fields"><label>Exercise<input data-flow-group="${group.key}" data-flow-index="${i}" data-flow-field="name" maxlength="140" value="${flowEscape(saved.name ?? row.name)}"></label>
+            <label>Sets / reps / interval<input data-flow-group="${group.key}" data-flow-index="${i}" data-flow-field="target" maxlength="140" value="${flowEscape(saved.target ?? row.target)}"></label></div></div>`;
+        }).join('')}</section>`).join('')}</div>`;
+  }
+  function flowApplySession(day,date) {
+    for (const array of flowTouchedRows) array.splice(0,array.length,...flowOriginal(array).map(row => [...row]));
+    flowTouchedRows.clear();
+    const system=flowSystem(), edits=flowPlanEdits(date,system);
+    if (system === 'calisthenics') {
+      window.Motion12Cal?.applyExerciseEdits?.(day,edits);
+      return;
+    }
+    for (const [key] of flowGroups) {
+      const array = key === 'work' && day === 6 && typeof aerobicPowerSessionWork === 'function'
+        ? aerobicPowerSessionWork(date) : program[day]?.[key];
+      if (!array?.length) continue;
+      const base=flowOriginal(array);
+      array.splice(0,array.length,...base.map((row,i) => {
+        const item=edits[key + ':' + i] || {};
+        const copy=[...row];
+        if (item.name) copy[0]=flowSafeText(item.name) || row[0];
+        if (item.target) copy[1]=flowSafeText(item.target) || row[1];
+        return copy;
+      }));
+      flowTouchedRows.add(array);
+    }
+  }
+  const flowBaseOpenDay = window.openDay;
+  if (typeof flowBaseOpenDay === 'function') {
+    window.openDay = function(day,date) {
+      flowApplySession(Number(day),date || dateForProgramDay(Number(day)));
+      return flowBaseOpenDay(day,date);
+    };
+  }
+  function flowMount() {
+    let overlay = document.getElementById('motionFlowOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'motionFlowOverlay';
+      overlay.hidden = true;
+      document.body.appendChild(overlay);
+    }
+    if (!document.getElementById('motionFlowReturn')) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'motionFlowReturn';
+      button.textContent = '↗ RETURN TO FLOW';
+      button.onclick = () => window.Motion12Flow.resume();
+      document.body.appendChild(button);
+    }
+    return overlay;
+  }
+  function flowShow(kicker, title, content) {
+    const overlay = flowMount();
+    overlay.innerHTML = `<section class="motion-flow-card" role="dialog" aria-modal="true" aria-label="${flowEscape(title)}">
+      <header class="motion-flow-head"><span>${flowEscape(kicker)}</span><button type="button" onclick="Motion12Flow.close()" aria-label="Exit Flow Mode">✕</button></header>
+      <h2>${flowEscape(title)}</h2>${content}</section>`;
+    overlay.hidden = false;
+    document.body.classList.add('motion-flow-dialog-open');
+    overlay.querySelector('.motion-flow-head button')?.focus();
+  }
+  function flowHide() {
+    const overlay = document.getElementById('motionFlowOverlay');
+    if (overlay) overlay.hidden = true;
+    document.body.classList.remove('motion-flow-dialog-open');
+  }
+  function flowCollectSteps() {
+    const nodes = Array.from(document.querySelectorAll('#dayPage .exercise[id^="ex-"], #dayPage .cal-exercise'));
+    const steps = nodes.map(node => {
+      const title = node.querySelector('.ex-name h3,.cal-grow h3,h3')?.textContent?.trim() || 'Movement';
+      const target = node.querySelector('.ex-name p,.cal-grow p,.ex-top p')?.textContent?.trim() || 'Move with control';
+      const ticks = Array.from(node.querySelectorAll('.cal-tick'));
+      const complete = node.classList.contains('complete') || (ticks.length > 0 && ticks.every(tick => tick.textContent.trim() === '✓'));
+      return { id:node.id, title, target, complete };
+    });
+    if (!steps.length) {
+      const session = flowSession(flowState.day);
+      steps.push({ id:'mobilitySection', title:session?.name || 'Recovery & mobility', target:session?.why || 'Move easily today.', complete:false });
+    }
+    return steps;
+  }
+  function flowRenderFocus() {
+    const steps = flowCollectSteps();
+    flowState.index = Math.max(0, Math.min(flowState.index, steps.length - 1));
+    const current = steps[flowState.index];
+    const next = steps[flowState.index + 1];
+    flowState.mode = 'focus';
+    flowShow('FLOW MODE · ' + (flowState.index + 1) + ' / ' + steps.length,
+      current.title,
+      `<p class="motion-flow-target">${flowEscape(current.target)}</p>
+       <div class="motion-flow-cue"><small>ONE FOCUS</small><strong>${flowEscape(flowState.cue)}</strong></div>
+       <p class="motion-flow-next">${next ? 'NEXT · ' + flowEscape(next.title) : 'FINAL MOVEMENT · FINISH IN THE WORKOUT LOG'}</p>
+       <div class="motion-flow-actions">
+         <button type="button" class="motion-flow-secondary" onclick="Motion12Flow.previous()" ${flowState.index === 0 ? 'disabled' : ''}>← BACK</button>
+         <button type="button" class="motion-flow-primary" onclick="Motion12Flow.openLog()">LOG / TIMER ↗</button>
+         <button type="button" class="motion-flow-secondary" onclick="Motion12Flow.next()" ${flowState.index === steps.length - 1 ? 'disabled' : ''}>NEXT →</button>
+       </div><p class="motion-flow-note">Use the existing workout to record sets and control timers. Return to this focused view at any point.</p>`);
+  }
+  window.Motion12Flow = {
+    applySession:flowApplySession,
+    plannedTarget(day,date,group,index) {
+      const source=group === 'work' && day === 6 ? aerobicPowerSessionWork(date) : program[day]?.[group];
+      const baseline=source ? flowOriginal(source)[index]?.[1] : null;
+      const edited=flowPlanEdits(date,'standard')[group+':'+index]?.target;
+      return edited && edited !== baseline ? flowSafeText(edited) : null;
+    },
+    previewTomorrow() {
+      const date = flowTomorrow(), day = flowDay(date), session = flowSession(day);
+      const saved = logs[flowKey(date)] || {};
+      flowState.mode = 'preview'; flowState.day = day; flowState.date = date;
+      flowState.cue = saved.cue || flowDefaultCues[day];
+      const system = flowSystem(); flowState.system = system;
+      const weekday = new Date(date + 'T12:00:00').toLocaleDateString('en-AU',{weekday:'long'});
+      flowShow('TONIGHT · PREPARE FOR ' + weekday.toUpperCase(), session.name,
+        `<p class="motion-flow-target">${flowEscape(session.time)} · ${flowEscape(session.why)}</p>
+         <div class="motion-flow-cue"><small>TOMORROW'S ONE FOCUS</small>
+           <label for="motionFlowCueInput">Choose a short intention you can remember during the session.</label>
+           <input id="motionFlowCueInput" maxlength="110" value="${flowEscape(flowState.cue)}"></div>
+         <div class="motion-flow-plan-header"><div><small>YOUR EXERCISE PLAN</small><p>Review or change any exercise and prescription right here.</p></div><button type="button" class="motion-flow-reset" onclick="Motion12Flow.resetPreview()">RESET</button></div>
+         ${flowExerciseEditor(day,date,system)}
+         <p class="motion-flow-equipment">Set out the equipment for this plan tonight. Start with your usual warm-up tomorrow.</p>
+         <button type="button" class="motion-flow-primary motion-flow-wide" onclick="Motion12Flow.savePreview()">READY FOR MORNING ✓</button>
+         <p class="motion-flow-note" id="motionFlowStatus">Your focus and tomorrow's exercise edits will be saved together on this device.</p>`);
+    },
+    resetPreview() {
+      if (flowState.mode !== 'preview') return;
+      const groups=flowSessionGroups(flowState.day,flowState.date,flowState.system);
+      for (const group of groups) group.rows.forEach((row,i) => {
+        const selector=(field)=>`[data-flow-group="${group.key}"][data-flow-index="${i}"][data-flow-field="${field}"]`;
+        const name=document.querySelector(selector('name')),target=document.querySelector(selector('target'));
+        if (name) name.value=row.name;
+        if (target) target.value=row.target;
+      });
+    },
+    savePreview() {
+      const status = document.getElementById('motionFlowStatus');
+      if (window.Motion12Persistence?.isReadOnly()) {
+        if (status) status.textContent = 'Storage is read-only; the review cannot be saved.';
+        return;
+      }
+      flowState.cue = (document.getElementById('motionFlowCueInput')?.value || '').trim().slice(0,110) || flowDefaultCues[flowState.day];
+      const system=flowState.system, edits={};
+      document.querySelectorAll('#motionFlowOverlay [data-flow-field="name"]').forEach(input => {
+        const group=input.dataset.flowGroup,index=input.dataset.flowIndex;
+        const target=document.querySelector(`#motionFlowOverlay [data-flow-group="${group}"][data-flow-index="${index}"][data-flow-field="target"]`);
+        edits[group+':'+index]={name:flowSafeText(input.value),target:flowSafeText(target?.value)};
+      });
+      if (Object.values(edits).some(row => !row.name || !row.target)) {
+        if (status) status.textContent = 'Every exercise needs a name and sets / reps / interval.';
+        return;
+      }
+      const prior=logs[flowKey(flowState.date)] || {};
+      logs[flowKey(flowState.date)] = {...prior,ready:true,cue:flowState.cue,plans:{...prior.plans,[system]:edits},at:new Date().toISOString()};
+      motion12SetItem('motion12.logs', JSON.stringify(logs));
+      flowHide();
+      if (document.getElementById('homePage')?.classList.contains('active')) renderHome();
+    },
+    startToday() {
+      const date = todayISO(), day = programDay(), session = flowSession(day);
+      flowState.mode = 'arrive'; flowState.date = date; flowState.day = day; flowState.index = 0;
+      flowState.cue = logs[flowKey(date)]?.cue || flowDefaultCues[day];
+      flowShow('ARRIVE · TODAY\'S SESSION', session.name,
+        `<p class="motion-flow-target">${flowEscape(session.time)} · ${flowEscape(session.why)}</p>
+         <div class="motion-flow-cue"><small>ONE FOCUS</small><strong>${flowEscape(flowState.cue)}</strong></div>
+         <div class="motion-flow-review"><span>Settle into a comfortable breath</span><span>Unclench the jaw and avoid unnecessary bracing</span><span>Begin your normal 5-minute movement warm-up</span></div>
+         <button type="button" class="motion-flow-primary motion-flow-wide" onclick="Motion12Flow.begin()">BEGIN FLOW ↗</button>`);
+    },
+    begin() {
+      flowState.mode = 'focus';
+      openDay(flowState.day,flowState.date);
+      document.body.classList.add('motion-flow-armed');
+      flowRenderFocus();
+    },
+    previous() { flowState.index = Math.max(0, flowState.index - 1); flowRenderFocus(); },
+    next() { flowState.index += 1; flowRenderFocus(); },
+    openLog() {
+      const step = flowCollectSteps()[flowState.index];
+      flowHide();
+      document.getElementById(step?.id)?.scrollIntoView({behavior:'smooth',block:'center'});
+    },
+    resume() {
+      if (!document.getElementById('dayPage')?.classList.contains('active')) return;
+      const steps = flowCollectSteps();
+      if (steps[flowState.index]?.complete) {
+        const next = steps.findIndex((step,i) => i > flowState.index && !step.complete);
+        if (next >= 0) flowState.index = next;
+      }
+      flowRenderFocus();
+    },
+    close() {
+      flowHide();
+      document.body.classList.remove('motion-flow-armed');
+      flowState.mode = '';
+    }
+  };
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !document.getElementById('motionFlowOverlay')?.hidden) window.Motion12Flow.close();
+  });
+
+  installBodyCompSettings();
+  window.renderHome();
+})();

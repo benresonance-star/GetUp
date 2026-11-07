@@ -1,0 +1,17 @@
+.reminder-settings{margin-top:14px;border:1px solid rgba(44,204,196,.45);border-radius:16px;padding:12px 14px;background:#112527;color:#f3f6f2}
+.reminder-settings>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900;letter-spacing:.015em;padding:4px 0;font-size:15px}
+.reminder-settings>summary::marker{color:#39d4cd}
+.reminder-settings>summary span{font-size:10px;letter-spacing:.1em;color:#37d5cc;background:#153b3d;border-radius:7px;padding:6px 8px;white-space:nowrap}
+.reminder-settings>summary span.active{background:#1d5552;color:#c4fff6}
+.reminder-settings .settings-note{font-size:12px;line-height:1.45;color:#bdcac7;margin:11px 0}
+.reminder-settings .field{margin-top:10px}
+.reminder-settings .field label{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.reminder-settings .field input{box-sizing:border-box;width:100%;min-height:43px;border-radius:10px;color:#f4faf8;background:#071617;border:1px solid #3b6160;font-size:16px;padding:9px 11px}
+.reminder-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.reminder-buttons button{flex:1 1 105px;border:1px solid #39716e;border-radius:10px;background:#183d3c;color:#dcfffb;font-weight:900;font-size:12px;padding:13px 9px;cursor:pointer;min-height:42px}
+.reminder-buttons #flowReminderEnable{background:#38d4ca;color:#092322;border-color:#38d4ca}
+.reminder-buttons #flowReminderDisable{background:#101d1e;color:#b8c7c4}
+.reminder-buttons button:disabled{opacity:.4;cursor:wait}
+.reminder-status{font-size:12px;line-height:1.5;color:#b8d7d2;min-height:18px;margin:12px 0 3px}
+.reminder-status.error{color:#ffb49e}
+.reminder-status.success{color:#79e4d9}

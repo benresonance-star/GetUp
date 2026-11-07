@@ -1,0 +1,167 @@
+/* MOTION12 r8
+   Compact workout mode keeps the regular-size progress + dial timer.
+   Compact treatment starts at the exercise list below the timer. */
+
+/* Restore the normal progress block in Compact mode. */
+#dayPage.compact-active .workout-progress-block{
+  margin:4px 0 10px;
+}
+#dayPage.compact-active .timer-session-progress{
+  padding:11px 12px 10px;
+  border-radius:16px;
+}
+#dayPage.compact-active .strength-session-progress{
+  padding:12px;
+  border-radius:16px;
+}
+#dayPage.compact-active .timer-progress-head,
+#dayPage.compact-active .strength-progress-head{
+  margin-bottom:8px;
+}
+#dayPage.compact-active .timer-progress-head strong{
+  font-size:13px;
+}
+#dayPage.compact-active .strength-progress-head strong{
+  font-size:13px;
+}
+#dayPage.compact-active .timer-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px;
+  margin-top:7px;
+  font-size:8.5px;
+}
+#dayPage.compact-active .timer-progress-foot.continuous{
+  display:block;
+}
+#dayPage.compact-active .strength-progress-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  margin-top:8px;
+  font-size:8.5px;
+}
+
+/* Restore the complete regular timer card in Compact mode. */
+#dayPage.compact-active .workout-timer-block{
+  margin:0 0 18px;
+}
+#dayPage.compact-active .workout-primary-timer{
+  padding:18px;
+  border-radius:28px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-context span,
+#dayPage.compact-active .workout-primary-timer .timer-context b{
+  font-size:12px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring{
+  width:min(250px,72vw);
+  margin:18px auto;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring:before{
+  inset:10px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring strong{
+  font-size:49px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
+  max-width:190px;
+  font-size:13px;
+  line-height:1.2;
+  letter-spacing:.075em;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase.long{
+  max-width:200px;
+  font-size:11.5px;
+  line-height:1.18;
+  letter-spacing:.045em;
+}
+#dayPage.compact-active .workout-primary-timer .timer-ring small{
+  max-width:185px;
+  font-size:11.5px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next{
+  min-height:36px;
+  margin-top:7px;
+  padding:7px 11px 8px;
+  max-width:205px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-label{
+  font-size:9.5px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-next-stage{
+  font-size:11.5px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls{
+  gap:7px;
+}
+#dayPage.compact-active .workout-primary-timer .smart-timer-controls button{
+  min-height:44px;
+  padding:10px 13px;
+  font-size:11px;
+}
+#dayPage.compact-active .workout-primary-timer .timer-presets{
+  margin-top:12px;
+}
+
+/* Match the regular iPhone timer exactly at the narrow breakpoint. */
+@media(max-width:390px){
+  #dayPage.compact-active .workout-progress-block{
+    margin-top:2px;
+    margin-bottom:8px;
+  }
+  #dayPage.compact-active .timer-session-progress{
+    padding:10px 10px 9px;
+  }
+  #dayPage.compact-active .strength-session-progress{
+    padding:10px;
+  }
+  #dayPage.compact-active .timer-progress-head strong,
+  #dayPage.compact-active .strength-progress-head strong{
+    font-size:12px;
+  }
+  #dayPage.compact-active .timer-progress-foot{
+    display:grid;
+    gap:5px;
+    font-size:8px;
+  }
+  #dayPage.compact-active .timer-progress-foot.continuous{
+    display:block;
+  }
+  #dayPage.compact-active .strength-progress-foot{
+    display:grid;
+    gap:5px;
+    font-size:8px;
+  }
+  #dayPage.compact-active .workout-timer-block{
+    margin-bottom:16px;
+  }
+  #dayPage.compact-active .workout-primary-timer{
+    padding:15px;
+    border-radius:28px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring{
+    width:min(225px,70vw);
+    margin:14px auto;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring strong{
+    font-size:45px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase{
+    font-size:12px;
+    max-width:175px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring span#timerPhase.long{
+    font-size:10.8px;
+    max-width:185px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-ring small{
+    font-size:11px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-next{
+    max-width:190px;
+  }
+  #dayPage.compact-active .workout-primary-timer .timer-next-stage{
+    font-size:11px;
+  }
+}

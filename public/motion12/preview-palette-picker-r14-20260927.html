@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#121212" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MOTION 12" />
+  <title>MOTION 12 — 12-week fitness reset</title>
+  <meta name="motion12-build" content="palette-picker-r14-inline-tokens-20260927" />
+  <script>
+    (function(){
+      var standalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      if (standalone) document.documentElement.classList.add('standalone');
+    })();
+  </script>
+  <link rel="stylesheet" href="theme-r7.css" />
+  <link rel="stylesheet" href="app-r7.css" />
+  <link rel="stylesheet" href="compact-workout-r8.css" />
+  <link rel="stylesheet" href="compact-workout-r9.css" />
+  <link rel="stylesheet" href="compact-workout-r10.css" />
+  <link rel="stylesheet" href="compact-workout-r11.css" />
+  <link rel="stylesheet" href="meal-configurator-r12.css" />
+  <link rel="stylesheet" href="palette-r13.css" />
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="topline">
+      <div><div class="brand">MOTION<i>12</i></div><div class="date" id="todayDate"></div></div>
+      <div class="top-actions">
+        <button class="home-mode-toggle" id="homeModeToggle" type="button" role="switch" aria-checked="false" aria-label="Use compact Home">
+          <span class="home-mode-label">Compact</span><span class="switch-track"><span class="switch-knob"></span></span>
+        </button>
+        <button class="gear" id="settingsBtn" type="button" aria-label="Open settings"><span class="gear-icon">⚙</span><span class="gear-label">Settings</span></button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section id="homePage" class="page active"></section>
+    <section id="daysPage" class="page"></section>
+    <section id="dayPage" class="page"></section>
+    <section id="progressPage" class="page"></section>
+  </main>
+  <nav class="bottomnav">
+    <button class="navbtn active" data-page="homePage"><strong>⌂</strong>Home</button>
+    <button class="navbtn" data-page="daysPage"><strong>▦</strong>Days</button>
+    <button class="navbtn" data-page="progressPage"><strong>↗</strong>Progress</button>
+  </nav>
+</div>
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h2>Program settings</h2>
+    <div class="field"><label>12-week start date (Monday)</label><input type="date" id="startDateInput"></div>
+    <div class="field"><label>Bodyweight (kg)</label><input type="number" id="bodyweightInput" step="0.1" min="30" max="250"></div>
+    <div class="settings-grid">
+      <div class="field"><label>Height (cm)</label><input type="number" id="heightInput" step="1" min="120" max="230"></div>
+      <div class="field"><label>Age</label><input type="number" id="ageInput" step="1" min="18" max="100"></div>
+    </div>
+    <div class="field"><label>Sex for calorie estimate</label><select id="sexInput"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option></select></div>
+    <div class="field"><label>Daily step baseline</label><input type="number" id="stepsInput" step="500" min="0"></div>
+    <div class="field"><label>Known maintenance calories — optional</label><input type="number" id="maintenanceInput" step="50" min="1200" max="6000" placeholder="Overrides estimate if known"></div>
+    <div class="field app-colour-field">
+      <div class="app-colour-head"><label>App colour</label><b id="appPaletteName">Ember</b></div>
+      <input type="hidden" id="appPaletteInput" value="ember">
+      <div class="palette-picker" id="appPalettePicker" role="radiogroup" aria-label="App colour">
+        <button class="palette-swatch selected" type="button" role="radio" aria-checked="true" data-palette="ember" style="--sw1:#ff4d2e;--sw2:#ff7a1a"><span class="palette-swatch-preview"></span><small>Ember</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="ocean" style="--sw1:#38a6ff;--sw2:#20d6c7"><span class="palette-swatch-preview"></span><small>Ocean</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="forest" style="--sw1:#4fd270;--sw2:#b4df45"><span class="palette-swatch-preview"></span><small>Forest</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="violet" style="--sw1:#8c72ff;--sw2:#d45cff"><span class="palette-swatch-preview"></span><small>Violet</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="gold" style="--sw1:#ffb62e;--sw2:#ff7a1a"><span class="palette-swatch-preview"></span><small>Gold</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="rose" style="--sw1:#ff5f8f;--sw2:#ff8c51"><span class="palette-swatch-preview"></span><small>Rose</small></button>
+      </div>
+      <p class="settings-note palette-picker-note">Tap a swatch to preview it. Save keeps the colour; Cancel restores the previous palette.</p>
+    </div>
+    <details class="portion-settings">
+      <summary>Portion calibration</summary>
+      <p class="settings-note">Edit these once to match your usual portions. Calories/macros recalculate from representative food values.</p>
+      <div class="settings-grid">
+        <div class="field"><label>Greek yoghurt (g)</label><input type="number" id="yogurtInput" step="10" min="0"></div>
+        <div class="field"><label>Berries (g)</label><input type="number" id="berriesInput" step="10" min="0"></div>
+        <div class="field"><label>Walnuts/almonds (g)</label><input type="number" id="nutsInput" step="5" min="0"></div>
+        <div class="field"><label>Ground flax/chia (g)</label><input type="number" id="seedsInput" step="5" min="0"></div>
+        <div class="field"><label>Latte milk each (ml)</label><input type="number" id="latteMilkInput" step="10" min="0"></div>
+        <div class="field"><label>Lunch protein</label><select id="lunchProteinInput"><option value="chicken">Chicken breast — ~65 g cooked</option><option value="leanMince">Lean mince — ~77 g cooked</option><option value="oilyFish">Oily fish — ~87 g cooked</option></select></div>
+        <div class="field"><label>Dinner protein</label><select id="dinnerProteinInput"><option value="chicken">Chicken breast — ~65 g cooked</option><option value="leanMince">Lean mince — ~77 g cooked</option><option value="oilyFish">Oily fish — ~87 g cooked</option></select></div>
+        <p class="settings-note protein-equivalent-note">Each cooked portion supplies about 20 g protein. Calories vary by protein choice and are recalculated in the meal plan.</p>
+        <div class="field"><label>Lunch whole grain — cooked (g)</label><input type="number" id="lunchRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Dinner whole grain — cooked (g)</label><input type="number" id="dinnerRiceInput" step="10" min="0"></div>
+        <div class="field"><label>Legumes each meal — cooked (g)</label><input type="number" id="legumesInput" step="10" min="0"></div>
+        <div class="field"><label>Vegetables each meal (g)</label><input type="number" id="vegInput" step="10" min="0"></div>
+        <div class="field"><label>Extra-virgin olive oil each meal (g)</label><input type="number" id="oilInput" step="0.5" min="0"></div>
+        <div class="field"><label>Protein powder (g)</label><input type="number" id="powderInput" step="5" min="0"></div>
+        <div class="field"><label>Shake milk (ml)</label><input type="number" id="shakeMilkInput" step="10" min="0"></div>
+      </div>
+    </details>
+    <details class="data-settings">
+      <summary>Training data</summary>
+      <p class="settings-note">MOTION12 now stores live app and training data in IndexedDB. Existing localStorage data is read only once as migration input and is never modified by the new app.</p>
+      <div class="data-settings-actions">
+        <button type="button" id="exportDataBtn">Export backup</button>
+      </div>
+      <div class="data-store-status" id="dataStoreStatus"></div>
+    </details>
+    <div class="sheet-actions"><button class="cancel" id="cancelSettings">Cancel</button><button class="save" id="saveSettings">Save</button></div>
+  </div>
+</div>
+<div class="readonly-banner" id="readonlyBanner" hidden>
+  <div><b>READ ONLY</b><span id="readonlyBannerText">Storage is unavailable. Changes are disabled.</span></div>
+  <div class="readonly-banner-actions">
+    <button type="button" id="readonlyRetryBtn">Retry</button>
+    <button type="button" id="readonlyImportBtn">Import backup</button>
+  </div>
+</div>
+<div class="recovery-overlay" id="recoveryOverlay" hidden>
+  <div class="recovery-card">
+    <span class="recovery-kicker">DATA RECOVERY</span>
+    <h2>Training data storage needs attention</h2>
+    <p id="recoveryMessage">MOTION12 could not open its IndexedDB store. Your original localStorage migration source has not been changed.</p>
+    <div class="recovery-status" id="recoveryStatus"></div>
+    <div class="recovery-actions">
+      <button type="button" class="primary" id="recoveryRetryBtn">Retry IndexedDB</button>
+      <button type="button" id="recoveryReadonlyBtn">Open read-only</button>
+      <button type="button" id="recoveryImportBtn">Import backup</button>
+    </div>
+    <input type="file" id="recoveryImportFile" accept="application/json,.json" hidden>
+    <small>Read-only mode never writes to IndexedDB or localStorage. Import validates the backup before replacing IndexedDB; if IndexedDB is still unavailable, the backup opens in memory as read-only.</small>
+  </div>
+</div>
+<script src="program-r7.js"></script>
+<script src="persistence-v1-r7.js"></script>
+<script>
+  (function(){
+    var scriptsLoaded=false;
+    var recovery=document.getElementById('recoveryOverlay');
+    var recoveryMessage=document.getElementById('recoveryMessage');
+    var recoveryStatus=document.getElementById('recoveryStatus');
+    var importFile=document.getElementById('recoveryImportFile');
+    var readonlyBanner=document.getElementById('readonlyBanner');
+    var readonlyText=document.getElementById('readonlyBannerText');
+
+    function loadScript(src){
+      return new Promise(function(resolve,reject){
+        var s=document.createElement('script');
+        s.src=src;
+        s.onload=resolve;
+        s.onerror=function(){reject(new Error('Failed to load '+src))};
+        document.body.appendChild(s);
+      });
+    }
+    async function startApp(){
+      if(scriptsLoaded){
+        if(window.motion12ReloadStateFromPersistence)window.motion12ReloadStateFromPersistence();
+        applyReadOnlyShell();
+        return;
+      }
+      await loadScript('state-r14.js');
+      await loadScript('ui-r13.js');
+      scriptsLoaded=true;
+      applyReadOnlyShell();
+    }
+    function setRecoveryStatus(text,type){
+      recoveryStatus.textContent=text||'';
+      recoveryStatus.className='recovery-status '+(type||'');
+    }
+    function showRecovery(err,phase){
+      var message=err&&err.message?err.message:String(err||'IndexedDB is unavailable');
+      recoveryMessage.textContent='MOTION12 could not safely persist training data. Your original localStorage migration source has not been changed.';
+      setRecoveryStatus((phase?phase+': ':'')+message,'error');
+      recovery.hidden=false;
+    }
+    function hideRecovery(){recovery.hidden=true;setRecoveryStatus('','')}
+    function applyReadOnlyShell(){
+      var ro=window.Motion12Persistence.isReadOnly();
+      document.body.classList.toggle('motion12-readonly',ro);
+      readonlyBanner.hidden=!ro;
+      if(ro){
+        var s=window.Motion12Persistence.status();
+        readonlyText.textContent='Using '+(s.recoverySource||'recovery data')+'. Changes are disabled until storage recovers.';
+      }
+    }
+    async function retryStorage(){
+      setRecoveryStatus('Retrying IndexedDB…','working');
+      try{
+        await window.Motion12Persistence.retryBootstrap();
+        hideRecovery();
+        await startApp();
+        document.body.classList.remove('motion12-readonly');
+        readonlyBanner.hidden=true;
+      }catch(err){
+        showRecovery(err,'Retry failed');
+      }
+    }
+    async function openReadOnly(){
+      setRecoveryStatus('Preparing read-only recovery data…','working');
+      try{
+        await window.Motion12Persistence.enterReadOnly();
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+      }catch(err){
+        showRecovery(err,'Read-only recovery failed');
+      }
+    }
+    function chooseImport(){importFile.value='';importFile.click()}
+    async function importBackupFile(file){
+      if(!file)return;
+      setRecoveryStatus('Validating backup…','working');
+      try{
+        var json=await file.text();
+        var result=await window.Motion12Persistence.recoverFromBackup(json);
+        if(!result.valid){
+          var errors=(result.issues||[]).filter(function(x){return x.severity==='error'}).slice(0,3).map(function(x){return x.message}).join(' · ');
+          throw new Error(errors||'Backup validation failed');
+        }
+        hideRecovery();
+        await startApp();
+        applyReadOnlyShell();
+        if(result.readOnly){
+          readonlyText.textContent='Imported backup is open read-only because IndexedDB is still unavailable.';
+        }
+      }catch(err){
+        showRecovery(err,'Backup import failed');
+      }
+    }
+
+    document.getElementById('recoveryRetryBtn').onclick=retryStorage;
+    document.getElementById('recoveryReadonlyBtn').onclick=openReadOnly;
+    document.getElementById('recoveryImportBtn').onclick=chooseImport;
+    document.getElementById('readonlyRetryBtn').onclick=retryStorage;
+    document.getElementById('readonlyImportBtn').onclick=chooseImport;
+    importFile.onchange=function(){importBackupFile(importFile.files&&importFile.files[0])};
+
+    window.addEventListener('motion12:persistence-failure',function(e){
+      showRecovery(e.detail&&e.detail.error,e.detail&&e.detail.phase||'Storage failure');
+    });
+    window.addEventListener('motion12:readonly-write-blocked',function(){
+      applyReadOnlyShell();
+    });
+
+    if(!window.Motion12Persistence){
+      showRecovery(new Error('Persistence module did not initialize'),'Startup');
+      return;
+    }
+
+    window.Motion12Persistence.bootstrap()
+      .then(startApp)
+      .catch(function(err){showRecovery(err,'Startup')});
+  })();
+</script>
+</body>
+</html>

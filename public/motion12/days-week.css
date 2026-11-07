@@ -1,0 +1,172 @@
+/* MOTION12 Days · compact, scannable weekly schedule.
+   Only presentation changes: workout prescriptions and persisted state are untouched. */
+#daysPage .week-page-heading {
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+  padding:5px 1px 2px;
+}
+#daysPage .week-page-heading .eyebrow {
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.09em;
+  opacity:1;
+}
+#daysPage .week-page-heading h1 {
+  margin:5px 0 0;
+  font-size:30px;
+  font-weight:950;
+  line-height:1;
+  letter-spacing:-.045em;
+  text-transform:uppercase;
+}
+#daysPage .week-page-hint {
+  max-width:122px;
+  color:var(--muted);
+  text-align:right;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.3;
+}
+#daysPage .week-table {
+  margin-top:15px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--surface);
+}
+#daysPage .week-table-head,
+#daysPage .week-row-trigger {
+  display:grid;
+  grid-template-columns:minmax(78px,.80fr) minmax(0,1.85fr) minmax(83px,.90fr);
+  align-items:center;
+  column-gap:8px;
+}
+#daysPage .week-table-head {
+  min-height:34px;
+  padding:7px 10px 6px;
+  border-bottom:1px solid var(--line);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+#daysPage .week-row + .week-row {border-top:1px solid var(--line)}
+#daysPage .week-row-trigger {
+  width:100%;
+  min-height:63px;
+  padding:8px 10px;
+  border:0;
+  background:transparent;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+#daysPage .week-row-trigger:focus-visible {
+  outline:2px solid var(--volt);
+  outline-offset:-3px;
+}
+#daysPage .week-row-trigger:active {background:var(--surface2)}
+#daysPage .week-today .week-row-trigger {background:rgba(var(--accent-rgb,255,77,46),.065)}
+#daysPage .week-day {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  font-size:12.5px;
+  font-weight:800;
+  line-height:1.25;
+  letter-spacing:-.025em;
+}
+#daysPage .week-today-dot {
+  flex:0 0 auto;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--volt);
+}
+#daysPage .week-emphasis {display:block;min-width:0}
+#daysPage .week-emphasis b {
+  display:block;
+  font-size:13px;
+  font-weight:900;
+  line-height:1.18;
+  letter-spacing:-.02em;
+}
+#daysPage .week-emphasis small {
+  display:-webkit-box;
+  overflow:hidden;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:600;
+  line-height:1.25;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+#daysPage .week-level-wrap {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2px;
+  min-width:0;
+}
+#daysPage .week-level {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:25px;
+  padding:5px 6px 4px;
+  border-radius:4px;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+}
+#daysPage .level-easy {background:#153d33;color:#8bf1bb}
+#daysPage .level-moderate {background:#343538;color:#e2e2e3}
+#daysPage .level-hard {background:#4c2b21;color:#ffbd9f}
+#daysPage .week-expand-icon {
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:16px;
+  font-weight:850;
+  line-height:1;
+}
+#daysPage .week-expanded .week-expand-icon {transform:rotate(180deg)}
+#daysPage .week-row-detail {
+  padding:0 14px 16px;
+  background:var(--surface);
+}
+#daysPage .week-row-detail[hidden] {display:none!important}
+#daysPage .week-detail-meta {
+  margin:0;
+  padding:10px 0 0;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+#daysPage .week-row-detail .day-overview {margin-top:0;padding-top:8px;border-top:0}
+#daysPage .cal-week-container {padding-top:4px}
+
+@media (max-width:360px) {
+  #daysPage .week-table-head,
+  #daysPage .week-row-trigger {grid-template-columns:70px minmax(0,1fr) 78px;column-gap:6px}
+  #daysPage .week-table-head,
+  #daysPage .week-row-trigger {padding-left:7px;padding-right:7px}
+  #daysPage .week-day {font-size:11px}
+  #daysPage .week-emphasis b {font-size:12px}
+  #daysPage .week-emphasis small {font-size:10px}
+  #daysPage .week-level {font-size:9px;padding-inline:5px}
+}
+@media (max-height:760px) and (max-width:600px) {
+  #daysPage .week-page-heading h1 {font-size:27px}
+  #daysPage .week-table {margin-top:9px}
+  #daysPage .week-table-head {min-height:29px;padding-top:5px;padding-bottom:5px}
+  #daysPage .week-row-trigger {min-height:55px;padding-top:5px;padding-bottom:5px}
+}
