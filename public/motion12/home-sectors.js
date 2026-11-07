@@ -3,7 +3,17 @@
 (function () {
   const homeModel = window.Motion12HomeModel;
   if (!homeModel) throw new Error('Home model must load before its views');
+  const minimalView = window.Motion12MinimalHomeView;
   const CAL_SESSIONS = homeModel.calSessions;
+  window.setMotionHomeView = function setMotionHomeView(view) {
+    if (view !== 'minimal' && view !== 'detailed') return;
+    if ((settings.homeView === 'detailed' ? 'detailed' : 'minimal') === view) return;
+    settings.homeView = view;
+    if (!window.Motion12Persistence?.isReadOnly()) {
+      motion12SetItem('motion12.settings', JSON.stringify(settings));
+    }
+    renderHome();
+  };
   const originalToggleMeal = window.toggleMeal;
   window.toggleMeal = function (date, id) {
     originalToggleMeal(date, id);
@@ -145,7 +155,8 @@
       body: !!main.querySelector('#motionBodyCompDetails[open]'),
       fitness: !!main.querySelector('#motionFitnessDetails[open]'),
       food: !!main.querySelector('#motionFoodDetails[open]'),
-      training: !!main.querySelector('#motionTrainingDetails[open]')
+      training: !!main.querySelector('#motionTrainingDetails[open]'),
+      minimalFood: !!main.querySelector('#motionMinimalFoodDetails[open]')
     };
     const { kcalLeft, kcalUnit, consumed, target, caloriesProgress, macros } = homeModel.nutritionSummary(fastDay, intake);
     const mealCount = compactMealCount(day, date);
@@ -171,8 +182,21 @@
     sunday.setDate(sunday.getDate() - sunday.getDay());
     const recoveryAction = calMode ? `openDay(0,'${iso(sunday)}')` : 'openMobilityToday()';
 
+    if (settings.homeView !== 'detailed' && minimalView) {
+      main.classList.add('compact-active','minimal-home-active');
+      main.classList.remove('sector-active');
+      main.innerHTML = minimalView.viewSwitch('minimal') + minimalView.renderMinimalHome({
+        week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
+        sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
+        last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,mealCount,
+        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue
+      });
+      if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
+      return;
+    }
+    main.classList.remove('minimal-home-active');
     main.classList.add('compact-active', 'sector-active');
-    main.innerHTML = `
+    main.innerHTML = (minimalView?minimalView.viewSwitch('detailed'):'') + `
       <div class="motion-sector-stack" aria-label="Today's four priorities">
         <section class="motion-sector motion-goals" aria-labelledby="motionGoalsTitle">
           <div class="motion-sector-title"><span class="motion-sector-number">01</span><h2 id="motionGoalsTitle">Goals</h2><span class="motion-sector-side">WEEK ${week} / 12</span></div>

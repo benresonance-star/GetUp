@@ -6,12 +6,13 @@ const path=require('node:path');
 
 const ctx={window:{}};
 vm.createContext(ctx);
-for(const file of ['program.js','ui-domain.js','ui-plans.js','ui-views.js']){
+for(const file of ['program.js','ui-domain.js','ui-plans.js','ui-views.js','home-minimal-view.js']){
   vm.runInContext(fs.readFileSync(path.join(__dirname,file),'utf8'),ctx,{filename:file});
 }
 const domain=ctx.window.Motion12UiDomain;
 const plans=ctx.window.Motion12UiPlans;
 const views=ctx.window.Motion12UiViews;
+const minimalHome=ctx.window.Motion12MinimalHomeView;
 const program=vm.runInContext('program',ctx);
 const days=vm.runInContext('DAYS',ctx);
 const aerobicTargets=vm.runInContext('aerobicTargets',ctx);
@@ -134,4 +135,31 @@ test('collapsed Days overview shows all seven days in a compact, accessible sche
   assert.doesNotMatch(collapsed,/class="day-overview"/);
   assert.match(collapsed,/aria-expanded="false"/);
   assert.equal((collapsed.match(/class="week-row-detail"/g)||[]).length,7);
+});
+
+test('Minimal Home preserves four priorities and the Detailed switch without altering input data',()=>{
+  const input={
+    week:1,calMode:false,canSwitchSystem:true,
+    session:{name:'Aerobic Power',time:'30–40 min'},
+    sessionAction:"openDay(6,'2026-11-07')",sessionLabel:'START',
+    sessionDescription:'4 × 4 intervals',complete:false,
+    last7:1,fitness:{weeklySessions:7},loss:'~0.57 kg',
+    kcalLeft:'2,300',kcalUnit:'kcal left today',macros:{protein:155},
+    fastDay:false,mealCount:'0 / 3 ✓',
+    mealChips:'<button class="compact-meal">Meal 1</button>',
+    recoveryAction:'openMobilityToday()',recoveryCue:'Mobilise gently.'
+  };
+  const before=JSON.stringify(input);
+  const html=minimalHome.renderMinimalHome(input);
+  assert.equal((html.match(/class="motion-minimal-panel /g)||[]).length,4);
+  assert.match(html,/Aerobic Power/);
+  assert.match(html,/2,300/);
+  assert.match(html,/155 g/);
+  assert.match(html,/motionMinimalFoodDetails/);
+  assert.match(html,/Motion12Flow\.previewTomorrow\(\)/);
+  assert.match(html,/Motion12Cal\.switch/);
+  assert.equal(JSON.stringify(input),before);
+  assert.match(minimalHome.viewSwitch('minimal'),/aria-pressed="true" onclick="setMotionHomeView\('minimal'\)"/);
+  assert.match(minimalHome.viewSwitch('detailed'),/aria-pressed="true" onclick="setMotionHomeView\('detailed'\)"/);
+  assert.match(minimalHome.renderMinimalHome({...input,session:{name:'<img src=x>',time:'40 min'}}),/&lt;img src=x&gt;/);
 });
