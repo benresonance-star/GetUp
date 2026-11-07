@@ -380,6 +380,7 @@ html[data-app-palette="braun"] #dayPage .section-head small {
   color:#bdcbd4;
 }
 html[data-app-palette="braun"] #dayPage .prep-section > .exercise,
+html[data-app-palette="braun"] #dayPage .prep-section .session-fold-contents > .exercise,
 html[data-app-palette="braun"] #dayPage .mobility-warmup-section .card.row {
   background:#24433f;
   border-color:#4a8e82;
@@ -657,4 +658,31 @@ html[data-app-palette="braun"] #dayPage .complete-session.done {
     min-height:0;
     overflow:visible;
   }
+}
+
+/* R98: Warm-up and prep read as quiet folded instrument rows, not seafoam cards. */
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold{
+  background:#222b31;
+  border-color:#46575f;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-trigger{
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-index{
+  background:#29483f;
+  border-color:#5d9389;
+  color:#a7ded4;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-copy small,
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-chevron{
+  color:#b8c9d0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold:not(.collapsed) .session-fold-contents{
+  border-top:1px solid #3b4b51;
+  padding-top:9px;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold .card.row,
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold .prep-exercise{
+  background:#28423f;
+  border-color:#4d7d72;
 }

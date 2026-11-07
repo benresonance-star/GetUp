@@ -129,6 +129,34 @@ test('continuous sessions render a segmented elapsed dial against their time tar
   assert.match(render({kind:'stopwatch',ringDuration:0,ringProgress:0}),/data-segment-count="60"/);
 });
 
+test('compact workout preparation folds without deleting stages or exercise state',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'ui.js'),'utf8');
+  const start=source.indexOf('function sessionFoldButtonMarkup(');
+  const end=source.indexOf('function prepBlockMarkup(',start);
+  assert.ok(start>0&&end>start);
+  let expanded=null;
+  const classes=new Set(['session-fold','collapsed']);
+  const section={
+    classList:{
+      contains:name=>classes.has(name),
+      toggle:(name,on)=>on?classes.add(name):classes.delete(name)
+    },
+    querySelector:()=>({setAttribute:(name,value)=>{if(name==='aria-expanded')expanded=value}})
+  };
+  const state={settings:{homeMode:'compact'},document:{getElementById:id=>id==='mobilitySection'?section:null}};
+  const folds=vm.runInNewContext(source.slice(start,end)+'\n({sessionFoldButtonMarkup,setSessionFoldOpen,toggleSessionFold})',state);
+  assert.match(folds.sessionFoldButtonMarkup('mobilitySection','01','Mobility warm-up','7 moves · 6–8 min'),/aria-expanded="false"/);
+  folds.toggleSessionFold('mobilitySection');
+  assert.equal(classes.has('collapsed'),false);
+  assert.equal(expanded,'true');
+  folds.toggleSessionFold('mobilitySection');
+  assert.equal(classes.has('collapsed'),true);
+  assert.equal(expanded,'false');
+  assert.match(source,/class="workout-session" data-session-order/);
+  assert.match(source,/class="session-fold-contents" id="mobilitySection-contents"/);
+  assert.match(source,/function openMobilityToday\(\).*setSessionFoldOpen\('mobilitySection',true\)/);
+});
+
 test('Days and Progress pages render from view models without DOM or persistence access',()=>{
   const daysHtml=views.daysPage({
     todayDay:1,week:1,program,days,expandedDay:1,aerobicTargets,
@@ -220,7 +248,8 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r97/);
+  assert.match(html,/theme-braun\.css\?v=r98/);
+  assert.match(html,/canonical-r98/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }

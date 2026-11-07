@@ -10,8 +10,12 @@ function applySessionCompactMode(){
   if(!page)return;
   // Presentation-only: do not add/remove/reorder session stages here.
   const compact=settings.homeMode==='compact';
+  const wasCompact=page.classList.contains('compact-active');
   page.classList.toggle('compact-active',compact);
   page.dataset.sessionMode=compact?'compact':'full';
+  if(wasCompact!==compact){
+    page.querySelectorAll('.session-fold').forEach(section=>setSessionFoldOpen(section.id,!compact));
+  }
   const badge=page.querySelector('.session-mode-badge');
   if(badge){
     const key=(typeof timerContextDate==='function'&&typeof timerContextDay==='function')
@@ -717,6 +721,21 @@ function supportTarget(exercise,w){
   }
   return exercise[1];
 }
+function sessionFoldButtonMarkup(id,number,title,detail){
+  const expanded=settings.homeMode!=='compact';
+  return '<button type="button" class="session-fold-trigger" aria-controls="'+id+'-contents" aria-expanded="'+expanded+'" onclick="toggleSessionFold(\''+id+'\')">'+
+    '<span class="session-fold-index">'+number+'</span><span class="session-fold-copy"><strong>'+title+'</strong><small>'+detail+'</small></span><span class="session-fold-chevron" aria-hidden="true">⌄</span></button>';
+}
+function setSessionFoldOpen(id,open){
+  const section=document.getElementById(id);
+  if(!section)return;
+  section.classList.toggle('collapsed',!open);
+  section.querySelector('.session-fold-trigger')?.setAttribute('aria-expanded',open?'true':'false');
+}
+function toggleSessionFold(id){
+  const section=document.getElementById(id);
+  if(section)setSessionFoldOpen(id,section.classList.contains('collapsed'));
+}
 function prepBlockMarkup(day,date,p){
   if(!p.prep?.length)return '';
   const cards=p.prep.map((x,i)=>{
@@ -726,7 +745,7 @@ function prepBlockMarkup(day,date,p){
       <div class="tip">${x[2]}</div>
     </div>`;
   }).join('');
-  return `<section class="section prep-section"><div class="section-head"><h2>Movement prep</h2><small>light · controlled</small></div>${cards}</section>`;
+  return `<section class="section prep-section session-fold ${settings.homeMode==='compact'?'collapsed':''}" id="movementPrepSection"><div class="section-head"><h2>Movement prep</h2><small>light · controlled</small></div>${sessionFoldButtonMarkup('movementPrepSection','02','Movement prep',p.prep.length+' move'+(p.prep.length===1?'':'s')+' · light / controlled')}<div class="session-fold-contents" id="movementPrepSection-contents">${cards}</div></section>`;
 }
 function supportBlockMarkup(day,date,w,p){
   if(!p.support?.length)return '';
@@ -1423,7 +1442,7 @@ function openDay(day,date=null){
  const variantHtml=day===6?aerobicPowerVariantMarkup(date,w):'';
  const sessionTarget=day===6?aerobicPowerSessionTarget(date,w):weeklyTarget(day,w);
  const key=`${date}-${day}`;
- const mobilityHtml=`<section class="section mobility-warmup-section" id="mobilitySection"><div class="section-head"><h2>Mobility warm-up</h2><small>first · 6–8 min</small></div><div class="cards">${mob}</div></section>`;
+ const mobilityHtml=`<section class="section mobility-warmup-section session-fold ${settings.homeMode==='compact'?'collapsed':''}" id="mobilitySection"><div class="section-head"><h2>Mobility warm-up</h2><small>first · 6–8 min</small></div>${sessionFoldButtonMarkup('mobilitySection','01','Mobility warm-up',mobility.length+' moves · 6–8 min')}<div class="session-fold-contents" id="mobilitySection-contents"><div class="cards">${mob}</div></div></section>`;
  const primarySection=`<section class="section workout-exercises-section"><div class="section-head"><h2>${p.tendon?.length?'Primary strength':'Exercises'}</h2><small>${p.tendon?.length?'highest-priority work first':'log as you go'}</small></div>${primaryHtml||'<div class="card"><h3>Recovery day</h3><p>No formal strength work. Keep normal walking and complete the mobility warm-up above.</p></div>'}</section>`;
  const secondarySection=secondaryHtml?`<section class="section workout-exercises-section workout-secondary-section"><div class="section-head"><h2>Finishers / accessories</h2><small>after tendon capacity</small></div>${secondaryHtml}</section>`:'';
  const mainHtml=primarySection+tendonHtml+secondarySection;
@@ -1444,7 +1463,7 @@ function openDay(day,date=null){
  renderTimerPage();
  window.scrollTo({top:0,behavior:'smooth'});
 }
-function openMobilityToday(){openDay(programDay(),todayISO());setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
+function openMobilityToday(){openDay(programDay(),todayISO());setSessionFoldOpen('mobilitySection',true);setTimeout(()=>document.getElementById('mobilitySection')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
 function circuitExerciseCards(){
   return [...document.querySelectorAll('.workout-exercises-section > .exercise[data-timer-support="0"]')];
 }
@@ -2516,6 +2535,7 @@ function updateSmartTimerDisplay(){
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
   document.querySelectorAll('.navbtn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  document.documentElement.classList.toggle('motion-in-session',id==='dayPage');
   if(id==='homePage')renderHome();
   if(id==='daysPage')renderDays();
   if(id==='progressPage')renderProgress();
