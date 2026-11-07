@@ -163,3 +163,36 @@ test('Minimal Home preserves four priorities and the Detailed switch without alt
   assert.match(minimalHome.viewSwitch('detailed'),/aria-pressed="true" onclick="setMotionHomeView\('detailed'\)"/);
   assert.match(minimalHome.renderMinimalHome({...input,session:{name:'<img src=x>',time:'40 min'}}),/&lt;img src=x&gt;/);
 });
+
+test('Braun Charcoal opt-in palette applies without rewriting persisted data or other palettes',()=>{
+  const snapshot={
+    settings:{appPalette:'braun',startDate:'2026-11-02'},
+    logs:{'2026-11-06-5':{complete:true}},
+    measurements:{weight:86}
+  };
+  const before=JSON.stringify(snapshot);
+  const props={},meta={};
+  const root={dataset:{},style:{setProperty:(key,value)=>{props[key]=value}}};
+  const testCtx={
+    window:{Motion12Persistence:{view:()=>snapshot}},
+    document:{documentElement:root,querySelector:()=>({setAttribute:(key,value)=>{meta[key]=value}})}
+  };
+  vm.createContext(testCtx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'state.js'),'utf8'),testCtx,{filename:'state.js'});
+  assert.equal(root.dataset.appPalette,'braun');
+  assert.equal(props['--volt'],'#49aaf5');
+  assert.equal(props['--orange'],'#ff7045');
+  assert.equal(meta.content,'#181c20');
+  assert.equal(vm.runInContext('settings.appPalette',testCtx),'braun');
+  assert.equal(vm.runInContext('normalizeAppPalette("ocean")',testCtx),'ocean');
+  assert.equal(vm.runInContext('normalizeAppPalette("unknown")',testCtx),'ember');
+  assert.equal(JSON.stringify(snapshot),before);
+
+  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
+  assert.match(html,/data-palette="braun"/);
+  assert.match(html,/theme-braun\.css\?v=r94/);
+  for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
+    assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
+  }
+});

@@ -2522,7 +2522,8 @@ const APP_PALETTE_LABELS=Object.freeze({
   forest:'Forest',
   violet:'Violet',
   gold:'Gold',
-  rose:'Rose'
+  rose:'Rose',
+  braun:'Braun Charcoal'
 });
 function setAppPalettePicker(value,preview=true){
   const palette=normalizeAppPalette(value);

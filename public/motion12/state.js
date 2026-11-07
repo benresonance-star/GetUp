@@ -7,7 +7,8 @@ const APP_PALETTES=Object.freeze({
   forest:{volt:'#4fd270',orange:'#b4df45',cyan:'#42d9b7',pink:'#efb451',accentRgb:'79,210,112',accent2Rgb:'180,223,69'},
   violet:{volt:'#8c72ff',orange:'#d45cff',cyan:'#63dcff',pink:'#ff71b3',accentRgb:'140,114,255',accent2Rgb:'212,92,255'},
   gold:{volt:'#ffb62e',orange:'#ff7a1a',cyan:'#54d9c7',pink:'#ff786e',accentRgb:'255,182,46',accent2Rgb:'255,122,26'},
-  rose:{volt:'#ff5f8f',orange:'#ff8c51',cyan:'#62dce7',pink:'#bc79ff',accentRgb:'255,95,143',accent2Rgb:'255,140,81'}
+  rose:{volt:'#ff5f8f',orange:'#ff8c51',cyan:'#62dce7',pink:'#bc79ff',accentRgb:'255,95,143',accent2Rgb:'255,140,81'},
+  braun:{volt:'#49aaf5',orange:'#ff7045',cyan:'#72d6ce',pink:'#96b9e5',accentRgb:'73,170,245',accent2Rgb:'255,112,69'}
 });
 const APP_PALETTE_IDS=Object.freeze(Object.keys(APP_PALETTES));
 function normalizeAppPalette(value){return APP_PALETTE_IDS.includes(value)?value:'ember'}
@@ -22,7 +23,7 @@ function applyAppPalette(value){
   root.style.setProperty('--accent-rgb',tokens.accentRgb);
   root.style.setProperty('--accent2-rgb',tokens.accent2Rgb);
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',tokens.volt);
+  if(meta)meta.setAttribute('content',palette==='braun'?'#181c20':tokens.volt);
   return palette;
 }
 const defaultSettings={startDate:getMondayISO(new Date()),bodyweight:0,pullupMax:0,height:0,age:0,sex:'',steps:7000,maintenanceOverride:0,homeMode:'full',appPalette:'ember',portionPresetVersion:4,lunchProtein:'chicken',dinnerProtein:'chicken',portions:defaultPortions};

@@ -13,7 +13,7 @@
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
   <title>MOTION 12 — 12-week fitness reset</title>
-  <meta name="motion12-build" content="canonical-r93-20261107" />
+  <meta name="motion12-build" content="canonical-r94-20261107" />
   <script>
     (function(){
       var standalone = window.navigator.standalone === true ||
@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="./notifications.css?v=r87" />
   <link rel="stylesheet" href="./days-week.css?v=r92" />
   <link rel="stylesheet" href="./home-minimal.css?v=r93" />
+  <link rel="stylesheet" href="./theme-braun.css?v=r94" />
   <style>
     .brand-line{display:flex;align-items:baseline;gap:7px}
     .build-revision{color:var(--muted,#90939a);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
@@ -149,6 +150,7 @@
         <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="violet" onclick="setAppPalettePicker('violet',true)" style="--sw1:#8c72ff;--sw2:#d45cff"><span class="palette-swatch-preview"></span><small>Violet</small></button>
         <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="gold" onclick="setAppPalettePicker('gold',true)" style="--sw1:#ffb62e;--sw2:#ff7a1a"><span class="palette-swatch-preview"></span><small>Gold</small></button>
         <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="rose" onclick="setAppPalettePicker('rose',true)" style="--sw1:#ff5f8f;--sw2:#ff8c51"><span class="palette-swatch-preview"></span><small>Rose</small></button>
+        <button class="palette-swatch" type="button" role="radio" aria-checked="false" data-palette="braun" onclick="setAppPalettePicker('braun',true)" style="--sw1:#294eb8;--sw2:#317d7a"><span class="palette-swatch-preview"></span><small>Braun</small></button>
       </div>
       <p class="settings-note palette-picker-note">Tap a swatch to preview it. Save keeps the colour; Cancel restores the previous palette.</p>
     </div>
@@ -246,7 +248,7 @@
     function loadScript(src){
       return new Promise(function(resolve,reject){
         var s=document.createElement('script');
-        s.src='./'+src+'?v=r93';
+        s.src='./'+src+'?v=r94';
         s.onload=resolve;
         s.onerror=function(){reject(new Error('Failed to load '+src))};
         document.body.appendChild(s);

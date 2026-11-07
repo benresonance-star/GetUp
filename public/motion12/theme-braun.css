@@ -1,0 +1,210 @@
+/* MOTION12 Braun Charcoal — opt-in palette, deliberately flat and restrained.
+   The charcoal shell is shared across the app; only the Home priorities receive
+   large saturated colour fields. No data or interaction rules live here. */
+html[data-app-palette="braun"] {
+  --bg:#181c20;
+  --surface:#21272d;
+  --surface2:#2a3238;
+  --ink:#f5f5f0;
+  --muted:#afbac3;
+  --line:#39434a;
+  --shadow:none;
+  --theme-line:#39434a;
+  --theme-line-soft:#2d373d;
+  --theme-line-strong:#53636d;
+  --tendon:#72d6ce;
+  --tendon-rgb:114,214,206;
+  color-scheme:dark;
+}
+html[data-app-palette="braun"] body,
+html[data-app-palette="braun"] .app { background:#181c20; }
+html[data-app-palette="braun"] .top {
+  background:#181c20;
+  backdrop-filter:none;
+}
+html[data-app-palette="braun"] .bottomnav {
+  background:#11161a;
+  border-top-color:#344048;
+  backdrop-filter:none;
+}
+html[data-app-palette="braun"] .sheet,
+html[data-app-palette="braun"] .settings-overlay .sheet {
+  background:#22292f;
+}
+html[data-app-palette="braun"] .accent,
+html[data-app-palette="braun"] .fast-card {
+  background:#27323c;
+  background-image:none;
+}
+html[data-app-palette="braun"] .hero { background-image:none; }
+
+/* A quiet, high-contrast segmented control frames four unambiguous colours. */
+html[data-app-palette="braun"] #homePage .motion-home-layout-label {
+  color:#bcc8d0;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice {
+  background:#242b31;
+  border-color:#43505a;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice button {
+  color:#b6c0c9;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice button.selected {
+  color:#f5f5f0;
+  background:#435260;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-home { gap:9px; }
+html[data-app-palette="braun"] #homePage .motion-minimal-panel {
+  border-width:1px;
+  border-radius:17px;
+  box-shadow:none;
+  background-image:none;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-heading {
+  letter-spacing:.13em;
+}
+
+/* The daily workout is the only saturated blue field. Coral denotes action. */
+html[data-app-palette="braun"] #homePage .motion-minimal-training {
+  background:#294eb8;
+  border-color:#6586df;
+  color:#fff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-training .motion-minimal-heading {
+  color:#d8e4ff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-session-meta {
+  color:#d7e2fb;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-system {
+  color:#fff;
+  background:#213f96;
+  border-color:#83a0e6;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-primary {
+  background:#ff7045;
+  color:#141b20;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-primary:active {
+  background:#f65d35;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-secondary {
+  background:transparent;
+  color:#fff;
+  border-color:rgba(230,238,255,.75);
+}
+
+/* Light blue / seafoam are deliberately related, with readable dark ink. */
+html[data-app-palette="braun"] #homePage .motion-minimal-goals {
+  background:#96b9e5;
+  border-color:#c1d5f0;
+  color:#101e2b;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition {
+  background:#9ecfc3;
+  border-color:#c0e2d9;
+  color:#102620;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-stat small {
+  color:#2c4965;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition .motion-minimal-stat small {
+  color:#2c554d;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-text-action {
+  color:#1a529a;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition-marker {
+  color:#175d54;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-food-details {
+  border-top-color:rgba(16,57,49,.32);
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-food-details summary {
+  color:#214a42;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal {
+  background:rgba(255,255,255,.29);
+  border-color:rgba(16,57,49,.3);
+  color:#14342e;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal-kcal {
+  color:#31584f;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal .meal-check {
+  color:#14342e;
+  border-color:#3f766c;
+}
+
+/* A calm petrol recovery panel closes the hierarchy. */
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery {
+  background:#317d7a;
+  border-color:#6bb1ab;
+  color:#fff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-body small,
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-note {
+  color:#d4efea;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-body button {
+  color:#fff;
+  border-color:rgba(227,255,250,.7);
+  background:rgba(0,0,0,.07);
+}
+
+/* Detailed view retains its information density, but stays within the same
+   cool family. Darker values let the existing white labels remain readable. */
+html[data-app-palette="braun"] #homePage .motion-sector {
+  background-image:none;
+  box-shadow:none;
+  border-radius:17px;
+}
+html[data-app-palette="braun"] #homePage .motion-goals {
+  background:#263d61;
+  border-color:#587fb3;
+}
+html[data-app-palette="braun"] #homePage .motion-nutrition {
+  background:#24514e;
+  border-color:#538f85;
+}
+html[data-app-palette="braun"] #homePage .motion-training {
+  background:#294eb8;
+  border-color:#6586df;
+}
+html[data-app-palette="braun"] #homePage .motion-recovery {
+  background:#276966;
+  border-color:#5ca39b;
+}
+html[data-app-palette="braun"] #homePage .motion-sector-number {
+  color:#e7f3fc;
+  background:rgba(255,255,255,.12);
+}
+html[data-app-palette="braun"] #homePage .motion-sector-side,
+html[data-app-palette="braun"] #homePage .motion-key-figure small,
+html[data-app-palette="braun"] #homePage .motion-calorie-total>span,
+html[data-app-palette="braun"] #homePage .motion-training-row>div>span,
+html[data-app-palette="braun"] #homePage .motion-recovery-row small,
+html[data-app-palette="braun"] #homePage .motion-recovery-cue {
+  color:#d5e2e7;
+}
+html[data-app-palette="braun"] #homePage .motion-training-launch {
+  background:#ff7045;
+  color:#141b20;
+}
+html[data-app-palette="braun"] #homePage .motion-goals .motion-sector-foot button,
+html[data-app-palette="braun"] #homePage .motion-training-tools .motion-flow-tool-primary {
+  color:#c4e3ff;
+}
+
+/* Long sessions, opened meal logs and small devices must remain scrollable. */
+@media(max-width:520px) {
+  html[data-app-palette="braun"] #homePage.compact-active.minimal-home-active {
+    height:auto;
+    min-height:0;
+    overflow:visible;
+  }
+}
