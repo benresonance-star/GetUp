@@ -119,3 +119,19 @@ test('Days and Progress pages render from view models without DOM or persistence
   assert.match(progressHtml,/Save measures/);
   assert.match(progressHtml,/Program adherence/);
 });
+
+test('collapsed Days overview shows all seven days in a compact, accessible schedule',()=>{
+  const collapsed=views.daysPage({
+    todayDay:6,week:2,program,days,expandedDay:null,aerobicTargets,
+    weeklyTarget:()=> 'Week two',supportTarget:()=> 'Practice gently'
+  });
+  assert.equal((collapsed.match(/class="week-row /g)||[]).length,7);
+  assert.equal((collapsed.match(/class="week-row-trigger"/g)||[]).length,7);
+  assert.match(collapsed,/Day<\/span><span>Emphasis<\/span><span>Intensity/);
+  assert.match(collapsed,/4 × 4 min intervals/);
+  assert.match(collapsed,/class="week-level level-easy"/);
+  assert.match(collapsed,/class="week-level level-hard"/);
+  assert.doesNotMatch(collapsed,/class="day-overview"/);
+  assert.match(collapsed,/aria-expanded="false"/);
+  assert.equal((collapsed.match(/class="week-row-detail"/g)||[]).length,7);
+});

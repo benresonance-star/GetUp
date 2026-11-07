@@ -35,19 +35,23 @@
 
   function daysPage({todayDay,week,program,days,expandedDay,aerobicTargets,weeklyTarget,supportTarget}) {
     const params={aerobicTargets,supportTarget};
-    let html=`<div class="page-title"><div class="eyebrow">Week ${week}</div><h1>Your week</h1><p>Tap a day to preview its exercises. Open the full session when you are ready to train.</p></div><div class="section day-list cards">`;
+    // Short, presentation-only summaries: the prescribed workouts stay in program.js.
+    const focus={1:'Squat · pull · press',2:'Recovery · easy movement',3:'Unilateral · posterior chain',4:'Kettlebell · power',5:'Full body · lateral strength',6:'4 × 4 min intervals',0:'Easy aerobic · mobility'};
+    const effort={1:'Hard',2:'Easy',3:'Hard',4:'Hard',5:'Moderate',6:'Hard',0:'Easy'};
+    let html=`<div class="week-page-heading"><div><div class="eyebrow">Week ${week} · 12-week plan</div><h1>Your week</h1></div><span class="week-page-hint">Tap a day for exercises</span></div>
+      <div class="week-table day-list" aria-label="Weekly training schedule">
+        <div class="week-table-head" aria-hidden="true"><span>Day</span><span>Emphasis</span><span>Intensity</span></div>`;
     [1,2,3,4,5,6,0].forEach(day=>{
-      const p=program[day],expanded=expandedDay===day;
-      html+=`<div id="day-card-${day}" class="card day-card ${day===todayDay?'todaycard':''} ${expanded?'expanded':''}" role="button" tabindex="0" aria-expanded="${expanded}" onclick="toggleDayCard(${day})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDayCard(${day})}">
-        <div class="day-card-head">
-          <div class="day-card-copy">
-            <div class="label">${days[day]} · ${p.time}</div>
-            <h3>${p.name}</h3>
-            <p>${day===6?weeklyTarget(day,week)+' · A / B available':weeklyTarget(day,week)}</p>
-          </div>
-          <div class="day-chevron ${p.tone}" aria-hidden="true">⌄</div>
+      const p=program[day],expanded=expandedDay===day,level=effort[day];
+      html+=`<div id="day-card-${day}" class="week-row ${day===todayDay?'week-today':''} ${expanded?'week-expanded':''}">
+        <button type="button" class="week-row-trigger" aria-expanded="${expanded}" aria-controls="day-details-${day}" aria-label="${days[day]}, ${p.name}, ${level}. ${expanded?'Hide':'Preview'} exercises" onclick="toggleDayCard(${day})">
+          <span class="week-day">${days[day]}${day===todayDay?'<span class="week-today-dot" aria-label="Today"></span>':''}</span>
+          <span class="week-emphasis"><b>${p.name}</b><small>${focus[day]}</small></span>
+          <span class="week-level-wrap"><span class="week-level level-${level.toLowerCase()}">${level}</span><span class="week-expand-icon" aria-hidden="true">⌄</span></span>
+        </button>
+        <div class="week-row-detail" id="day-details-${day}" ${expanded?'':'hidden'}>
+          ${expanded?`<p class="week-detail-meta">${p.time} · ${day===6?weeklyTarget(day,week)+' · A / B available':weeklyTarget(day,week)}</p>${dayOverviewMarkup(day,week,p,params)}`:''}
         </div>
-        ${expanded?dayOverviewMarkup(day,week,p,params):''}
       </div>`;
     });
     return html+'</div>';

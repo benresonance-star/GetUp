@@ -114,6 +114,16 @@ function dayLine(day,date,expanded){
   (expanded?'<p>'+clean(p.time)+' · '+clean(p.work.map(x=>x[1]).join(' · ')||'Recovery and mobility')+'</p>':'')+
   '<button class="cal-small-button" type="button" onclick="Motion12Cal.open('+day+',\''+date+'\')">'+(done?'Review session':'Open session')+' →</button></div>';
 }
+function compactDayLine(day,date){
+ const p=TYPES[day],done=!!record(date,day).completed;
+ const level=p.kind==='recover'?'Easy':p.kind==='aerobic'&&day!==6?'Moderate':'Hard';
+ return '<div class="week-row '+(day===new Date().getDay()?'week-today ':'')+(done?'week-done':'')+'">'+
+  '<button type="button" class="week-row-trigger" aria-label="'+clean(WEEKDAYS[day]+', '+p.name+', '+level+(done?', completed':'')+'. Open session')+'" onclick="Motion12Cal.open('+day+',\''+date+'\')">'+
+  '<span class="week-day">'+clean(WEEKDAYS[day])+(day===new Date().getDay()?'<span class="week-today-dot" aria-label="Today"></span>':'')+'</span>'+
+  '<span class="week-emphasis"><b>'+clean(p.name)+'</b><small>'+clean(p.desc)+'</small></span>'+
+  '<span class="week-level-wrap"><span class="week-level level-'+level.toLowerCase()+'">'+level+'</span><span class="week-expand-icon" aria-hidden="true">'+(done?'✓':'›')+'</span></span>'+
+  '</button></div>';
+}
 function renderCalHome(){
  activeSession=null;stopTick();
  const day=new Date().getDay(),date=todayISO(),r=record(date,day),type=TYPES[day],complete=!!r.completed;
@@ -130,7 +140,7 @@ function renderCalHome(){
 }
 function renderCalDays(){
  const mount=document.getElementById('daysPage');
- mount.innerHTML='<div class="cal-container"><div class="page-title"><div class="eyebrow">WEEK '+weekNum()+'</div><h1>Calisthenics schedule</h1><p>'+clean(phaseNote())+'</p></div><div class="section cards">'+weekList().map(d=>dayLine(d,weeklyDate(d),true)).join('')+'</div></div>';
+ mount.innerHTML='<div class="cal-container cal-week-container"><div class="week-page-heading"><div><div class="eyebrow">CALISTHENICS · WEEK '+weekNum()+'</div><h1>Your week</h1></div><span class="week-page-hint">Tap a day to open</span></div><div class="week-table day-list" aria-label="Weekly calisthenics schedule"><div class="week-table-head" aria-hidden="true"><span>Day</span><span>Emphasis</span><span>Intensity</span></div>'+weekList().map(d=>compactDayLine(d,weeklyDate(d))).join('')+'</div></div>';
 }
 function renderCalProgress(){
  const mount=document.getElementById('progressPage');
