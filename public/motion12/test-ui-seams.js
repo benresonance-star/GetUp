@@ -191,7 +191,7 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
   const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'theme-braun.css'),'utf8');
   assert.match(html,/data-palette="braun"/);
-  assert.match(html,/theme-braun\.css\?v=r95/);
+  assert.match(html,/theme-braun\.css\?v=r96/);
   for(const className of ['motion-minimal-training','motion-minimal-goals','motion-minimal-nutrition','motion-minimal-recovery']){
     assert.ok(css.includes('html[data-app-palette="braun"] #homePage .'+className));
   }
@@ -199,4 +199,9 @@ test('Braun Charcoal opt-in palette applies without rewriting persisted data or 
     assert.ok(css.includes('html[data-app-palette="braun"] #daysPage .'+className));
   }
   assert.match(css,/#dayPage \.workout-primary-timer/);
+  for(const className of ['strength-set-flow','strength-set-row','exercise-note-card','aerobic-variant-option','aerobic-b-breakdown','timer-ring']){
+    assert.ok(css.includes('html[data-app-palette="braun"] #dayPage .'+className));
+  }
+  assert.match(css,/#dayPage \.timer-progress-segment\.complete/);
+  assert.match(css,/#dayPage \.strength-flow-actions \.strength-flow-primary/);
 });
