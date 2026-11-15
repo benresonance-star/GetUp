@@ -255,3 +255,37 @@
   #homePage .motion-minimal-train-actions {margin-top:10px}
   #homePage .motion-minimal-recovery-note {display:none}
 }
+
+/* r102 · Goals lead Minimal Home; walking is measured, not inferred. */
+#homePage .motion-minimal-goals {padding:13px 14px 11px}
+#homePage .motion-minimal-goals .motion-minimal-heading {margin-bottom:7px}
+#homePage .motion-minimal-walk-head {display:flex;align-items:center;justify-content:space-between;gap:10px}
+#homePage .motion-minimal-walk-copy {min-width:0}
+#homePage .motion-minimal-walk-copy strong {display:block;font-size:clamp(22px,5.9vw,27px);line-height:1.1;letter-spacing:-.055em;font-weight:950;font-variant-numeric:tabular-nums}
+#homePage .motion-minimal-walk-copy em {font-size:14px;font-style:normal;letter-spacing:-.015em;font-weight:800}
+#homePage .motion-minimal-walk-copy small {display:block;margin-top:3px;font-size:10px;line-height:1.2;opacity:.77}
+#homePage .motion-minimal-walk-log {flex:0 0 auto;min-height:34px;padding:6px 12px;border:1px solid currentColor;border-radius:10px;background:transparent;color:inherit;font-size:11px;font-weight:900;cursor:pointer}
+#homePage .motion-minimal-walk-track {height:5px;margin:9px 0 8px;border-radius:99px;overflow:hidden;background:rgba(20,35,46,.18)}
+#homePage .motion-minimal-walk-track span {display:block;height:100%;border-radius:99px;background:currentColor;opacity:.7;transition:width .2s}
+#homePage .motion-minimal-goal-substats {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 22px;align-items:center;gap:6px;font-size:10px;line-height:1.25}
+#homePage .motion-minimal-goal-substats span {min-width:0;white-space:nowrap}
+#homePage .motion-minimal-goal-substats b {font-size:12px}
+#homePage .motion-minimal-goal-substats button {padding:0;border:0;background:none;color:inherit;font-size:20px;font-weight:900;cursor:pointer}
+#homePage .motion-minimal-walk-details:not([open]) {display:none}
+#homePage .motion-minimal-walk-details summary {display:none}
+#homePage .motion-minimal-walk-details[open] {margin-top:10px;padding-top:10px;border-top:1px solid rgba(20,35,46,.2)}
+#homePage .motion-minimal-training {padding:11px 13px 10px}
+#homePage .motion-minimal-training .motion-minimal-heading {margin-bottom:6px}
+#homePage .motion-minimal-training-line {display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#homePage .motion-minimal-training h1 {min-width:0;font-size:clamp(18px,5vw,22px);line-height:1.1;letter-spacing:-.04em;overflow-wrap:normal}
+#homePage .motion-minimal-duration {flex:0 0 auto;font-size:10px;line-height:1.2;font-weight:800;opacity:.82;white-space:nowrap}
+#homePage .motion-minimal-train-actions {margin-top:9px;gap:6px;grid-template-columns:minmax(0,1fr) auto auto}
+#homePage .motion-minimal-train-actions button {min-height:34px;border-radius:9px;font-size:10px}
+#homePage .motion-minimal-primary {padding:6px 11px}
+#homePage .motion-minimal-secondary {padding:6px 9px}
+@media(max-width:360px) {
+ #homePage .motion-minimal-goal-substats {font-size:9px}
+ #homePage .motion-minimal-goal-substats b {font-size:11px}
+ #homePage .motion-minimal-training h1 {font-size:18px}
+ #homePage .motion-minimal-duration {font-size:9px}
+}
