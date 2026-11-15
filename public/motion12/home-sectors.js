@@ -228,7 +228,7 @@
       main.innerHTML = minimalView.viewSwitch('minimal') + minimalView.renderMinimalHome({
         week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
         sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
-        last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,mealCount,
+        last7,fitness,loss,fatGoal:fatLoss ? `${fatLoss.low}–${fatLoss.high}` : '—',kcalLeft,kcalUnit,macros,fastDay,mealCount,
         mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking
       });
       if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
@@ -244,16 +244,12 @@
       <div class="motion-sector-stack" aria-label="Today's four priorities">
         <section class="motion-sector motion-goals" aria-labelledby="motionGoalsTitle">
           <div class="motion-sector-title"><span class="motion-sector-number">01</span><h2 id="motionGoalsTitle">Goals</h2><span class="motion-sector-side">WEEK ${week} / 12</span></div>
-          <div class="motion-goal-row">
-            <div class="motion-key-figure"><strong>${loss}</strong><small>planned loss / week</small></div>
-            <div class="motion-key-figure"><strong>${last7}<em> / ${fitness.weeklySessions} sessions</em></strong><small>weekly fitness goal · last 7 days</small></div>
+          <div class="motion-fat-goal-primary">
+            <small>FAT LOSS GOAL</small>
+            <strong>${fatLoss ? fatLoss.low+'–'+fatLoss.high : '—'}<em> kg / week</em></strong>
+            <span>${loss} projected / week · based on calorie plan</span>
           </div>
-          <div class="motion-fitness-goal-strip" aria-label="12-week fitness targets">
-            <div><strong>${fitness.pushups ?? '↑'}</strong><small>push-ups · reps</small></div>
-            <div><strong>${walking.target.toLocaleString('en-AU')}</strong><small>daily step target</small></div>
-            <div><strong>${fitness.rhr ?? '↓'}</strong><small>resting HR · bpm</small></div>
-          </div>
-          <div class="motion-walk-summary"><span>STEPS TODAY</span><strong>${walking.actual === null ? '—' : walking.actual.toLocaleString('en-AU')} / ${walking.target.toLocaleString('en-AU')}</strong></div>
+          <div class="motion-walk-summary"><span>DAILY WALKING</span><strong>${walking.actual === null ? '—' : walking.actual.toLocaleString('en-AU')} / ${walking.target.toLocaleString('en-AU')}</strong></div>
           <details id="motionDetailedWalkingDetails" class="motion-walk-details">
             <summary>LOG / EDIT DAILY STEPS <span>⌄</span></summary>
             <form class="motion-walk-form" onsubmit="return saveWalkingGoal(event)">
@@ -262,6 +258,11 @@
               <button type="submit">SAVE STEPS</button><p role="status" aria-live="polite"></p>
             </form>
           </details>
+          <div class="motion-fitness-goal-strip" aria-label="Additional fitness targets">
+            <div><strong>${last7} / ${fitness.weeklySessions}</strong><small>sessions · 7d</small></div>
+            <div><strong>${fitness.pushups ?? '↑'}</strong><small>push-ups · reps</small></div>
+            <div><strong>${fitness.rhr ?? '↓'}</strong><small>resting HR · bpm</small></div>
+          </div>
           <div class="motion-progress-line" aria-label="${completedRatio}% of program sessions complete"><span style="width:${completedRatio}%"></span></div>
           <div class="motion-sector-foot"><span>${progress.completed} / ${progress.programDays} sessions complete · ${lossDetail}</span><button type="button" onclick="showPage('progressPage')">DETAILS ↗</button></div>
           <details id="motionFitnessDetails" class="motion-sector-details motion-fitness-details"><summary><span>FITNESS TARGETS</span><b>12-week strength, cardio &amp; recovery goals</b><span class="motion-fitness-edit">EDIT ⌄</span></summary>
