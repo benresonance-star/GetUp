@@ -20,7 +20,7 @@
   }
 
   function renderMinimalHome({week,calMode,canSwitchSystem,session,sessionAction,sessionLabel,
-    sessionDescription,complete,last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,
+    sessionDescription,complete,last7,fitness,loss,fatGoal,kcalLeft,kcalUnit,macros,fastDay,
     mealCount,mealChips,recoveryAction,recoveryCue,walking}) {
     const systemSelect = canSwitchSystem ? `<select class="motion-minimal-system" aria-label="Training system"
       onchange="Motion12Cal.switch(this.value)">
@@ -35,18 +35,22 @@
     return `<div class="motion-minimal-home" aria-label="Minimal Home dashboard">
       <section class="motion-minimal-panel motion-minimal-goals" aria-labelledby="minimalGoalsTitle">
         <div class="motion-minimal-heading"><span id="minimalGoalsTitle">GOALS</span><span>WEEK ${escapeText(week)} / 12</span></div>
+        <div class="motion-minimal-fat-goal" aria-label="Fat loss goal">
+          <span class="motion-minimal-fat-label">FAT LOSS GOAL</span>
+          <div class="motion-minimal-fat-amount">${escapeText(fatGoal)}<em> kg / week</em></div>
+          <div class="motion-minimal-fat-projection">${escapeText(loss)} projected / week · based on calorie plan</div>
+        </div>
         <div class="motion-minimal-walk-head">
           <div class="motion-minimal-walk-copy">
             <strong>${walking.actual === null ? '—' : escapeText(walking.actual.toLocaleString('en-AU'))}<em> / ${escapeText(walking.target.toLocaleString('en-AU'))}</em></strong>
-            <small>steps today · +${escapeText(walking.additional.toLocaleString('en-AU'))} over baseline</small>
+            <small>steps today · +${escapeText(walking.additional.toLocaleString('en-AU'))} above baseline</small>
           </div>
           <button type="button" class="motion-minimal-walk-log" aria-expanded="false" aria-controls="motionMinimalWalkingDetails" onclick="toggleWalkingDetails('motionMinimalWalkingDetails',this)">LOG</button>
         </div>
         <div class="motion-minimal-walk-track" role="progressbar" aria-label="Logged daily steps toward walking goal" aria-valuemin="0" aria-valuemax="${walking.target}" ${walkProgressAria}><span style="width:${walking.percent}%"></span></div>
         <div class="motion-minimal-goal-substats">
-          <span><b>${escapeText(last7)} / ${escapeText(fitness.weeklySessions)}</b> sessions · 7d</span>
-          <span><b>${escapeText(loss)}</b> planned / wk</span>
-          <button type="button" onclick="showPage('progressPage')" aria-label="Open progress">↗</button>
+          <span><b>${escapeText(last7)} / ${escapeText(fitness.weeklySessions)}</b> sessions · last 7 days</span>
+          <button type="button" onclick="showPage('progressPage')" aria-label="Open goals and progress">DETAILS ↗</button>
         </div>
         <details id="motionMinimalWalkingDetails" class="motion-minimal-walk-details">
           <summary>Daily walking entry</summary>
