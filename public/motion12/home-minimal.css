@@ -352,3 +352,15 @@
   #homePage .motion-minimal-body-target strong {font-size:16px}
   #homePage .motion-minimal-body-target b {font-size:11px}
 }
+
+/* r104 — estimated achievement date beneath the body target, compact single row. */
+#homePage .motion-minimal-goal-eta {display:flex;align-items:baseline;flex-wrap:wrap;column-gap:8px;row-gap:2px;padding:0 0 5px;font-variant-numeric:tabular-nums}
+#homePage .motion-minimal-goal-eta>span {font-size:9px;font-weight:900;letter-spacing:.045em;opacity:.76}
+#homePage .motion-minimal-goal-eta>strong {font-size:12px;font-weight:950;line-height:1.15;white-space:nowrap}
+#homePage .motion-minimal-goal-eta>small {font-size:9px;font-weight:650;opacity:.74;white-space:nowrap}
+#homePage .motion-minimal-body-target {padding-bottom:2px}
+@media(max-width:360px){
+  #homePage .motion-minimal-goal-eta {column-gap:6px}
+  #homePage .motion-minimal-goal-eta>strong {font-size:11px}
+  #homePage .motion-minimal-goal-eta>small {font-size:8px}
+}

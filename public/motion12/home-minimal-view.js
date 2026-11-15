@@ -21,7 +21,7 @@
 
   function renderMinimalHome({week,calMode,canSwitchSystem,session,sessionAction,sessionLabel,
     sessionDescription,complete,last7,fitness,loss,fatGoal,kcalLeft,kcalUnit,macros,fastDay,
-    mealCount,mealChips,recoveryAction,recoveryCue,walking,bodyTarget}) {
+    mealCount,mealChips,recoveryAction,recoveryCue,walking,bodyTarget,goalEta}) {
     const systemSelect = canSwitchSystem ? `<select class="motion-minimal-system" aria-label="Training system"
       onchange="Motion12Cal.switch(this.value)">
       <option value="standard" ${calMode?'':'selected'}>STANDARD</option>
@@ -46,6 +46,11 @@
           <span>BODY TARGET</span>
           <strong>${escapeText(bodyTarget.weightKg)}<small> kg</small></strong>
           <b>≈${escapeText(bodyTarget.fatPct)}% <small>fat</small></b>
+        </div>
+        <div class="motion-minimal-goal-eta" aria-label="Estimated date to achieve target weight">
+          <span>EST. GOAL DATE</span>
+          <strong>${escapeText(goalEta.label)}</strong>
+          ${goalEta.status === 'estimated' ? '<small>at ' + escapeText(Number(goalEta.weeklyLoss).toFixed(2)) + ' kg/wk</small>' : ''}
         </div>
         <div class="motion-minimal-walk-head">
           <div class="motion-minimal-walk-copy">
