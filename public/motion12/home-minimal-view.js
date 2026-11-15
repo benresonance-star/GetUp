@@ -21,7 +21,7 @@
 
   function renderMinimalHome({week,calMode,canSwitchSystem,session,sessionAction,sessionLabel,
     sessionDescription,complete,last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,
-    mealCount,mealChips,recoveryAction,recoveryCue}) {
+    mealCount,mealChips,recoveryAction,recoveryCue,walking}) {
     const systemSelect = canSwitchSystem ? `<select class="motion-minimal-system" aria-label="Training system"
       onchange="Motion12Cal.switch(this.value)">
       <option value="standard" ${calMode?'':'selected'}>STANDARD</option>
@@ -32,23 +32,42 @@
     const protein = macros ? `${escapeText(macros.protein)} g` : '—';
 
     return `<div class="motion-minimal-home" aria-label="Minimal Home dashboard">
+      <section class="motion-minimal-panel motion-minimal-goals" aria-labelledby="minimalGoalsTitle">
+        <div class="motion-minimal-heading"><span id="minimalGoalsTitle">GOALS</span><span>WEEK ${escapeText(week)} / 12</span></div>
+        <div class="motion-minimal-walk-head">
+          <div class="motion-minimal-walk-copy">
+            <strong>${walking.actual === null ? '—' : escapeText(walking.actual.toLocaleString('en-AU'))}<em> / ${escapeText(walking.target.toLocaleString('en-AU'))}</em></strong>
+            <small>steps today · +${escapeText(walking.additional.toLocaleString('en-AU'))} over baseline</small>
+          </div>
+          <button type="button" class="motion-minimal-walk-log" aria-expanded="false" aria-controls="motionMinimalWalkingDetails" onclick="toggleWalkingDetails('motionMinimalWalkingDetails',this)">LOG</button>
+        </div>
+        <div class="motion-minimal-walk-track" role="progressbar" aria-label="Logged daily steps toward walking goal" aria-valuemin="0" aria-valuemax="${walking.target}" aria-valuenow="${walking.actual === null ? 0 : walking.actual}"><span style="width:${walking.percent}%"></span></div>
+        <div class="motion-minimal-goal-substats">
+          <span><b>${escapeText(last7)} / ${escapeText(fitness.weeklySessions)}</b> sessions · 7d</span>
+          <span><b>${escapeText(loss)}</b> planned / wk</span>
+          <button type="button" onclick="showPage('progressPage')" aria-label="Open progress">↗</button>
+        </div>
+        <details id="motionMinimalWalkingDetails" class="motion-minimal-walk-details">
+          <summary>Daily walking entry</summary>
+          <form class="motion-walk-form" onsubmit="return saveWalkingGoal(event)">
+            <label>Steps today<input name="motionWalkActual" type="number" inputmode="numeric" min="0" max="100000" step="1" value="${walking.actual === null ? '' : walking.actual}" placeholder="Enter total steps"></label>
+            <label>Daily goal<input name="motionWalkTarget" type="number" inputmode="numeric" min="8000" max="30000" step="500" required value="${walking.target}"></label>
+            <button type="submit">SAVE STEPS</button>
+            <p role="status" aria-live="polite"></p>
+          </form>
+        </details>
+      </section>
+
       <section class="motion-minimal-panel motion-minimal-training" aria-labelledby="minimalTrainingTitle">
         <div class="motion-minimal-heading"><span>TODAY'S TRAINING</span>${systemSelect}</div>
-        <h1 id="minimalTrainingTitle">${escapeText(session.name)}</h1>
-        <p class="motion-minimal-session-meta">${complete?'✓ Completed · ':''}${escapeText(session.time)} · ${escapeText(sessionDescription)}</p>
+        <div class="motion-minimal-training-line">
+          <h1 id="minimalTrainingTitle">${escapeText(session.name)}</h1>
+          <span class="motion-minimal-duration">${escapeText(session.time)}</span>
+        </div>
         <div class="motion-minimal-train-actions">
           <button type="button" class="motion-minimal-primary" onclick="${sessionAction}">${escapeText(sessionLabel)} <span aria-hidden="true">↗</span></button>
           <button type="button" class="motion-minimal-secondary" onclick="Motion12Flow.startToday()">FLOW</button>
           <button type="button" class="motion-minimal-secondary" onclick="Motion12Flow.previewTomorrow()">PREVIEW</button>
-        </div>
-      </section>
-
-      <section class="motion-minimal-panel motion-minimal-goals" aria-labelledby="minimalGoalsTitle">
-        <div class="motion-minimal-heading"><span id="minimalGoalsTitle">GOALS</span><span>WEEK ${escapeText(week)} / 12</span></div>
-        <div class="motion-minimal-stats">
-          <div class="motion-minimal-stat"><strong>${escapeText(last7)}<em> / ${escapeText(fitness.weeklySessions)}</em></strong><small>sessions · last 7 days</small></div>
-          <div class="motion-minimal-stat"><strong>${escapeText(loss)}</strong><small>planned loss / week</small></div>
-          <button type="button" class="motion-minimal-text-action" onclick="showPage('progressPage')" aria-label="Open goals and progress">↗</button>
         </div>
       </section>
 
