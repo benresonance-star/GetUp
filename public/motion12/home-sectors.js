@@ -105,18 +105,55 @@
     const pushups = optional('fitnessGoalPushups');
     const walk = optional('fitnessGoalWalk');
     const rhr = optional('fitnessGoalRhr');
+    const dailySteps = optional('fitnessGoalSteps');
     const inRange = (value, low, high, integer = false) => value === null ||
       (Number.isFinite(value) && value >= low && value <= high && (!integer || Number.isInteger(value)));
     if (!inRange(weeklySessions, 1, 7, true) || weeklySessions === 0 ||
-        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true)) {
-      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm.';
+        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true) || !inRange(dailySteps, 8000, 30000, true)) {
+      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm, 8k–30k daily steps.';
       return false;
     }
-    settings.fitnessGoals = { weeklySessions, pushups, walk, rhr };
+    settings.fitnessGoals = { ...settings.fitnessGoals, weeklySessions, pushups, walk, rhr, dailySteps: dailySteps ?? fitnessGoalTargets().dailySteps };
     motion12SetItem('motion12.settings', JSON.stringify(settings));
     renderHome();
     const savedStatus = document.getElementById('fitnessGoalSaveStatus');
     if (savedStatus) savedStatus.textContent = '✓ Fitness targets saved';
+    return false;
+  };
+
+  window.toggleWalkingDetails = function toggleWalkingDetails(id, button) {
+    const details = document.getElementById(id);
+    if (!details) return;
+    details.open = !details.open;
+    if (button) button.setAttribute('aria-expanded', details.open ? 'true' : 'false');
+    if (details.open) details.querySelector('input')?.focus();
+  };
+  window.saveWalkingGoal = function saveWalkingGoal(event) {
+    if (event) event.preventDefault();
+    const form = event?.currentTarget || event?.target;
+    const status = form?.querySelector('[role="status"]');
+    if (window.Motion12Persistence?.isReadOnly()) {
+      if (status) status.textContent = 'Read-only: steps were not saved.';
+      return false;
+    }
+    const rawCount = form?.elements?.namedItem('motionWalkActual')?.value?.trim() ?? '';
+    const rawTarget = form?.elements?.namedItem('motionWalkTarget')?.value?.trim() ?? '';
+    const actual = rawCount === '' ? null : Number(rawCount);
+    const target = Number(rawTarget);
+    if (!Number.isInteger(target) || target < 8000 || target > 30000 ||
+        (actual !== null && (!Number.isInteger(actual) || actual < 0 || actual > 100000))) {
+      if (status) status.textContent = 'Enter 0–100,000 steps and a daily target of 8,000–30,000.';
+      return false;
+    }
+    settings.fitnessGoals = { ...settings.fitnessGoals, dailySteps: target };
+    if (actual !== null) {
+      logs['walk.steps:' + todayISO()] = { count: actual, at: new Date().toISOString() };
+      motion12SetItem('motion12.logs', JSON.stringify(logs));
+    }
+    motion12SetItem('motion12.settings', JSON.stringify(settings));
+    renderHome();
+    const restored = document.querySelector('#motionMinimalWalkingDetails .motion-walk-form [role="status"], #motionDetailedWalkingDetails .motion-walk-form [role="status"]');
+    if (restored) restored.textContent = 'Walking entry saved';
     return false;
   };
 
@@ -147,6 +184,7 @@
     }).filter(Boolean).length : sessionsLastSevenDays();
     const composition = currentBodyComp();
     const fitness = fitnessGoalTargets();
+    const walking = homeModel.walkingSummary(settings, logs, date);
     const currentMeasure = (id, unit) => Number(measurements[id]) > 0 ? Number(measurements[id]) + ' ' + unit : 'not recorded';
     const main = document.getElementById('homePage');
     if (!main) return;
@@ -156,7 +194,9 @@
       fitness: !!main.querySelector('#motionFitnessDetails[open]'),
       food: !!main.querySelector('#motionFoodDetails[open]'),
       training: !!main.querySelector('#motionTrainingDetails[open]'),
-      minimalFood: !!main.querySelector('#motionMinimalFoodDetails[open]')
+      minimalFood: !!main.querySelector('#motionMinimalFoodDetails[open]'),
+      minimalWalk: !!main.querySelector('#motionMinimalWalkingDetails[open]'),
+      detailedWalk: !!main.querySelector('#motionDetailedWalkingDetails[open]')
     };
     const { kcalLeft, kcalUnit, consumed, target, caloriesProgress, macros } = homeModel.nutritionSummary(fastDay, intake);
     const mealCount = compactMealCount(day, date);
@@ -189,9 +229,13 @@
         week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
         sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
         last7,fitness,loss,kcalLeft,kcalUnit,macros,fastDay,mealCount,
-        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue
+        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking
       });
       if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
+      if (detailsOpen.minimalWalk) {
+        main.querySelector('#motionMinimalWalkingDetails').open = true;
+        main.querySelector('.motion-minimal-walk-log')?.setAttribute('aria-expanded','true');
+      }
       return;
     }
     main.classList.remove('minimal-home-active');
@@ -206,15 +250,25 @@
           </div>
           <div class="motion-fitness-goal-strip" aria-label="12-week fitness targets">
             <div><strong>${fitness.pushups ?? '↑'}</strong><small>push-ups · reps</small></div>
-            <div><strong>${fitness.walk ?? '↓'}</strong><small>2 km walk · min</small></div>
+            <div><strong>${walking.target.toLocaleString('en-AU')}</strong><small>daily step target</small></div>
             <div><strong>${fitness.rhr ?? '↓'}</strong><small>resting HR · bpm</small></div>
           </div>
+          <div class="motion-walk-summary"><span>STEPS TODAY</span><strong>${walking.actual === null ? '—' : walking.actual.toLocaleString('en-AU')} / ${walking.target.toLocaleString('en-AU')}</strong></div>
+          <details id="motionDetailedWalkingDetails" class="motion-walk-details">
+            <summary>LOG / EDIT DAILY STEPS <span>⌄</span></summary>
+            <form class="motion-walk-form" onsubmit="return saveWalkingGoal(event)">
+              <label>Steps today<input name="motionWalkActual" type="number" inputmode="numeric" min="0" max="100000" step="1" value="${walking.actual === null ? '' : walking.actual}" placeholder="Enter total steps"></label>
+              <label>Daily target<input name="motionWalkTarget" type="number" inputmode="numeric" min="8000" max="30000" step="500" required value="${walking.target}"></label>
+              <button type="submit">SAVE STEPS</button><p role="status" aria-live="polite"></p>
+            </form>
+          </details>
           <div class="motion-progress-line" aria-label="${completedRatio}% of program sessions complete"><span style="width:${completedRatio}%"></span></div>
           <div class="motion-sector-foot"><span>${progress.completed} / ${progress.programDays} sessions complete · ${lossDetail}</span><button type="button" onclick="showPage('progressPage')">DETAILS ↗</button></div>
           <details id="motionFitnessDetails" class="motion-sector-details motion-fitness-details"><summary><span>FITNESS TARGETS</span><b>12-week strength, cardio &amp; recovery goals</b><span class="motion-fitness-edit">EDIT ⌄</span></summary>
             <form class="motion-fitness-form" onsubmit="return saveFitnessGoalTargets(event)">
               <label>Sessions / week<input id="fitnessGoalSessions" type="number" inputmode="numeric" min="1" max="7" step="1" required value="${fitness.weeklySessions}"><small>Current: ${last7} in last 7 days</small></label>
               <label>Strict push-ups (reps)<input id="fitnessGoalPushups" type="number" inputmode="numeric" min="1" max="200" step="1" value="${fitness.pushups ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('pushups', 'reps')}</small></label>
+              <label>Daily steps target<input id="fitnessGoalSteps" type="number" inputmode="numeric" min="8000" max="30000" step="500" value="${fitness.dailySteps}"><small>Progress toward 15,000 steps</small></label>
               <label>2 km walk (minutes)<input id="fitnessGoalWalk" type="number" inputmode="decimal" min="5" max="60" step="0.1" value="${fitness.walk ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('walk', 'min')}</small></label>
               <label>Resting HR (bpm)<input id="fitnessGoalRhr" type="number" inputmode="numeric" min="30" max="120" step="1" value="${fitness.rhr ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('rhr', 'bpm')}</small></label>
               <p>Set your personal 12-week targets here. Update current results in <button type="button" onclick="showPage('progressPage')">Progress ↗</button>.</p>
@@ -270,6 +324,7 @@
     if (detailsOpen.fitness) main.querySelector('#motionFitnessDetails').open = true;
     if (detailsOpen.food) main.querySelector('#motionFoodDetails').open = true;
     if (detailsOpen.training) main.querySelector('#motionTrainingDetails').open = true;
+    if (detailsOpen.detailedWalk) main.querySelector('#motionDetailedWalkingDetails').open = true;
   };
 
   /* Flow Mode is a focused layer over the existing workout. The underlying
