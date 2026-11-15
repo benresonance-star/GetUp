@@ -76,6 +76,43 @@
     };
   }
 
+  /* Predict a calendar date from the saved/current weight and calorie-plan rate.
+     Dates use local noon so DST boundaries do not shift the displayed day. */
+  function achievementEstimate(currentWeight, goalWeight, weeklyLoss, todayISO) {
+    const current = Number(currentWeight);
+    const target = Number(goalWeight);
+    const rate = Number(weeklyLoss);
+    if (!(Number.isFinite(current) && current > 0 && current <= 500 &&
+          Number.isFinite(target) && target > 0)) {
+      return {status:'missing-weight', label:'Log current weight', weeks:null, weeklyLoss:null};
+    }
+    if (current <= target) {
+      return {status:'achieved', label:'Goal reached', weeks:0, weeklyLoss:Number.isFinite(rate)?rate:null};
+    }
+    if (!(Number.isFinite(rate) && rate > 0)) {
+      return {status:'missing-rate', label:'Rate unavailable', weeks:null, weeklyLoss:null};
+    }
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(todayISO))
+      ? new Date(String(todayISO) + 'T12:00:00') : new Date(NaN);
+    if (!Number.isFinite(date.getTime())) {
+      return {status:'missing-date', label:'Date unavailable', weeks:null, weeklyLoss:rate};
+    }
+    const weeks = (current - target) / rate;
+    const days = Math.ceil(weeks * 7);
+    if (!(Number.isFinite(days) && days > 0 && days <= 3650)) {
+      return {status:'too-distant', label:'Beyond 10 years', weeks:null, weeklyLoss:rate};
+    }
+    date.setDate(date.getDate() + days);
+    return {
+      status:'estimated',
+      label:date.toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'}),
+      iso:[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-'),
+      weeks:Math.round(weeks * 10) / 10,
+      days,
+      weeklyLoss:rate
+    };
+  }
+
   /* Daily walking is manually logged; an unlogged count stays unknown. */
   function walkingSummary(settings, logs, date) {
     const goal = fitnessGoalTargets(settings).dailySteps;
@@ -114,6 +151,6 @@
 
   window.Motion12HomeModel = Object.freeze({
     calSessions, recoveryCues, flowCues, bodyCompHistory, currentBodyComp,
-    fitnessGoalTargets, bodyCompositionGoal, walkingSummary, goalsSummary, nutritionSummary
+    fitnessGoalTargets, bodyCompositionGoal, achievementEstimate, walkingSummary, goalsSummary, nutritionSummary
   });
 })();
