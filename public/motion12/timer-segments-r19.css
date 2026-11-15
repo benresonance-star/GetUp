@@ -1,0 +1,26 @@
+/* MOTION12 r19 — equal timer segments.
+   Every phase division uses the same arc length and the same gap.
+   The previous five-second major-marker overlay made every fifth segment
+   appear shorter; remove that overlay while keeping the existing countdown. */
+
+.timer-ring:after{
+  content:none!important;
+  display:none!important;
+}
+
+/* Keep the ring edge visually uniform around the full circumference. */
+.timer-ring{
+  background:
+    conic-gradient(
+      from -90deg,
+      transparent 0deg var(--timer-progress),
+      var(--timer-track) var(--timer-progress) 360deg
+    ),
+    repeating-conic-gradient(
+      from -90deg,
+      var(--timer-orange) 0deg,
+      var(--timer-red) var(--timer-fill-angle),
+      var(--timer-track) var(--timer-fill-angle),
+      var(--timer-track) var(--timer-step-angle)
+    );
+}

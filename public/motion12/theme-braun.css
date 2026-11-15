@@ -1,0 +1,772 @@
+/* MOTION12 Braun Charcoal — opt-in palette, deliberately flat and restrained.
+   The charcoal shell is shared across the app; only the Home priorities receive
+   large saturated colour fields. No data or interaction rules live here. */
+html[data-app-palette="braun"] {
+  --bg:#181c20;
+  --surface:#21272d;
+  --surface2:#2a3238;
+  --ink:#f5f5f0;
+  --muted:#afbac3;
+  --line:#39434a;
+  --shadow:none;
+  --theme-line:#39434a;
+  --theme-line-soft:#2d373d;
+  --theme-line-strong:#53636d;
+  --tendon:#72d6ce;
+  --tendon-rgb:114,214,206;
+  color-scheme:dark;
+}
+html[data-app-palette="braun"] body,
+html[data-app-palette="braun"] .app { background:#181c20; }
+html[data-app-palette="braun"] .top {
+  background:#181c20;
+  backdrop-filter:none;
+}
+html[data-app-palette="braun"] .bottomnav {
+  background:#11161a;
+  border-top-color:#344048;
+  backdrop-filter:none;
+}
+html[data-app-palette="braun"] .sheet,
+html[data-app-palette="braun"] .settings-overlay .sheet {
+  background:#22292f;
+}
+html[data-app-palette="braun"] .accent,
+html[data-app-palette="braun"] .fast-card {
+  background:#27323c;
+  background-image:none;
+}
+html[data-app-palette="braun"] .hero { background-image:none; }
+
+/* A quiet, high-contrast segmented control frames four unambiguous colours. */
+html[data-app-palette="braun"] #homePage .motion-home-layout-label {
+  color:#bcc8d0;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice {
+  background:#242b31;
+  border-color:#43505a;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice button {
+  color:#b6c0c9;
+}
+html[data-app-palette="braun"] #homePage .motion-home-layout-choice button.selected {
+  color:#f5f5f0;
+  background:#435260;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-home { gap:9px; }
+html[data-app-palette="braun"] #homePage .motion-minimal-panel {
+  border-width:1px;
+  border-radius:17px;
+  box-shadow:none;
+  background-image:none;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-heading {
+  letter-spacing:.13em;
+}
+
+/* The daily workout is the only saturated blue field. Coral denotes action. */
+html[data-app-palette="braun"] #homePage .motion-minimal-training {
+  background:#294eb8;
+  border-color:#6586df;
+  color:#fff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-training .motion-minimal-heading {
+  color:#d8e4ff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-session-meta {
+  color:#d7e2fb;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-system {
+  color:#fff;
+  background:#213f96;
+  border-color:#83a0e6;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-primary {
+  background:#ff7045;
+  color:#141b20;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-primary:active {
+  background:#f65d35;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-secondary {
+  background:transparent;
+  color:#fff;
+  border-color:rgba(230,238,255,.75);
+}
+
+/* Light blue / seafoam are deliberately related, with readable dark ink. */
+html[data-app-palette="braun"] #homePage .motion-minimal-goals {
+  background:#96b9e5;
+  border-color:#c1d5f0;
+  color:#101e2b;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition {
+  background:#9ecfc3;
+  border-color:#c0e2d9;
+  color:#102620;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-stat small {
+  color:#2c4965;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition .motion-minimal-stat small {
+  color:#2c554d;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-goals .motion-minimal-text-action {
+  color:#1a529a;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-nutrition-marker {
+  color:#175d54;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-food-details {
+  border-top-color:rgba(16,57,49,.32);
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-food-details summary {
+  color:#214a42;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal {
+  background:rgba(255,255,255,.29);
+  border-color:rgba(16,57,49,.3);
+  color:#14342e;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal-kcal {
+  color:#31584f;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-meal-content .compact-meal .meal-check {
+  color:#14342e;
+  border-color:#3f766c;
+}
+
+/* A calm petrol recovery panel closes the hierarchy. */
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery {
+  background:#317d7a;
+  border-color:#6bb1ab;
+  color:#fff;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery .motion-minimal-heading,
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-body small,
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-note {
+  color:#d4efea;
+}
+html[data-app-palette="braun"] #homePage .motion-minimal-recovery-body button {
+  color:#fff;
+  border-color:rgba(227,255,250,.7);
+  background:rgba(0,0,0,.07);
+}
+
+/* Detailed view retains its information density, but stays within the same
+   cool family. Darker values let the existing white labels remain readable. */
+html[data-app-palette="braun"] #homePage .motion-sector {
+  background-image:none;
+  box-shadow:none;
+  border-radius:17px;
+}
+html[data-app-palette="braun"] #homePage .motion-goals {
+  background:#263d61;
+  border-color:#587fb3;
+}
+html[data-app-palette="braun"] #homePage .motion-nutrition {
+  background:#24514e;
+  border-color:#538f85;
+}
+html[data-app-palette="braun"] #homePage .motion-training {
+  background:#294eb8;
+  border-color:#6586df;
+}
+html[data-app-palette="braun"] #homePage .motion-recovery {
+  background:#276966;
+  border-color:#5ca39b;
+}
+html[data-app-palette="braun"] #homePage .motion-sector-number {
+  color:#e7f3fc;
+  background:rgba(255,255,255,.12);
+}
+html[data-app-palette="braun"] #homePage .motion-sector-side,
+html[data-app-palette="braun"] #homePage .motion-key-figure small,
+html[data-app-palette="braun"] #homePage .motion-calorie-total>span,
+html[data-app-palette="braun"] #homePage .motion-training-row>div>span,
+html[data-app-palette="braun"] #homePage .motion-recovery-row small,
+html[data-app-palette="braun"] #homePage .motion-recovery-cue {
+  color:#d5e2e7;
+}
+html[data-app-palette="braun"] #homePage .motion-training-launch {
+  background:#ff7045;
+  color:#141b20;
+}
+html[data-app-palette="braun"] #homePage .motion-goals .motion-sector-foot button,
+html[data-app-palette="braun"] #homePage .motion-training-tools .motion-flow-tool-primary {
+  color:#c4e3ff;
+}
+
+/* Days — a compact instrument-like week schedule. The row, not a large card,
+   carries the hierarchy; today uses the same blue as the Home training sector. */
+html[data-app-palette="braun"] #daysPage .week-page-heading .eyebrow {
+  color:#9bbfe5;
+  letter-spacing:.14em;
+}
+html[data-app-palette="braun"] #daysPage .week-page-heading h1 {
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #daysPage .week-page-hint {
+  color:#b9c7d0;
+}
+html[data-app-palette="braun"] #daysPage .week-table {
+  background:#212a31;
+  border-color:#485a66;
+  border-radius:17px;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #daysPage .week-table-head {
+  background:#2d3b45;
+  border-bottom-color:#50616d;
+  color:#c9d8e2;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #daysPage .week-row + .week-row {
+  border-top-color:#3a4853;
+}
+html[data-app-palette="braun"] #daysPage .week-row:nth-child(odd):not(.week-today):not(.week-expanded) .week-row-trigger {
+  background:#242f37;
+}
+html[data-app-palette="braun"] #daysPage .week-row-trigger {
+  background:#212a31;
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #daysPage .week-row-trigger:active {
+  background:#344958;
+}
+html[data-app-palette="braun"] #daysPage .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-expand-icon {
+  color:#b6c5cf;
+}
+html[data-app-palette="braun"] #daysPage .week-expanded:not(.week-today) .week-row-trigger {
+  background:#2e4a68;
+}
+html[data-app-palette="braun"] #daysPage .week-today .week-row-trigger,
+html[data-app-palette="braun"] #daysPage .week-today.week-expanded .week-row-trigger {
+  background:#294eb8;
+  color:#fff;
+}
+html[data-app-palette="braun"] #daysPage .week-today .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-today .week-expand-icon,
+html[data-app-palette="braun"] #daysPage .week-expanded .week-emphasis small,
+html[data-app-palette="braun"] #daysPage .week-expanded .week-expand-icon {
+  color:#e0e9ff;
+}
+html[data-app-palette="braun"] #daysPage .week-today-dot {
+  width:6px;
+  height:6px;
+  background:#ff7045;
+}
+html[data-app-palette="braun"] #daysPage .week-level {
+  border-radius:5px;
+  font-weight:950;
+  letter-spacing:.01em;
+}
+html[data-app-palette="braun"] #daysPage .level-easy {
+  background:#9ecfc3;
+  color:#102620;
+}
+html[data-app-palette="braun"] #daysPage .level-moderate {
+  background:#96b9e5;
+  color:#14243c;
+}
+html[data-app-palette="braun"] #daysPage .level-hard {
+  background:#ffb49b;
+  color:#492318;
+}
+html[data-app-palette="braun"] #daysPage .week-row-detail {
+  background:#1d252b;
+  color:#f5f5f0;
+  padding-bottom:14px;
+}
+html[data-app-palette="braun"] #daysPage .week-detail-meta {
+  border-top-color:#496074;
+  color:#c4d4df;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-group-title {
+  color:#93c9e7;
+  letter-spacing:.13em;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-exercise {
+  border-top-color:#34424e;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-num,
+html[data-app-palette="braun"] #daysPage .day-overview-dot {
+  color:#83c8ec;
+}
+html[data-app-palette="braun"] #daysPage .day-overview-exercise small,
+html[data-app-palette="braun"] #daysPage .day-overview-note {
+  color:#b5c7cf;
+}
+html[data-app-palette="braun"] #daysPage .day-session-btn,
+html[data-app-palette="braun"] #daysPage .day-session-btn.cyan,
+html[data-app-palette="braun"] #daysPage .day-session-btn.pink,
+html[data-app-palette="braun"] #daysPage .day-session-btn.orange {
+  background:#ff7045;
+  border-color:#ff7045;
+  color:#182027;
+  border-radius:11px;
+}
+html[data-app-palette="braun"] #daysPage .day-session-btn:active {
+  background:#f15c36;
+}
+
+/* Open day / workout session — visually continuous with the Days tab. */
+html[data-app-palette="braun"] #dayPage .back {
+  color:#9fc8ee;
+}
+html[data-app-palette="braun"] #dayPage .page-title .eyebrow {
+  color:#9fc8ee;
+}
+html[data-app-palette="braun"] #dayPage .page-title h1 {
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage .session-summary .mini,
+html[data-app-palette="braun"] #dayPage .exercise,
+html[data-app-palette="braun"] #dayPage .workout-progress-block .timer-session-progress,
+html[data-app-palette="braun"] #dayPage .workout-progress-block .strength-session-progress {
+  background:#222d35;
+  background-image:none;
+  border-color:#455a68;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer {
+  background:#263f7b;
+  background-image:none;
+  border-color:#6284cb;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .workout-exercises-section > .exercise.compact-current,
+html[data-app-palette="braun"] #dayPage .workout-exercises-section > .exercise.session-current {
+  background:#293f63;
+  background-image:none;
+  border-color:#7596d6;
+  box-shadow:inset 4px 0 0 #ff7045;
+}
+html[data-app-palette="braun"] #dayPage .exercise .num {
+  background:#324b60;
+  color:#a5dafb;
+}
+html[data-app-palette="braun"] #dayPage .session-mode-badge {
+  background:#4b2f30;
+  color:#ffc3aa;
+  border-color:#da8467;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .smart-timer-controls .timer-primary,
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .mobile-smart-timer-controls .timer-primary {
+  background:#ff7045;
+  color:#182027;
+  border-color:#ff7045;
+}
+
+/* Routines — purposeful colour by role, rather than by historical workout
+   type. Blue = active work; seafoam = completed / recovery; coral = action. */
+html[data-app-palette="braun"] #dayPage .sticky-col .card.accent {
+  background:#263f72;
+  background-image:none;
+  border-color:#6687c1;
+}
+html[data-app-palette="braun"] #dayPage .sticky-col .card.accent .tag {
+  color:#b7d6f7;
+  border-color:#7296ca;
+}
+html[data-app-palette="braun"] #dayPage .section-head h2 {
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage .section-head small {
+  color:#bdcbd4;
+}
+html[data-app-palette="braun"] #dayPage .prep-section > .exercise,
+html[data-app-palette="braun"] #dayPage .prep-section .session-fold-contents > .exercise,
+html[data-app-palette="braun"] #dayPage .mobility-warmup-section .card.row {
+  background:#222b31;
+  border-color:#46575f;
+}
+html[data-app-palette="braun"] #dayPage .support-section > .exercise {
+  background:#222b31;
+  border-color:#46575f;
+}
+html[data-app-palette="braun"] #dayPage .tendon-capacity-section > .tendon-capacity {
+  background:#222d35;
+  background-image:none;
+  border-color:#465a68;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .exercise .ex-name p,
+html[data-app-palette="braun"] #dayPage .card.row p {
+  color:#b9d0d3;
+}
+html[data-app-palette="braun"] #dayPage .exercise .num {
+  background:#365575;
+  color:#c1e5ff;
+  border:1px solid #577a9e;
+}
+html[data-app-palette="braun"] #dayPage .prep-section .num,
+html[data-app-palette="braun"] #dayPage .support-section .num,
+html[data-app-palette="braun"] #dayPage .tendon-capacity-section .num {
+  background:#2a3e4b;
+  color:#adccdf;
+  border-color:#557387;
+}
+html[data-app-palette="braun"] #dayPage .exercise .check {
+  border-color:#7fa7ba;
+  background:#20313b;
+}
+html[data-app-palette="braun"] #dayPage .exercise.complete .check {
+  background:#9ecfc3;
+  border-color:#9ecfc3;
+}
+html[data-app-palette="braun"] #dayPage .exercise.complete .check:after {
+  color:#122921;
+}
+html[data-app-palette="braun"] #dayPage .exercise.complete {
+  opacity:.8;
+}
+html[data-app-palette="braun"] #dayPage .exercise.active-timer,
+html[data-app-palette="braun"] #dayPage .strength-session-slice.session-current,
+html[data-app-palette="braun"] #dayPage .tendon-capacity.active-timer {
+  background:#293f63;
+  background-image:none;
+  border-color:#7596d6;
+  box-shadow:inset 4px 0 0 #ff7045;
+}
+html[data-app-palette="braun"] #dayPage .exercise .field input,
+html[data-app-palette="braun"] #dayPage .exercise .field select,
+html[data-app-palette="braun"] #dayPage .strength-set-row input {
+  background:#17242e;
+  color:#f5f5f0;
+  border-color:#4c6574;
+}
+html[data-app-palette="braun"] #dayPage .exercise .field input:focus,
+html[data-app-palette="braun"] #dayPage .strength-set-row input:focus {
+  border-color:#a2c6ec;
+  box-shadow:0 0 0 2px rgba(162,198,236,.15);
+}
+html[data-app-palette="braun"] #dayPage .exercise .tip {
+  background:#233b40;
+  color:#d3e7e5;
+  border-left-color:#72d6ce;
+}
+html[data-app-palette="braun"] #dayPage .exercise .tip.progress-rule {
+  background:#253650;
+  border-left-color:#96b9e5;
+}
+html[data-app-palette="braun"] #dayPage .video-link {
+  background:#2b4356;
+  color:#b5ddf9;
+  border-color:#6186a2;
+}
+html[data-app-palette="braun"] #dayPage .exercise-note-card,
+html[data-app-palette="braun"] #dayPage .exercise-note-card.has-note {
+  background:#1b2b34;
+  background-image:none;
+  border-color:#466070;
+}
+html[data-app-palette="braun"] #dayPage .exercise-note-input {
+  background:#17232b;
+  border-color:#4d6472;
+}
+
+/* The dial is the main instrument; its active seconds remain legible over blue. */
+html[data-app-palette="braun"] #dayPage .timer-ring {
+  --timer-track:#5c74a2;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .timer-ring:before {
+  background:#1a2e59;
+  border-color:#5575b3;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .timer-ring-segment.elapsed {
+  stroke:#5873a4;
+}
+html[data-app-palette="braun"] #dayPage .timer-ring[data-timer-kind="stopwatch"] .timer-ring-segment.elapsed {
+  stroke:#88a8d7;
+}
+html[data-app-palette="braun"] #dayPage .timer-ring[data-timer-kind="stopwatch"] .timer-ring-segment.remaining {
+  stroke:#ff7045;
+  stroke-width:5.5;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.continuous {
+  background:#43586b;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.continuous i {
+  background:#ff7045;
+}
+html[data-app-palette="braun"] #dayPage .timer-next {
+  background:#1e3667;
+  border-color:#5b7bb7;
+}
+html[data-app-palette="braun"] #dayPage .timer-next-label,
+html[data-app-palette="braun"] #dayPage .timer-context b {
+  color:#cfdef5;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .smart-timer-controls button:not(.timer-primary),
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .mobile-smart-timer-controls button:not(.timer-primary) {
+  background:#203564;
+  border-color:#6a84b7;
+  color:#f2f6ff;
+}
+html[data-app-palette="braun"] #dayPage .workout-timer-footer {
+  border-top-color:#5b75a6;
+}
+html[data-app-palette="braun"] #dayPage .timer-presets button {
+  background:#203564;
+  border-color:#5b75a6;
+  color:#e6effe;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment,
+html[data-app-palette="braun"] #dayPage .strength-progress-segment {
+  background:#3c5260;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.current,
+html[data-app-palette="braun"] #dayPage .strength-progress-segment.current {
+  background:#ff7045;
+  background-image:none;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .timer-progress-segment.complete,
+html[data-app-palette="braun"] #dayPage .strength-progress-segment.complete {
+  background:#9ecfc3;
+}
+
+/* Strength set rows share the same restrained palette as the rest of a routine. */
+html[data-app-palette="braun"] #dayPage .strength-set-flow {
+  background:#1b2b37;
+  background-image:none;
+  border-color:#506d82;
+}
+html[data-app-palette="braun"] #dayPage .strength-flow-status,
+html[data-app-palette="braun"] #dayPage .strength-set-flow.working .strength-flow-status {
+  background:#2b4674;
+  border-color:#6485bc;
+}
+html[data-app-palette="braun"] #dayPage .strength-flow-status span {
+  color:#c5e5ff;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-flow.resting .strength-flow-status {
+  background:#28534d;
+  border-color:#64a99c;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-flow.complete .strength-flow-status {
+  background:#28534d;
+  border-color:#64a99c;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-flow.complete .strength-flow-status span {
+  color:#c9f7ee;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-columns {
+  background:#1b2b37;
+  border-bottom-color:#526d80;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-row {
+  background:#20313b;
+  border-color:#465b69;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-row.active {
+  background:#29436a;
+  border-color:#82a7da;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-row.logged {
+  background:#23433f;
+  border-color:#589889;
+}
+html[data-app-palette="braun"] #dayPage .strength-set-row.future {
+  opacity:.62;
+}
+html[data-app-palette="braun"] #dayPage .strength-summary-metrics > div,
+html[data-app-palette="braun"] #dayPage .strength-next {
+  background:#20343f;
+  border-color:#4c6e7e;
+}
+html[data-app-palette="braun"] #dayPage .strength-flow-actions .strength-flow-primary,
+html[data-app-palette="braun"] #dayPage .inline-timer-primary {
+  background:#ff7045;
+  color:#182027;
+  border-color:#ff7045;
+}
+html[data-app-palette="braun"] #dayPage .strength-flow-actions .strength-flow-primary.done {
+  background:#9ecfc3;
+  color:#15332b;
+  border-color:#9ecfc3;
+}
+html[data-app-palette="braun"] #dayPage .strength-flow-actions .strength-flow-secondary,
+html[data-app-palette="braun"] #dayPage .inline-timer-actions button:not(.inline-timer-primary) {
+  background:#2a414f;
+  border-color:#5d7d89;
+  color:#f0f6f6;
+}
+html[data-app-palette="braun"] #dayPage .inline-ex-timer {
+  background:#253c58;
+  border-color:#608aba;
+}
+
+/* Aerobic A/B selector and B station sequence. */
+html[data-app-palette="braun"] #dayPage .aerobic-variant-option {
+  background:#23313c;
+  border-color:#506476;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-variant-option.selected {
+  background:#294eb8;
+  background-image:none;
+  border-color:#88a9eb;
+  box-shadow:inset 3px 0 0 #ff7045;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-variant-option.selected > span {
+  color:#fff;
+  background:#244493;
+  border-color:#a0b7e9;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-variant-option.selected > small {
+  color:#e0eaff;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-b-breakdown {
+  background:#224540;
+  border-color:#5a9d91;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-b-movement {
+  background:#203a39;
+  border-color:#4b7d73;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-b-order {
+  background:#314b5c;
+  color:#dbecf6;
+}
+html[data-app-palette="braun"] #dayPage .aerobic-b-recovery {
+  background:#273640;
+  border-color:#597785;
+}
+html[data-app-palette="braun"] #dayPage .session-end-actions .complete-session,
+html[data-app-palette="braun"] #dayPage .complete-session:not(.done) {
+  background:#ff7045;
+  color:#182027;
+}
+html[data-app-palette="braun"] #dayPage .complete-session.done {
+  background:#9ecfc3;
+  color:#15332b;
+}
+
+/* Long sessions, opened meal logs and small devices must remain scrollable. */
+@media(max-width:520px) {
+  html[data-app-palette="braun"] #homePage.compact-active.minimal-home-active {
+    height:auto;
+    min-height:0;
+    overflow:visible;
+  }
+}
+
+/* R100: one Braun instrument-list language across all preparation stages.
+   Charcoal surfaces; blue marks position, coral marks action, seafoam completion. */
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold{
+  background:transparent;
+  border:0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-trigger{
+  color:#f5f5f0;
+  border-bottom-color:#43535b;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-index{
+  background:transparent;
+  border:0;
+  color:#94bdd1;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-copy small,
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold-chevron{
+  color:#b9c7cf;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .session-fold:not(.collapsed) .session-fold-contents{
+  border:0;
+  padding:0;
+}
+/* Include .card.row / .exercise in the selectors to win against the older
+   section-specific colour rules regardless of their stylesheet position. */
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-warmup-section.session-fold .session-fold-contents .card.row.mobility-move,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section.session-fold .session-fold-contents > .exercise.prep-exercise{
+  background:transparent;
+  background-image:none;
+  border:0;
+  border-bottom:1px solid #3b4b53;
+  border-radius:0;
+  box-shadow:none;
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-number,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .num{
+  color:#94bdd1;
+  background:transparent;
+  border:0;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-copy h3,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .ex-name h3{
+  color:#f5f5f0;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-dose,
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .ex-name p,
+html[data-app-palette="braun"] #dayPage.compact-active .mobility-row-copy small{
+  color:#b6c4cc;
+  font-size:11px;
+  font-weight:600;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise .check{
+  border-color:#718d9b;
+  background:#202c33;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .prep-section .prep-exercise.complete .check{
+  border-color:#9ecfc3;
+  background:#9ecfc3;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .workout-progress-block .timer-session-progress,
+html[data-app-palette="braun"] #dayPage.compact-active .workout-progress-block .strength-session-progress{
+  background:#222b31;
+  background-image:none;
+  border:1px solid #43535c;
+  border-radius:11px;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option,
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected{
+  background:transparent;
+  border:0;
+  border-bottom:3px solid transparent;
+  border-radius:0;
+  box-shadow:none;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected{
+  border-bottom-color:#ff7045;
+}
+html[data-app-palette="braun"] #dayPage.compact-active .aerobic-variant-option.selected > span{
+  background:#2a4354;
+  border-color:#7aa8bd;
+}
+
+/* R101: clear blue timing instrument with a quiet, full-width information strip. */
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-context #timerPhase{
+  color:#64b8f5;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-ring > .timer-ring-readout strong{
+  color:#f5f5f0;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details{
+  border-top-color:#5573a4;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-stage-detail{
+  color:#cfdbeb;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next{
+  background:transparent;
+  border:0;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next-label{
+  color:#91b3dc;
+}
+html[data-app-palette="braun"] #dayPage .workout-primary-timer .timer-readout-details .timer-next-stage{
+  color:#f5f5f0;
+}

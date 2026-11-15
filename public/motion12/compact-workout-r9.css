@@ -1,0 +1,122 @@
+/* MOTION12 r9
+   Mobility is a warm-up, so it appears first in every session.
+   Compact mode keeps mobility + support visible while retaining the full-size timer. */
+
+.mobility-warmup-section{
+  margin-top:0;
+}
+
+/* Compact mode previously hid these sections; keep them in the session flow. */
+#dayPage.compact-active .support-section,
+#dayPage.compact-active #mobilitySection{
+  display:block;
+}
+
+/* Compact mobility: readable warm-up rows without turning into full-size cards. */
+#dayPage.compact-active .mobility-warmup-section{
+  margin:0 0 10px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .mobility-warmup-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .mobility-warmup-section .cards{
+  gap:4px;
+}
+#dayPage.compact-active .mobility-warmup-section .card{
+  min-height:42px;
+  padding:7px 9px;
+  border-radius:12px;
+}
+#dayPage.compact-active .mobility-warmup-section .card h3{
+  margin:0 0 1px;
+  font-size:12px;
+  line-height:1.15;
+}
+#dayPage.compact-active .mobility-warmup-section .card p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .mobility-warmup-section .card .volt{
+  font-size:9px;
+}
+#dayPage.compact-active .mobility-warmup-section .video-link{
+  display:none;
+}
+
+/* Compact support: keep the block and every support movement visible.
+   Details collapse to the movement row until that support exercise is active. */
+#dayPage.compact-active .support-section{
+  margin-top:10px;
+}
+#dayPage.compact-active .support-section .section-head{
+  display:flex;
+  margin:0 2px 6px;
+}
+#dayPage.compact-active .support-section .section-head h2{
+  font-size:15px;
+}
+#dayPage.compact-active .support-section .section-head small{
+  font-size:9px;
+}
+#dayPage.compact-active .support-section>.support-exercise{
+  margin-bottom:5px;
+  padding:9px 10px;
+  border-radius:13px;
+}
+#dayPage.compact-active .support-section>.support-exercise .num{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  font-size:9px;
+}
+#dayPage.compact-active .support-section>.support-exercise .check{
+  width:28px;
+  height:28px;
+}
+#dayPage.compact-active .support-section>.support-exercise .ex-name h3{
+  margin:0 0 1px;
+  font-size:13px;
+}
+#dayPage.compact-active .support-section>.support-exercise .ex-name p{
+  font-size:9px;
+  line-height:1.2;
+}
+#dayPage.compact-active .support-section>.support-exercise .video-link{
+  display:none;
+}
+#dayPage.compact-active .support-section>.support-exercise:not(.active-timer)>:not(.ex-top){
+  display:none !important;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer{
+  border-color:rgba(99,210,214,.55);
+  box-shadow:inset 3px 0 0 rgba(99,210,214,.55);
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer>.tip,
+#dayPage.compact-active .support-section>.support-exercise.active-timer>.load-rule{
+  display:none !important;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .inputs{
+  margin-top:9px;
+  gap:5px;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .field label{
+  font-size:7px;
+}
+#dayPage.compact-active .support-section>.support-exercise.active-timer .field input{
+  min-height:36px;
+  padding:7px 6px;
+}
+
+@media(max-width:390px){
+  #dayPage.compact-active .mobility-warmup-section .card{
+    min-height:40px;
+    padding:6px 8px;
+  }
+}

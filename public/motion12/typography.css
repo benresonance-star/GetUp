@@ -1,0 +1,115 @@
+/* MOTION12 type system — shared visual roles across every app surface.
+   Style belongs here; training content and derived metrics belong in JS. */
+:root {
+  --motion-type-page:36px;
+  --motion-type-section-title:20px;
+  --motion-type-card-title:17px;
+  --motion-type-feature:23px;
+  --motion-type-display:28px;
+  --motion-type-stat:18px;
+  --motion-type-target:15px;
+  --motion-type-body:13px;
+  --motion-type-caption:11px;
+  --motion-type-overline:10px;
+  --motion-type-compact-body:10px;
+  --motion-type-compact-label:9.5px;
+  --motion-type-action:10px;
+}
+
+/* Page and sectional hierarchy — identical on Days, workout and Progress. */
+.page-title h1 {
+  font-size:var(--motion-type-page);
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.055em;
+}
+.page-title .eyebrow { font-size:var(--motion-type-overline); font-weight:900; }
+.page-title p { font-size:var(--motion-type-body); line-height:1.5; }
+.section h2,.section-head h2 {
+  font-size:var(--motion-type-section-title);
+  line-height:1.15;
+  font-weight:900;
+  letter-spacing:-.035em;
+}
+.section-head small { font-size:var(--motion-type-caption); font-weight:750; }
+.section .tag { font-size:var(--motion-type-overline); font-weight:900; }
+.section .card h3 { font-size:var(--motion-type-card-title); font-weight:900; line-height:1.18; }
+.section .card p { font-size:var(--motion-type-body); line-height:1.45; }
+
+/* Days: each session title has the same prominence as Home's featured session. */
+#daysPage .day-list .label { font-size:var(--motion-type-overline); font-weight:850; }
+#daysPage .day-list h3 {
+  font-size:var(--motion-type-feature);
+  font-weight:950;
+  line-height:1.08;
+  letter-spacing:-.045em;
+}
+#daysPage .day-list .day-card-copy p { font-size:var(--motion-type-body); }
+#daysPage .day-overview-group-title { font-size:var(--motion-type-overline); }
+#daysPage .day-overview-exercise b { font-size:var(--motion-type-body); font-weight:850; }
+#daysPage .day-overview-exercise small,
+#daysPage .day-overview-note { font-size:var(--motion-type-caption); }
+
+/* Workout: exercise names, metrics, captions and form labels. */
+#dayPage .exercise .ex-name h3 { font-size:var(--motion-type-card-title); font-weight:900; }
+#dayPage .exercise .ex-name p { font-size:var(--motion-type-caption); }
+#dayPage .session-summary .mini b { font-size:var(--motion-type-stat); font-weight:950; }
+#dayPage .session-summary .mini span { font-size:var(--motion-type-overline); }
+#dayPage .field label { font-size:var(--motion-type-caption); font-weight:850; }
+
+/* Progress: numbers lead, labels explain; small 8px labels are removed. */
+#progressPage .adherence-grid b {
+  font-size:var(--motion-type-display);
+  font-weight:950;
+  line-height:1.05;
+  letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;
+}
+#progressPage .adherence-grid span {
+  font-size:var(--motion-type-overline);
+  line-height:1.3;
+  font-weight:850;
+}
+#progressPage .adherence-card>small { font-size:var(--motion-type-caption); }
+#progressPage .target-chip b { font-size:var(--motion-type-stat); font-weight:950; }
+#progressPage .target-chip span { font-size:var(--motion-type-overline); line-height:1.3; }
+#progressPage .measure-grid h3 { font-size:var(--motion-type-card-title); font-weight:900; }
+#progressPage .measure-grid .tag { font-size:var(--motion-type-overline); }
+
+/* Settings: one readable label and explanation scale, consistent disclosures. */
+.settings-overlay .sheet h2 {
+  font-size:var(--motion-type-section-title);
+  font-weight:900;
+  line-height:1.2;
+  letter-spacing:-.035em;
+}
+.settings-overlay .sheet details>summary { font-size:14px; font-weight:850; line-height:1.35; }
+.settings-overlay .sheet .field label { font-size:var(--motion-type-caption); font-weight:850; }
+.settings-overlay .sheet .settings-note { font-size:var(--motion-type-caption); line-height:1.5; }
+.settings-overlay .sheet-actions button { font-size:14px; font-weight:900; }
+.settings-overlay .sheet input:not([type=hidden]),
+.settings-overlay .sheet select { font-size:16px; }
+
+/* Flow Preview and Flow Mode reuse the same hierarchy and accessible form text. */
+.motion-flow-card h2 {
+  font-size:var(--motion-type-display);
+  font-weight:950;
+  line-height:1.05;
+}
+.motion-flow-target { font-size:var(--motion-type-body); }
+.motion-flow-head span,.motion-flow-cue small,.motion-flow-plan-header small,
+.motion-flow-plan-group h3,.motion-flow-plan-group h3 span { font-size:var(--motion-type-overline); }
+.motion-flow-cue strong { font-size:var(--motion-type-card-title); font-weight:850; }
+.motion-flow-cue label,.motion-flow-review span { font-size:var(--motion-type-body); }
+.motion-flow-plan-header p,.motion-flow-note,.motion-flow-equipment { font-size:var(--motion-type-caption); }
+.motion-flow-ex-fields label { font-size:var(--motion-type-overline); }
+.motion-flow-cue input,.motion-flow-ex-fields input { font-size:16px; }
+.motion-flow-actions button,.motion-flow-wide { font-size:12px; }
+
+@media(min-width:760px) {
+  :root { --motion-type-page:40px; --motion-type-feature:26px; }
+}
+@media(max-width:390px) {
+  :root { --motion-type-page:32px; --motion-type-feature:21px; --motion-type-display:24px; }
+  .motion-flow-card h2 { font-size:25px; }
+}
