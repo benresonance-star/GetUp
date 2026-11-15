@@ -57,7 +57,23 @@
       weeklySessions: target('weeklySessions', 1, 7, 7),
       pushups: target('pushups', 1, 200),
       walk: target('walk', 5, 60),
-      rhr: target('rhr', 30, 120)
+      rhr: target('rhr', 30, 120),
+      dailySteps: target('dailySteps', 8000, 30000, 13000)
+    };
+  }
+
+  /* Daily walking is manually logged; an unlogged count stays unknown. */
+  function walkingSummary(settings, logs, date) {
+    const goal = fitnessGoalTargets(settings).dailySteps;
+    const raw = logs?.['walk.steps:' + date];
+    const actual = Number.isInteger(raw?.count) && raw.count >= 0 && raw.count <= 100000 ? raw.count : null;
+    const baseline = Math.max(10000, Number(settings?.steps) || 0);
+    return {
+      target: goal,
+      actual,
+      baseline,
+      additional: Math.max(0, goal - baseline),
+      percent: actual === null ? 0 : Math.max(0, Math.min(100, Math.round(actual / goal * 100)))
     };
   }
 
@@ -84,6 +100,6 @@
 
   window.Motion12HomeModel = Object.freeze({
     calSessions, recoveryCues, flowCues, bodyCompHistory, currentBodyComp,
-    fitnessGoalTargets, goalsSummary, nutritionSummary
+    fitnessGoalTargets, walkingSummary, goalsSummary, nutritionSummary
   });
 })();
