@@ -306,3 +306,26 @@
   #homePage .motion-minimal-fat-amount {font-size:24px}
   #homePage .motion-minimal-fat-amount em {font-size:11px}
 }
+
+/* r102 compact Goals: shorter vertical rhythm, retain tappable Log control. */
+#homePage .motion-minimal-goals {padding:9px 12px 8px}
+#homePage .motion-minimal-goals .motion-minimal-heading {margin-bottom:3px;min-height:15px}
+#homePage .motion-minimal-fat-goal {padding:0 0 6px}
+#homePage .motion-minimal-fat-top {display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 9px}
+#homePage .motion-minimal-fat-label {font-size:9px;line-height:1.15}
+#homePage .motion-minimal-fat-projection {margin:0;font-size:9px;line-height:1.15}
+#homePage .motion-minimal-fat-amount {margin-top:2px;font-size:clamp(24px,6.2vw,29px);line-height:1}
+#homePage .motion-minimal-fat-amount em {font-size:12px}
+#homePage .motion-minimal-walk-head {gap:7px;padding-top:6px}
+#homePage .motion-minimal-walk-copy strong {font-size:clamp(17px,4.8vw,21px);line-height:1}
+#homePage .motion-minimal-walk-copy em {font-size:12px}
+#homePage .motion-minimal-walk-copy small {margin-top:2px;font-size:9px;line-height:1.15}
+#homePage .motion-minimal-walk-log {min-height:36px;padding:5px 10px}
+#homePage .motion-minimal-walk-track {height:4px;margin:5px 0 5px}
+#homePage .motion-minimal-goal-substats {font-size:9px;line-height:1.1}
+#homePage .motion-minimal-goal-substats b {font-size:11px}
+#homePage .motion-minimal-walk-details[open] {margin-top:7px;padding-top:7px}
+@media(max-width:360px) {
+  #homePage .motion-minimal-fat-amount {font-size:24px}
+  #homePage .motion-minimal-fat-projection {font-size:8px}
+}
