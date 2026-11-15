@@ -318,3 +318,11 @@ body.motion-flow-armed:has(#dayPage.active) #motionFlowReturn { display:block; }
 #homePage .motion-goals .motion-fitness-goal-strip {margin-top:4px}
 #homePage .motion-goals .motion-progress-line {margin-top:4px}
 #homePage .motion-goals .motion-sector-foot {margin-top:3px}
+
+/* r103 target weight and predicted fat percentage in Detailed Goals. */
+#homePage .motion-body-target {display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 9px;margin-top:4px}
+#homePage .motion-body-target>span {font-size:var(--m12-type-label,9px);font-weight:900;letter-spacing:.06em}
+#homePage .motion-body-target strong {font-size:19px;line-height:1.1;font-weight:950;letter-spacing:-.03em}
+#homePage .motion-body-target b {font-size:13px;line-height:1.1;font-weight:850}
+#homePage .motion-body-target-note {display:block;font-size:9px;line-height:1.2;opacity:.76;margin-top:2px}
+#homePage .motion-goals .motion-walk-summary {margin-top:5px;padding-top:5px}
