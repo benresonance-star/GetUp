@@ -299,3 +299,12 @@ body.motion-flow-armed:has(#dayPage.active) #motionFlowReturn { display:block; }
 #homePage .motion-walk-form button {min-height:36px;padding:7px 10px;border:1px solid currentColor;border-radius:9px;background:transparent;color:inherit;font-size:10px;font-weight:900;cursor:pointer}
 #homePage .motion-walk-form p {margin:0;align-self:center;font-size:10px;line-height:1.25}
 #homePage .motion-walk-form button:focus-visible,#homePage .motion-walk-form input:focus-visible {outline:2px solid var(--volt);outline-offset:2px}
+
+/* r102 refinement: one clear fat-loss outcome above walking in Detailed Goals. */
+#homePage .motion-fat-goal-primary {display:grid;gap:3px}
+#homePage .motion-fat-goal-primary small {font-size:var(--m12-type-label,10px);font-weight:900;letter-spacing:.075em}
+#homePage .motion-fat-goal-primary strong {font-size:clamp(25px,6.3vw,31px);line-height:1.1;letter-spacing:-.04em;font-weight:950;font-variant-numeric:tabular-nums}
+#homePage .motion-fat-goal-primary strong em {font-size:13px;font-style:normal;font-weight:750;letter-spacing:-.01em}
+#homePage .motion-fat-goal-primary>span {font-size:var(--m12-type-body,10px);opacity:.75}
+#homePage .motion-walk-summary {margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+#homePage .motion-goals .motion-fitness-goal-strip {margin-top:6px}
