@@ -286,3 +286,16 @@ body.motion-flow-armed:has(#dayPage.active) #motionFlowReturn { display:block; }
   .motion-flow-plan { padding:6px 9px 9px; }
   .motion-flow-ex-fields { grid-template-columns:minmax(0,1fr); gap:6px; }
 }
+
+/* r102 · Daily walking goal, shared between Minimal and Detailed Home. */
+#homePage .motion-walk-summary {display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:8px;font-size:var(--m12-type-label,10px);font-weight:850;letter-spacing:.06em}
+#homePage .motion-walk-summary strong {font-size:var(--m12-type-stat,17px);letter-spacing:-.035em;white-space:nowrap}
+#homePage .motion-walk-details {margin-top:4px;border-top:1px solid var(--line)}
+#homePage .motion-walk-details summary {display:flex;justify-content:space-between;align-items:center;min-height:24px;padding:5px 0;cursor:pointer;list-style:none;font-size:var(--m12-type-label,10px);font-weight:900;letter-spacing:.055em}
+#homePage .motion-walk-details summary::-webkit-details-marker {display:none}
+#homePage .motion-walk-form {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+#homePage .motion-walk-form label {display:grid;gap:4px;min-width:0;font-size:10px;font-weight:800;letter-spacing:.02em}
+#homePage .motion-walk-form input {width:100%;min-width:0;min-height:38px;padding:8px;border:1px solid rgba(90,110,122,.4);border-radius:9px;background:rgba(255,255,255,.89);color:#13252d;font-size:16px;font-weight:800}
+#homePage .motion-walk-form button {min-height:36px;padding:7px 10px;border:1px solid currentColor;border-radius:9px;background:transparent;color:inherit;font-size:10px;font-weight:900;cursor:pointer}
+#homePage .motion-walk-form p {margin:0;align-self:center;font-size:10px;line-height:1.25}
+#homePage .motion-walk-form button:focus-visible,#homePage .motion-walk-form input:focus-visible {outline:2px solid var(--volt);outline-offset:2px}
