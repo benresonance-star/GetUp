@@ -30,6 +30,7 @@
     const nutritionValue = fastDay ? 'Water fast' : escapeText(kcalLeft);
     const nutritionLabel = fastDay ? 'Monday · recovery nutrition tomorrow' : escapeText(kcalUnit);
     const protein = macros ? `${escapeText(macros.protein)} g` : '—';
+    const walkProgressAria = walking.actual === null ? 'aria-valuetext="Steps not logged"' : `aria-valuenow="${Math.min(walking.actual, walking.target)}"`;
 
     return `<div class="motion-minimal-home" aria-label="Minimal Home dashboard">
       <section class="motion-minimal-panel motion-minimal-goals" aria-labelledby="minimalGoalsTitle">
@@ -41,7 +42,7 @@
           </div>
           <button type="button" class="motion-minimal-walk-log" aria-expanded="false" aria-controls="motionMinimalWalkingDetails" onclick="toggleWalkingDetails('motionMinimalWalkingDetails',this)">LOG</button>
         </div>
-        <div class="motion-minimal-walk-track" role="progressbar" aria-label="Logged daily steps toward walking goal" aria-valuemin="0" aria-valuemax="${walking.target}" aria-valuenow="${walking.actual === null ? 0 : walking.actual}"><span style="width:${walking.percent}%"></span></div>
+        <div class="motion-minimal-walk-track" role="progressbar" aria-label="Logged daily steps toward walking goal" aria-valuemin="0" aria-valuemax="${walking.target}" ${walkProgressAria}><span style="width:${walking.percent}%"></span></div>
         <div class="motion-minimal-goal-substats">
           <span><b>${escapeText(last7)} / ${escapeText(fitness.weeklySessions)}</b> sessions · 7d</span>
           <span><b>${escapeText(loss)}</b> planned / wk</span>
