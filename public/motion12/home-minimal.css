@@ -329,3 +329,26 @@
   #homePage .motion-minimal-fat-amount {font-size:24px}
   #homePage .motion-minimal-fat-projection {font-size:8px}
 }
+
+/* r103 body composition target, single compact row beneath weekly fat-loss goal. */
+#homePage .motion-minimal-body-target {
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 9px;
+  padding:2px 0 6px;font-variant-numeric:tabular-nums;
+}
+#homePage .motion-minimal-body-target>span {
+  font-size:9px;line-height:1.2;font-weight:900;letter-spacing:.04em;opacity:.78;
+}
+#homePage .motion-minimal-body-target strong {
+  font-size:17px;font-weight:950;line-height:1.05;letter-spacing:-.035em;white-space:nowrap;
+}
+#homePage .motion-minimal-body-target b {
+  font-size:12px;font-weight:850;line-height:1.1;white-space:nowrap;
+}
+#homePage .motion-minimal-body-target small {font-size:10px;font-weight:750}
+#homePage .motion-minimal-fat-goal {padding-bottom:2px}
+#homePage .motion-minimal-walk-head {padding-top:5px}
+@media (max-width:360px) {
+  #homePage .motion-minimal-body-target {gap:3px 6px}
+  #homePage .motion-minimal-body-target strong {font-size:16px}
+  #homePage .motion-minimal-body-target b {font-size:11px}
+}
