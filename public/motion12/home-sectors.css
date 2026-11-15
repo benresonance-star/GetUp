@@ -308,3 +308,13 @@ body.motion-flow-armed:has(#dayPage.active) #motionFlowReturn { display:block; }
 #homePage .motion-fat-goal-primary>span {font-size:var(--m12-type-body,10px);opacity:.75}
 #homePage .motion-walk-summary {margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
 #homePage .motion-goals .motion-fitness-goal-strip {margin-top:6px}
+
+/* r102 compact Detailed Goals: match the shortened Minimal hierarchy. */
+#homePage .motion-goals {padding-top:8px;padding-bottom:7px}
+#homePage .motion-goals .motion-sector-title {margin-bottom:4px}
+#homePage .motion-fat-goal-primary {gap:1px}
+#homePage .motion-fat-goal-primary strong {font-size:clamp(23px,6vw,28px);line-height:1.04}
+#homePage .motion-walk-summary {margin-top:6px;padding-top:5px}
+#homePage .motion-goals .motion-fitness-goal-strip {margin-top:4px}
+#homePage .motion-goals .motion-progress-line {margin-top:4px}
+#homePage .motion-goals .motion-sector-foot {margin-top:3px}
