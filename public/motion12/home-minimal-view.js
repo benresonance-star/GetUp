@@ -35,15 +35,17 @@
     return `<div class="motion-minimal-home" aria-label="Minimal Home dashboard">
       <section class="motion-minimal-panel motion-minimal-goals" aria-labelledby="minimalGoalsTitle">
         <div class="motion-minimal-heading"><span id="minimalGoalsTitle">GOALS</span><span>WEEK ${escapeText(week)} / 12</span></div>
-        <div class="motion-minimal-fat-goal" aria-label="Fat loss goal">
-          <span class="motion-minimal-fat-label">FAT LOSS GOAL</span>
-          <div class="motion-minimal-fat-amount">${escapeText(fatGoal)}<em> kg / week</em></div>
-          <div class="motion-minimal-fat-projection">${escapeText(loss)} projected / week · based on calorie plan</div>
+        <div class="motion-minimal-fat-goal" aria-label="Fat loss goal per week">
+          <div class="motion-minimal-fat-top">
+            <span class="motion-minimal-fat-label">FAT LOSS / WEEK</span>
+            <span class="motion-minimal-fat-projection">${escapeText(loss)} projected</span>
+          </div>
+          <div class="motion-minimal-fat-amount">${escapeText(fatGoal)}<em> kg</em></div>
         </div>
         <div class="motion-minimal-walk-head">
           <div class="motion-minimal-walk-copy">
             <strong>${walking.actual === null ? '—' : escapeText(walking.actual.toLocaleString('en-AU'))}<em> / ${escapeText(walking.target.toLocaleString('en-AU'))}</em></strong>
-            <small>steps today · +${escapeText(walking.additional.toLocaleString('en-AU'))} above baseline</small>
+            <small>STEPS TODAY · +${escapeText(walking.additional.toLocaleString('en-AU'))} above baseline</small>
           </div>
           <button type="button" class="motion-minimal-walk-log" aria-expanded="false" aria-controls="motionMinimalWalkingDetails" onclick="toggleWalkingDetails('motionMinimalWalkingDetails',this)">LOG</button>
         </div>
