@@ -187,6 +187,7 @@
     const fitness = fitnessGoalTargets();
     const walking = homeModel.walkingSummary(settings, logs, date);
     const bodyTarget = homeModel.bodyCompositionGoal(settings);
+    const goalEta = homeModel.achievementEstimate(composition.weight, bodyTarget.weightKg, calories?.predictedLoss, date);
     const currentMeasure = (id, unit) => Number(measurements[id]) > 0 ? Number(measurements[id]) + ' ' + unit : 'not recorded';
     const main = document.getElementById('homePage');
     if (!main) return;
@@ -231,7 +232,7 @@
         week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
         sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
         last7,fitness,loss,fatGoal:fatLoss ? `${fatLoss.low}–${fatLoss.high}` : '—',kcalLeft,kcalUnit,macros,fastDay,mealCount,
-        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking,bodyTarget
+        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking,bodyTarget,goalEta
       });
       if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
       if (detailsOpen.minimalWalk) {
@@ -257,6 +258,11 @@
             <b>≈${bodyTarget.fatPct}% body fat</b>
           </div>
           <small class="motion-body-target-note">Estimated from your initial Hume reading, assuming fat-free mass is retained.</small>
+          <div class="motion-goal-eta" aria-label="Estimated date to reach bodyweight goal">
+            <span>EST. TARGET DATE</span>
+            <strong>${goalEta.label}</strong>
+            ${goalEta.status === 'estimated' ? '<small>at ' + Number(goalEta.weeklyLoss).toFixed(2) + ' kg/wk projected</small>' : ''}
+          </div>
           <div class="motion-walk-summary"><span>DAILY WALKING</span><strong>${walking.actual === null ? '—' : walking.actual.toLocaleString('en-AU')} / ${walking.target.toLocaleString('en-AU')}</strong></div>
           <details id="motionDetailedWalkingDetails" class="motion-walk-details">
             <summary>LOG / EDIT DAILY STEPS <span>⌄</span></summary>
