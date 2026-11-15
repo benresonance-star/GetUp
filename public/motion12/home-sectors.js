@@ -106,14 +106,15 @@
     const walk = optional('fitnessGoalWalk');
     const rhr = optional('fitnessGoalRhr');
     const dailySteps = optional('fitnessGoalSteps');
+    const weightKg = optional('fitnessGoalWeight');
     const inRange = (value, low, high, integer = false) => value === null ||
       (Number.isFinite(value) && value >= low && value <= high && (!integer || Number.isInteger(value)));
     if (!inRange(weeklySessions, 1, 7, true) || weeklySessions === 0 ||
-        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true) || !inRange(dailySteps, 8000, 30000, true)) {
-      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm, 8k–30k daily steps.';
+        !inRange(pushups, 1, 200, true) || !inRange(walk, 5, 60) || !inRange(rhr, 30, 120, true) || !inRange(dailySteps, 8000, 30000, true) || !inRange(weightKg, 75, 130)) {
+      if (status) status.textContent = 'Check targets: 1–7 sessions, 1–200 push-ups, 5–60 min walk, 30–120 bpm, 8k–30k daily steps, 75–130 kg bodyweight goal.';
       return false;
     }
-    settings.fitnessGoals = { ...settings.fitnessGoals, weeklySessions, pushups, walk, rhr, dailySteps: dailySteps ?? fitnessGoalTargets().dailySteps };
+    settings.fitnessGoals = { ...settings.fitnessGoals, weeklySessions, pushups, walk, rhr, dailySteps: dailySteps ?? fitnessGoalTargets().dailySteps, weightKg: weightKg ?? homeModel.bodyCompositionGoal(settings).weightKg };
     motion12SetItem('motion12.settings', JSON.stringify(settings));
     renderHome();
     const savedStatus = document.getElementById('fitnessGoalSaveStatus');
@@ -185,6 +186,7 @@
     const composition = currentBodyComp();
     const fitness = fitnessGoalTargets();
     const walking = homeModel.walkingSummary(settings, logs, date);
+    const bodyTarget = homeModel.bodyCompositionGoal(settings);
     const currentMeasure = (id, unit) => Number(measurements[id]) > 0 ? Number(measurements[id]) + ' ' + unit : 'not recorded';
     const main = document.getElementById('homePage');
     if (!main) return;
@@ -229,7 +231,7 @@
         week,calMode,canSwitchSystem:!!window.Motion12Cal,session,sessionAction,sessionLabel,
         sessionDescription:calMode?session.why:weeklyTarget(day,week),complete,
         last7,fitness,loss,fatGoal:fatLoss ? `${fatLoss.low}–${fatLoss.high}` : '—',kcalLeft,kcalUnit,macros,fastDay,mealCount,
-        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking
+        mealChips:compactMealChips(day,date),recoveryAction,recoveryCue,walking,bodyTarget
       });
       if (detailsOpen.minimalFood) main.querySelector('#motionMinimalFoodDetails').open = true;
       if (detailsOpen.minimalWalk) {
@@ -249,6 +251,12 @@
             <strong>${fatLoss ? fatLoss.low+'–'+fatLoss.high : '—'}<em> kg / week</em></strong>
             <span>${loss} projected / week · based on calorie plan</span>
           </div>
+          <div class="motion-body-target" aria-label="Target bodyweight and estimated body fat at that weight">
+            <span>BODY TARGET</span>
+            <strong>${bodyTarget.weightKg} kg</strong>
+            <b>≈${bodyTarget.fatPct}% body fat</b>
+          </div>
+          <small class="motion-body-target-note">Estimated from your initial Hume reading, assuming fat-free mass is retained.</small>
           <div class="motion-walk-summary"><span>DAILY WALKING</span><strong>${walking.actual === null ? '—' : walking.actual.toLocaleString('en-AU')} / ${walking.target.toLocaleString('en-AU')}</strong></div>
           <details id="motionDetailedWalkingDetails" class="motion-walk-details">
             <summary>LOG / EDIT DAILY STEPS <span>⌄</span></summary>
@@ -269,6 +277,7 @@
             <form class="motion-fitness-form" onsubmit="return saveFitnessGoalTargets(event)">
               <label>Sessions / week<input id="fitnessGoalSessions" type="number" inputmode="numeric" min="1" max="7" step="1" required value="${fitness.weeklySessions}"><small>Current: ${last7} in last 7 days</small></label>
               <label>Strict push-ups (reps)<input id="fitnessGoalPushups" type="number" inputmode="numeric" min="1" max="200" step="1" value="${fitness.pushups ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('pushups', 'reps')}</small></label>
+              <label>Target body weight (kg)<input id="fitnessGoalWeight" type="number" inputmode="decimal" min="75" max="130" step="0.1" value="${bodyTarget.weightKg}"><small>Estimated body fat at this weight: ≈${bodyTarget.fatPct}%</small></label>
               <label>Daily steps target<input id="fitnessGoalSteps" type="number" inputmode="numeric" min="8000" max="30000" step="500" value="${fitness.dailySteps}"><small>Progress toward 15,000 steps</small></label>
               <label>2 km walk (minutes)<input id="fitnessGoalWalk" type="number" inputmode="decimal" min="5" max="60" step="0.1" value="${fitness.walk ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('walk', 'min')}</small></label>
               <label>Resting HR (bpm)<input id="fitnessGoalRhr" type="number" inputmode="numeric" min="30" max="120" step="1" value="${fitness.rhr ?? ''}" placeholder="Set target"><small>Current: ${currentMeasure('rhr', 'bpm')}</small></label>
