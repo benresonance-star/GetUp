@@ -21,7 +21,7 @@
 
   function renderMinimalHome({week,calMode,canSwitchSystem,session,sessionAction,sessionLabel,
     sessionDescription,complete,last7,fitness,loss,fatGoal,kcalLeft,kcalUnit,macros,fastDay,
-    mealCount,mealChips,recoveryAction,recoveryCue,walking}) {
+    mealCount,mealChips,recoveryAction,recoveryCue,walking,bodyTarget}) {
     const systemSelect = canSwitchSystem ? `<select class="motion-minimal-system" aria-label="Training system"
       onchange="Motion12Cal.switch(this.value)">
       <option value="standard" ${calMode?'':'selected'}>STANDARD</option>
@@ -41,6 +41,11 @@
             <span class="motion-minimal-fat-projection">${escapeText(loss)} projected</span>
           </div>
           <div class="motion-minimal-fat-amount">${escapeText(fatGoal)}<em> kg</em></div>
+        </div>
+        <div class="motion-minimal-body-target" aria-label="Body composition goal: ${escapeText(bodyTarget.weightKg)} kilograms and approximately ${escapeText(bodyTarget.fatPct)} percent body fat, assuming fat-free mass is maintained">
+          <span>BODY TARGET</span>
+          <strong>${escapeText(bodyTarget.weightKg)}<small> kg</small></strong>
+          <b>≈${escapeText(bodyTarget.fatPct)}% <small>fat</small></b>
         </div>
         <div class="motion-minimal-walk-head">
           <div class="motion-minimal-walk-copy">

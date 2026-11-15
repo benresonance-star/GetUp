@@ -62,6 +62,20 @@
     };
   }
 
+  /* Stable initial Hume baseline. Projected body-fat at the target weight assumes
+     fat-free mass is retained; never mistake this estimate for a measured result. */
+  function bodyCompositionGoal(settings) {
+    const stored = Number(settings?.fitnessGoals?.weightKg);
+    const weightKg = Number.isFinite(stored) && stored >= 75 && stored <= 130 ? stored : 82;
+    const baselineFatFreeKg = 90.6 * (1 - 23.4 / 100);
+    const fatPct = (1 - baselineFatFreeKg / weightKg) * 100;
+    return {
+      weightKg,
+      fatPct: Math.round(fatPct * 10) / 10,
+      basis: 'Hume baseline: 90.6 kg at 23.4% fat; assumes fat-free mass remains unchanged'
+    };
+  }
+
   /* Daily walking is manually logged; an unlogged count stays unknown. */
   function walkingSummary(settings, logs, date) {
     const goal = fitnessGoalTargets(settings).dailySteps;
@@ -100,6 +114,6 @@
 
   window.Motion12HomeModel = Object.freeze({
     calSessions, recoveryCues, flowCues, bodyCompHistory, currentBodyComp,
-    fitnessGoalTargets, walkingSummary, goalsSummary, nutritionSummary
+    fitnessGoalTargets, bodyCompositionGoal, walkingSummary, goalsSummary, nutritionSummary
   });
 })();
